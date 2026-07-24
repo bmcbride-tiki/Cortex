@@ -253,3 +253,15 @@ Managed device support: enabled
 [2026-07-16T22:48:12.579Z] [INFO] Shutting down.
 [2026-07-16T22:48:12.579Z] [INFO] Stopping the task scheduler and canceling any outstanding work items...
 [2026-07-16T22:48:12.579Z] [INFO] Task scheduler has stopped, and all work has been canceled.
+[2026-07-24T20:03:37.696Z] [INFO] ========================================================================================================================
+[2026-07-24T20:03:37.696Z] [INFO] Initializing MAM Client.
+App: com.microsoft.edge 150.0.4078.83
+SDK: 2.1.367.0
+OS: windows 10.0.26100.8875
+DeviceType: Desktop
+Manufacturer: LENOVO
+Model: 21D7S2TJ00
+Telemetry: yes
+Managed device support: enabled
+[2026-07-24T20:03:37.696Z] [INFO] Telemetry session 6bab4a76-e6b9-4415-87cc-2874d91612b5.
+[2026-07-24T20:03:37.697Z] [INFO] Reinitialized cache (v1).

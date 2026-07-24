@@ -1,81 +1,74 @@
 ---
 tool_id: 'server'
-title: 'Workbrain Cortex Server'
+title: 'Cortex Workbrain Operation Console'
 classification: '00_System_Core'
 data_policy: 'internal'
 execution_engine: 'pure_code'
-tags: [type/module, domain/system-core, tier/zero-input, function/web-server, scope/cortex-console, connects/core-router, connects/database, connects/workflow-engine, connects/gemini-bridge, connects/copilot-bridge, connects/schedule-analytics]
+tags: [type/module, domain/system-core, tier/zero-input, function/web-server, function/license-gating, scope/cortex-console, scope/workflow-builder, connects/core-router, connects/database, connects/workflow-engine, connects/data-processing, connects/gemini-bridge, connects/copilot-bridge]
 ---
 
 # server
 
-> **Status:** Active. The FastAPI application behind the "Cortex" web console. Run directly: `python server.py` (from `00_System_Core`, or `python .\00_System_Core\server.py` from the repo root) launches Uvicorn on `http://127.0.0.1:8090` with hot-reload.
+> **Status:** Active. The FastAPI application behind the "Cortex" web console. Run directly: `python 00_System/server.py` (or `python server.py` from inside `00_System/`) launches Uvicorn on `http://127.0.0.1:8080` with hot-reload. At ~1,560 lines this is the largest file in the project -- routes are grouped under `# --- SECTION NAME ---` comment banners; skim for those to find the relevant part.
 
 ## Purpose
 
-The single backend process for the whole vault's web UI. Serves the SPA shell (`templates/index.html`) and its page/popup HTML fragments, exposes every REST API the frontend calls (dashboard stats, the class-schedule analytics dashboard, the contacts CRM, process tags, Copilot context lookups, the Agentic Workflow Uploader, the Workflow Builder, and the generic automation-tool runner), and owns startup schema initialization via [[database|database.initialize_database()]].
+The single backend process for the Cortex web UI. Serves the SPA shell (`templates/index.html`) and every page/popup HTML fragment, exposes every REST API the frontend calls, and owns startup schema initialization via [[database|database.initialize_database()]].
 
 ## Processing Logic
 
-### Boot
+### Boot & live request log
 
-`lifespan()` runs `initialize_database()` before the app starts accepting requests, then prints boot/shutdown banners. `/images` and `/static` are mounted as `StaticFiles` from `templates/images` and `templates/static` (Tailwind build output + vendored Font Awesome/Chart.js).
-
-### Live request activity log
-
-**Added 2026-07-20.** `log_requests` (an `@app.middleware("http")` wrapper registered right after the `app = FastAPI(...)` line) prints one numbered line per request as it starts and another as it finishes, e.g. `[REQ #0002] --> GET /api/stats` then `[REQ #0002] <-- GET /api/stats :: 200 (14ms)`. This exists because `log_config=None` (see Operational notes below) silences Uvicorn's own access log entirely, which otherwise leaves the console showing only the boot banner with zero visibility into what the running app is doing as pages are clicked or automations are triggered.
-
-### Page & popup serving
-
-* `GET /` — serves `templates/index.html` (the SPA shell) verbatim.
-* `GET /page/{page_name:path}` — reads `templates/{page_name}.html` and returns it raw. The `:path` converter lets `page_name` contain slashes, so this single route serves both top-level pages (`/page/workflows` → `templates/workflows.html`) and per-tool popups (`/page/popup/abc_uploader` → `templates/popup/abc_uploader.html`). Resolves the path and checks it stays inside `templates/` before reading, to block traversal via a crafted `page_name`. 404s (with an inline error `<div>`, not JSON) if the file is missing.
-* `GET /apps` — thin wrapper returning `CoreRouter.get_visible_apps()`, the manifest the Processes/Tasks/Workflows pages render cards from.
-
-### Generic automation execution
-
-* `POST /execute/{category}/{tool_id}` — body `{"args": [...]}`. Delegates to `CoreRouter.execute_app_logic` (see [[core_router]]) via `await run_in_threadpool(...)`, running the target tool as a subprocess on a background worker thread and returning `{"success", "message"}`. **Fixed 2026-07-20:** this used to call `execute_app_logic` directly inside the `async def` route, which blocked the single shared event loop for the tool's *entire* run time -- a long [[gemini_bridge|Gemini]]/[[copilot_bridge|Copilot]] browser-automation call (which can take minutes) froze every other request to the whole server for as long as it ran, including totally unrelated pages. `run_in_threadpool` moves that blocking call off the event loop so the server stays responsive to everyone else in the meantime. `POST /api/workflow-builder/run` (below) had the identical problem and got the identical fix.
+`lifespan()` runs `initialize_database()` before the app accepts requests, then prints boot/shutdown banners. `log_requests` (an `@app.middleware("http")` wrapper) prints one numbered line per request as it starts and finishes (`[REQ #0002] --> GET /api/stats` / `[REQ #0002] <-- ... :: 200 (14ms)`), since `log_config=None` (see Operational notes) silences Uvicorn's own access log entirely. `/images`, `/generated-images`, and `/static` are mounted as `StaticFiles`.
 
 ### Dashboard / stats / graph
 
-* `GET /api/stats` — row counts across the main tracking tables, for the dashboard tiles.
-* `GET /api/inbox` — lists pending `.xlsx` reports and `.txt`/`.docx` transcripts sitting in `01_inbox/`.
-* `GET /api/network` — builds the force-graph dataset for the System page: nodes/edges spanning the database, server, router, inbox/vault folders, registered automation tasks, live `brain_state.db` tables (introspected via `sqlite_master`, not hardcoded), the class-schedule scraper's raw JSON outputs, and trade/class/exam nodes cross-referenced against `TARGET_TRADES_MAP`.
-
-### Class schedule analytics (backs the Schedule dashboard's slicers/charts)
-
-All under `/api/schedule/*`, all accept optional `trades`/`providers`/`years` comma-separated query params (parsed by `_split_param`) and build parameterized `IN (...)` clauses (`_in_clause`):
-
-* `GET /api/schedule/filters` — distinct trade/provider/school-year values for the slicers.
-* `GET /api/schedule/trade-provider-map` — distinct (trade, provider) pairs, for client-side cross-filtering.
-* `GET /api/schedule/summary` — total/completed/remaining class counts (`end_date` vs today).
-* `GET /api/schedule/class-results` — per-class average AIT exam mark, one series per provider plus a provincial average; trade names are translated from the schedule catalogue's vocabulary to the marks-correlation tables' vocabulary via [[schedule_analytics|resolve_marks_trades]].
-* `GET /api/schedule/pass-fail` — pass (>=70) / fail counts.
-* `GET /api/schedule/section-averages` — average mark per exam section, per provider + provincial average.
-* `GET /api/schedule/supplemental-attempts` — counts re-written exam sections (more than one recorded score per apprentice/section/period, after de-duplicating literal re-import rows).
-
-### Workflow Builder (backs the drag-and-drop pipeline canvas; see [[workflow_engine]])
-
-* `SKILLS_REGISTRY` / `FUNCTIONS_REGISTRY` (module-level constants, not routes) — the static palette of "Skill" and "Function" node types the canvas can drag on, since those have no scanned folder/script the way Tasks/Processes do (see [[core_router]]). `FUNCTIONS_REGISTRY` includes the AI-bridge-backed nodes: `function_gemini_ask` / `function_google_search` / `function_image_generate` (→ [[gemini_bridge]]), and `function_copilot_image_generate` / `function_copilot_agent_ask` / `function_copilot_list_agents` (→ [[copilot_bridge]], added 2026-07-20 alongside that adapter's Designer-image and "@agent" mention support).
-* `GET /api/skills` — returns `SKILLS_REGISTRY`.
-* `GET /api/workflow-builder/node-registry` — flat, sorted list combining `CoreRouter.get_visible_apps()`'s Tasks/Processes with `SKILLS_REGISTRY` and `FUNCTIONS_REGISTRY`, tagged with `kind` — the full palette the canvas renders.
-* `GET/POST/PUT/DELETE /api/workflow-builder/workflows[/{id}]` — CRUD over the `workflow_definitions` table (see [[database]]): save/load/rename/delete a diagram (Drawflow graph JSON).
-* `POST /api/workflow-builder/run` — body `{"dry_run": bool, "graph_json": {...}}` or `{"workflow_id": int}`. Instantiates a fresh `WorkflowEngine` (see [[workflow_engine]]) and calls `engine.run(graph_json)` via `await run_in_threadpool(...)` (same blocking-call fix as `/execute/{category}/{tool_id}` above — a workflow containing an AI-bridge node can run for minutes). Returns the engine's full step-by-step execution log.
-
-### Contacts CRM
-
-Standard CRUD at `/api/contacts` (`GET`, `POST`), `/api/contacts/{id}` (`PUT`, `DELETE`), plus `POST /api/contacts/import-raw` which dynamically loads `contact_importer.py` (checked in both a `00_System_Core/adapters/contact-importer/` and a `30_Automation_Scripts/05_Processes/contact_importer/` location) to merge in bulk/pasted contact data.
+* `GET /api/stats` -- row counts across the main tracking tables.
+* `GET /api/inbox` -- pending `.xlsx` reports and `.txt`/`.docx` transcripts sitting in `01_inbox/`.
+* `GET /api/network` -- force-graph dataset for the Network page (database tables, tasks, trades/classes/exams, all introspected live rather than hardcoded).
 
 ### Copilot context bridge
 
-`GET /api/copilot/transcripts` and `GET /api/copilot/transcript-content/{id}` expose `transcripts_metadata` rows and their vaulted text content as prompt-fillable context for the [[copilot_bridge]] adapter's UI.
+`GET /api/copilot/transcripts` / `GET /api/copilot/transcript-content/{id}` -- expose `transcripts_metadata` rows and their vaulted text as prompt-fillable context for the [[copilot_bridge]] adapter's UI.
 
-### Tag registry (Processes / Tasks / Workflows)
+### App/tool discovery
 
-`GET/POST /api/process-tags` and `POST /api/process-tags/assign` manage the colored tags used to group tools on the Processes, Tasks, and Workflows pages (auto-assigns a color from `PROCESS_TAG_COLOR_PALETTE` if none given). All three pages share the one tag registry, but `GET` takes a `category` query param and `POST .../assign` takes a `category` body field (`'process'` | `'task'` | `'workflow'`, defaults to `'process'`) so each page's assignments stay independent even when a tag name is reused across all three.
+* `GET /apps` -- thin wrapper over `CoreRouter.get_visible_apps()` (see [[core_router]]).
+* `GET /api/skills` -- returns `SKILLS_REGISTRY` (module-level constant; Skills have no scanned folder, unlike Tasks/Processes).
+* `GET /api/workflow-builder/node-registry` -- the full Workflow Builder palette: Tasks/Processes/Adapters/Functions from `CoreRouter.get_visible_apps()` plus `SKILLS_REGISTRY`/`FUNCTIONS_REGISTRY`, each entry enriched with:
+  * `model` -- which AI backend it touches (via `TOOL_MODELS`/`ADAPTER_MODELS`), feeding `model_classifications.py`'s classification-ceiling badge client-side.
+  * `required_capability`/`licensed` -- whether the *current* user (via [[user_identity]]'s `UserIdentityManager`) holds the license/SKU a node needs (`MODEL_CAPABILITY_MAP`; only `m365`→`M365_BASE` and `copilot`→`COPILOT_BASIC` are gated today -- gemini/claude/chatgpt/notebooklm run through their own signed-in bridge sessions, not an M365/Google entitlement).
+  * `icon_source`/`svgl_icon_url`/`fa_icon` -- a real per-product logo (`TOOL_SVGL_MAP`, verified against the live SVGL API -- Outlook/Teams/SharePoint/OneNote/OneDrive/Excel/PowerPoint/Word/Copilot/Gemini/Claude/OpenAI each get their own, not one blanket "Microsoft" mark) or a semantic Font Awesome glyph (`TOOL_FA_ICON_MAP`, checked against the actually-installed FA6 Free icon set) for anything without a real brand logo (Power BI, NotebookLM, generic containers/logic/import-export).
+
+### Workflow Builder (backs the drag-and-drop pipeline canvas; see [[workflow_engine]])
+
+* `GET/POST/PUT/DELETE /api/workflow-builder/workflows[/{id}]` -- CRUD over the `workflow_definitions` table (see [[database]]): save/load/rename/delete a diagram (Drawflow graph JSON).
+* `GET /api/workflow-builder/workflows/{id}/map` -- **new**: builds a read-only, stage-column structural map of a saved workflow for the Workflow Map page. Reuses `WorkflowEngine._parse_graph()`/`_find_entry_nodes()` (see [[workflow_engine]]) to get the real, container-flattened node graph rather than re-parsing the Drawflow export here, then layers nodes into stages by BFS depth from the entry node(s) (cycle-safe, since a Review Gate's loop-back edge is a valid cycle). Each node carries the same icon/license fields as the node-registry endpoint above, read from the saved node's own data if present (workflows saved before the icon feature existed fall back to the same `TOOL_SVGL_MAP`/`TOOL_FA_ICON_MAP` lookup).
+* `POST /api/workflow-builder/run` -- body `{"dry_run": bool, "graph_json": {...}}` or `{"workflow_id": int}`. Runs a `WorkflowEngine` via `await run_in_threadpool(...)` (a workflow containing an AI-bridge node can run for minutes; this keeps the event loop responsive to everyone else meanwhile). Returns the engine's full step-by-step execution log -- also what the Workflow Map page's "Preview Dry-Run Trace" button calls to overlay real per-node status onto the map.
+
+### Review checkpoints
+
+`GET /api/workflow-checkpoints` (status filter: pending/reviewed/all) and `POST /api/workflow-checkpoints/{id}/resolve` -- the "Awaiting Review" queue written by a `human_review_checkpoint` workflow node when a run pauses for a human hand-off; backs the Review Queue page.
+
+### Tag registry (Processes / Tasks / Functions / Adapters)
+
+`GET/POST /api/process-tags` and `POST /api/process-tags/assign` -- colored tags shared across those pages, scoped per-category so the same tag name can be reused independently on each.
 
 ### Agentic Workflow Uploader (`abc_uploader`)
 
-`GET/POST /api/abc-uploader/templates`, `DELETE /api/abc-uploader/templates/{name}`, `POST /api/abc-uploader/upload`. The GET/POST/DELETE handlers dynamically load `abc_uploader.py` (via `SourceFileLoader`, re-executed fresh per request so edits apply without a server restart) and call its DB-backed functions directly, in-process. `upload` instead goes through `CoreRouter.execute_app_logic("07_Workflows", "abc_uploader", ["upload", name, ...])` so the Playwright browser automation runs as an isolated subprocess, consistent with every other tool.
+`GET/POST /api/abc-uploader/templates`, `DELETE .../templates/{name}`, `POST .../upload`. GET/POST/DELETE dynamically load `abc_uploader.py` (via `SourceFileLoader`) and call its DB-backed functions in-process; `upload` goes through `CoreRouter.execute_app_logic("06_Tasks", "abc_uploader", [...])` so the Playwright browser automation runs as an isolated subprocess.
+
+### Dedicated task-popup uploads
+
+`POST /api/uploads/exam-pass-fail`, `/transcripts`, `/word-to-excel-exam`, `/curriculum-guide-to-tos` -- each saves the uploaded file(s) into the right `01_inbox/` subfolder (collision-safe, via `_save_upload_collision_safe`), then dispatches the matching import/processing Task through `router.execute_app_logic`.
+
+### In-app markdown reader/editor & run:// links
+
+`GET/POST /api/md-editor/read` / `/save` -- read/write a vault-relative markdown file, guarded by `_resolve_vault_path` (resolves the path fully and checks it's still inside the project root, blocking `../` traversal from a crafted link). `POST /api/protocol/run` -- executes a `run://` link's target script via `router.execute_script`, same containment guard. `POST /execute/{category}/{tool_id}` -- the generic automation-tool runner, via `router.execute_app_logic`.
+
+### Page & popup serving
+
+`GET /` serves `templates/index.html` verbatim. `GET /page/{page_name:path}` reads `templates/{page_name}.html` raw (the `:path` converter lets it serve both top-level pages and nested popups, e.g. `/page/popup/abc_uploader`), with the same vault-containment check as the markdown/run:// endpoints, and a 404 (inline HTML error, not JSON) if the file is missing.
 
 ## Output
 
@@ -83,13 +76,13 @@ JSON (`JSONResponse`) from every `/api/*` and `/apps`/`/execute` route; raw HTML
 
 ## Operational notes
 
-* **Port 8090**, not the FastAPI/Uvicorn-typical 8000 or the project's original 8081 -- 8081 turned out to be permanently occupied by something outside this project's control on the primary dev machine (confirmed via `netstat`/`Get-Process`/`tasklist` all disagreeing about what, if anything, held it), so the whole stack moved to 8090.
-* **`log_config=None`** is required in the `uvicorn.run(...)` call. Without it, Uvicorn's `--reload` crashes the newly spawned worker process on Windows/Python 3.13 (`logging.config.dictConfig` failing inside `_clearExistingHandlers` across the multiprocessing spawn boundary) every time a watched file changes -- a Windows-specific Uvicorn bug, unrelated to this project's own code.
-* **`reload_excludes`** keeps the `--reload` file watcher from treating a tool's own runtime writes (browser profiles, `05_Processes`/`06_Tasks`/`07_Workflows` scripts writing their own output files, `node_modules`, compiled CSS, `*.db`) as source changes that should restart the server.
-* `sys.dont_write_bytecode = True` at the top blocks `.pyc` writes inside the watched tree, for the same reason.
+* **Port 8080.** `reload=True` watches project files and restarts on change; `reload_excludes` keeps that watcher from treating a tool's own runtime writes (`*.db`, browser-automation profile folders, `11_Processes`/`12_Tasks`/`13_Workflows`/`14_Adapters` script output, `node_modules`, compiled CSS) as source changes.
+* **`log_config=None`** avoids a Windows-specific Uvicorn `--reload` crash (`dictConfig` reconfiguration failing across the spawn boundary) -- unrelated to this project's own code.
+* Every route that calls a blocking, potentially slow function (subprocess execution, browser automation) goes through `await run_in_threadpool(...)` rather than calling it directly, so one long-running call (a Gemini/Copilot browser-automation pass can take minutes) can't freeze the single shared event loop for every other request.
+* `sys.dont_write_bytecode = True` blocks `.pyc` writes inside the watched tree.
 
 ## Notes for AI reuse
 
-To add a new REST endpoint for a tool-specific popup (following the `abc_uploader` pattern): dynamically load the tool's script with `SourceFileLoader`, call its plain Python functions directly for anything DB-only/fast, and only route through `CoreRouter.execute_app_logic` for anything that needs to run as an isolated subprocess (browser automation, long-running work). Register the popup's own page at `templates/popup/<tool_id>.html` -- no server-side change needed for that part, since `/page/{page_name:path}` already serves any nested template path.
+To add a new REST endpoint for a tool-specific popup: dynamically load the tool's script with `SourceFileLoader` for anything DB-only/fast, and only route through `CoreRouter.execute_app_logic`/`execute_script` for anything that needs to run as an isolated subprocess. Register the popup's own page at `templates/popup/<tool_id>.html` -- no server-side change needed, since `/page/{page_name:path}` already serves any nested template path.
 
-Any new route that calls a blocking, potentially slow function (subprocess execution, browser automation, an external HTTP call with no timeout) must go through `await run_in_threadpool(...)` rather than calling it directly -- see the Generic automation execution note above for what happens when that's skipped. See [[core_router]] for the subprocess-dispatch layer, [[workflow_engine]] for the pipeline-execution layer, and [[database]] for the schema every `/api/*` route ultimately reads/writes.
+See [[core_router]] for the subprocess-dispatch layer (and its separate, newer `CoreWorkflowRouter` in-process execution model), [[workflow_engine]] for the Drawflow pipeline-execution layer, [[database]] for the schema every `/api/*` route reads/writes, and `data_processing/user_identity.py`/`svgl_icon_manager.py` for the license-gating and icon-resolution logic the node-registry/workflow-map endpoints share.

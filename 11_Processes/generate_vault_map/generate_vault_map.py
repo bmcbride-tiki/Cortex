@@ -1,3 +1,20 @@
+# =============================================================================
+# generate_vault_map.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Walks the whole Cortex project folder and writes a plain-text tree
+#   diagram of it (like the output of the `tree` command) to
+#   `vault_map.txt`, right next to this script. A zero-input, one-click
+#   Process -- no settings, just "map what's here right now."
+#
+# WHAT IT INTERACTS WITH
+#   - The entire project folder tree, read-only (skips `venv`, `.git`,
+#     `__pycache__`).
+#   - `vault_map.txt`, overwritten each time this runs.
+#   - `core_router.py`, which discovers and launches this script the same
+#     way as every other Process (see CLAUDE.md's directory rules).
+# =============================================================================
+
 from pathlib import Path
 from typing import Dict, Any
 

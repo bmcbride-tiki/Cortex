@@ -1,3 +1,15 @@
+# =============================================================================
+# test_list_outlook_calendar_events.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that list_outlook_calendar_events.py's `run()` returns a
+#   successful result with at least one event, using m365_graph_bridge's
+#   existing mock data.
+#
+# WHAT IT INTERACTS WITH
+#   - `list_outlook_calendar_events.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

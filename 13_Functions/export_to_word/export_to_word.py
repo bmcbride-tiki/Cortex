@@ -1,3 +1,17 @@
+# =============================================================================
+# export_to_word.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: writes text into a new .docx file, one paragraph per line.
+#
+# WHAT IT INTERACTS WITH
+#   - `python-docx` (`Document`), which does the actual .docx writing.
+#   - `test_export_to_word.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category), passing
+#     its `text`/`output_dir`/`filename` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 import time

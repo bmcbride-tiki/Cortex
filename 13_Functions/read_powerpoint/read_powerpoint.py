@@ -1,3 +1,19 @@
+# =============================================================================
+# read_powerpoint.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: reads a local .pptx file's slide text and returns it as
+#   text, one `--- Slide N ---` section per slide.
+#
+# WHAT IT INTERACTS WITH
+#   - `python-pptx` (`Presentation`), for the actual slide/shape text
+#     extraction.
+#   - `test_read_powerpoint.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category), passing
+#     its `file_path` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

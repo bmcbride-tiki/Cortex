@@ -1,3 +1,15 @@
+# =============================================================================
+# test_generate_copilot_image.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that generate_copilot_image.py rejects a missing `prompt` or
+#   `output_dir` without touching the browser, and that a mocked Copilot
+#   image call returns the generated file's path.
+#
+# WHAT IT INTERACTS WITH
+#   - `generate_copilot_image.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 from unittest.mock import patch

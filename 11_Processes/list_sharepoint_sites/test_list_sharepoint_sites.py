@@ -1,3 +1,15 @@
+# =============================================================================
+# test_list_sharepoint_sites.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that list_sharepoint_sites.py's `run()` returns a successful
+#   result with at least one site, using the mock data m365_graph_bridge
+#   already returns (no real Microsoft account needed).
+#
+# WHAT IT INTERACTS WITH
+#   - `list_sharepoint_sites.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

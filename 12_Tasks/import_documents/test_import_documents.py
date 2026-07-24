@@ -1,3 +1,15 @@
+# =============================================================================
+# test_import_documents.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks import_documents.py's text-parsing helpers in isolation
+#   (label extraction, trade-list splitting, filename-fallback metadata) --
+#   does not touch the filesystem/database side of a real `run()`.
+#
+# WHAT IT INTERACTS WITH
+#   - `import_documents.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

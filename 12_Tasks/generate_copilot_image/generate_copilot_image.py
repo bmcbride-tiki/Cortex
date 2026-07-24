@@ -1,3 +1,19 @@
+# =============================================================================
+# generate_copilot_image.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: asks M365 Copilot's Designer plugin to generate an image from a
+#   prompt and saves it to a local folder.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/copilot_bridge/copilot_bridge.py`'s `generate_image()`,
+#     called directly in-process (no subprocess) -- a real Playwright
+#     browser-automation call against the signed-in Edge session, not a mock.
+#   - `test_generate_copilot_image.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its
+#     `prompt`/`output_dir` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

@@ -1,3 +1,17 @@
+# =============================================================================
+# test_fill_docx_template.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that fill_docx_template.py's `run()` replaces a `{{ content }}`
+#   token in a real generated .docx template, and fails cleanly on a
+#   missing template file.
+#
+# WHAT IT INTERACTS WITH
+#   - `fill_docx_template.py`, the file under test.
+#   - `python-docx`, used here to generate a throwaway template and read
+#     back the filled result.
+# =============================================================================
+
 import sys
 import tempfile
 from pathlib import Path

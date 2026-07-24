@@ -1,4 +1,29 @@
-# 12_Tasks/abc_uploader/abc_uploader.py
+# =============================================================================
+# abc_uploader.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   The "Agentic Workflow Uploader": manages a library of JSON workflow
+#   template files (stored as text directly in the database, not as
+#   separate files on disk) and can push one of them into an external
+#   tool called the "Agenty Builder Console" via real browser automation
+#   (Playwright), the same general approach as the Gemini/Copilot adapters.
+#   Supports both a CLI (`list`/`add`/`remove`/`set-url`/`upload`) and a
+#   single-JSON-payload mode for CoreRouter dispatch.
+#
+# WHAT IT INTERACTS WITH
+#   - `00_System/database.py`'s `get_db_connection()`, reading/writing the
+#     `abc_templates` (template registry) and `abc_uploader_settings`
+#     (configured service URL) tables.
+#   - The Agenty Builder Console web page (URL configurable via
+#     `set_url`/`abc_uploader_settings`), driven with Playwright
+#     (persistent Edge/Chromium profile stored outside the watched code
+#     tree at `abc_uploader_browser_profile/`, same rationale as
+#     `copilot_bridge`'s browser profile).
+#   - `server.py`/`core_router.py`, which call this file's functions
+#     directly (list/add/remove/set-url, DB-only) or dispatch `upload` as
+#     an isolated subprocess (real browser automation).
+# =============================================================================
+
 import sys
 sys.dont_write_bytecode = True
 

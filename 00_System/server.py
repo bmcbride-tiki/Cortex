@@ -78,6 +78,7 @@ import os
 import json
 import time
 import sqlite3
+from collections import deque
 from datetime import datetime
 from pathlib import Path
 from contextlib import asynccontextmanager
@@ -100,6 +101,7 @@ from core_router import CoreRouter  # type: ignore
 from database import get_db_connection, initialize_database  # type: ignore
 from workflow_engine import WorkflowEngine  # type: ignore
 from model_classifications import CLASSIFICATION_LEVELS, CLASSIFICATION_LABELS, MODEL_CLASSIFICATIONS  # type: ignore
+from data_processing.user_identity import CapabilityFlag, UserIdentityManager  # type: ignore
 
 # 🛰️ UNIFIED LIFESPAN CONTROLLER
 # FastAPI calls this once when the server first starts up (everything before
@@ -332,6 +334,131 @@ TOOL_MODELS = {
 # direction. Default-on set: m365 and copilot; everything else defaults off.
 MODEL_TOGGLE_ORDER = ["m365", "copilot", "gemini", "notebooklm", "claude", "chatgpt"]
 MODEL_TOGGLE_DEFAULTS = {"m365": True, "copilot": True}
+
+# model key -> the license/SKU capability a node needs (00_System/data_processing/user_identity.py).
+# Only models with a real enterprise SKU behind them are gated -- gemini/claude/chatgpt run
+# through their own signed-in bridge sessions, not an M365/Google entitlement, so they stay ungated.
+MODEL_CAPABILITY_MAP = {
+    "m365": CapabilityFlag.M365_BASE.value,
+    "copilot": CapabilityFlag.COPILOT_BASIC.value,
+}
+
+# --- Per-node iconography for the Workflow Builder palette/canvas ------------------------
+# Real per-product logos (verified against the live SVGL API, https://api.svgl.app) rather
+# than one blanket "Microsoft"/"Google" mark for every node -- each tool_id gets the actual
+# app it talks to. Font Awesome (already vendored, templates/static/vendor/fontawesome,
+# FA6 Free 6.7.2) fills in everything with no real brand logo (Power BI, NotebookLM have no
+# SVGL entry; generic containers/logic/import-export get a semantic glyph). Icon names below
+# were checked against the actual installed all.min.css, not guessed.
+_SVGL = "https://svgl.app/library/{}.svg".format
+MICROSOFT_OUTLOOK = _SVGL("microsoft-outlook")
+MICROSOFT_TEAMS = _SVGL("microsoft-teams")
+MICROSOFT_SHAREPOINT = _SVGL("microsoft-sharepoint")
+MICROSOFT_ONENOTE = _SVGL("microsoft-onenote")
+MICROSOFT_ONEDRIVE = _SVGL("microsoft-onedrive")
+MICROSOFT_EXCEL = _SVGL("microsoft-excel")
+MICROSOFT_POWERPOINT = _SVGL("microsoft-powerpoint")
+MICROSOFT_WORD = _SVGL("microsoft-word")
+MICROSOFT_COPILOT = _SVGL("microsoft-copilot")
+MICROSOFT_GENERIC = _SVGL("microsoft")
+GEMINI_ICON = _SVGL("gemini")
+CLAUDE_ICON = _SVGL("claude-ai-icon")
+OPENAI_ICON = _SVGL("openai")
+
+# tool_id -> SVGL brand logo URL.
+TOOL_SVGL_MAP: Dict[str, str] = {
+    "send_outlook_mail": MICROSOFT_OUTLOOK,
+    "search_outlook_email": MICROSOFT_OUTLOOK,
+    "list_outlook_calendar_events": MICROSOFT_OUTLOOK,
+    "create_outlook_calendar_event": MICROSOFT_OUTLOOK,
+    "list_m365_teams": MICROSOFT_TEAMS,
+    "list_teams_channels": MICROSOFT_TEAMS,
+    "post_teams_channel_message": MICROSOFT_TEAMS,
+    "list_teams_chat_messages": MICROSOFT_TEAMS,
+    "send_teams_chat_message": MICROSOFT_TEAMS,
+    "list_sharepoint_sites": MICROSOFT_SHAREPOINT,
+    "get_sharepoint_site": MICROSOFT_SHAREPOINT,
+    "list_sharepoint_lists": MICROSOFT_SHAREPOINT,
+    "list_sharepoint_list_items": MICROSOFT_SHAREPOINT,
+    "create_sharepoint_list_item": MICROSOFT_SHAREPOINT,
+    "list_onenote_notebooks": MICROSOFT_ONENOTE,
+    "list_onenote_pages": MICROSOFT_ONENOTE,
+    "get_onenote_page_content": MICROSOFT_ONENOTE,
+    "create_onenote_page": MICROSOFT_ONENOTE,
+    "list_m365_files": MICROSOFT_ONEDRIVE,
+    "download_m365_file": MICROSOFT_ONEDRIVE,
+    "upload_m365_file": MICROSOFT_ONEDRIVE,
+    "list_recent_onedrive_files": MICROSOFT_ONEDRIVE,
+    "create_onedrive_sharing_link": MICROSOFT_ONEDRIVE,
+    "get_excel_range": MICROSOFT_EXCEL,
+    "set_excel_range": MICROSOFT_EXCEL,
+    "read_powerpoint": MICROSOFT_POWERPOINT,
+    "write_powerpoint": MICROSOFT_POWERPOINT,
+    "import_from_word": MICROSOFT_WORD,
+    "export_to_word": MICROSOFT_WORD,
+    "fill_docx_template": MICROSOFT_WORD,
+    "populate_word_template_from_json": MICROSOFT_WORD,
+    "ask_copilot": MICROSOFT_COPILOT,
+    "ask_copilot_agent": MICROSOFT_COPILOT,
+    "list_copilot_agents": MICROSOFT_COPILOT,
+    "generate_copilot_image": MICROSOFT_COPILOT,
+    "format_text_with_copilot": MICROSOFT_COPILOT,
+    "generate_pptx_from_word_with_copilot": MICROSOFT_COPILOT,
+    "copilot_bridge": MICROSOFT_COPILOT,
+    "m365_graph_bridge": MICROSOFT_GENERIC,
+    "gemini_bridge": GEMINI_ICON,
+    "function_gemini_ask": GEMINI_ICON,
+    "function_google_search": GEMINI_ICON,
+    "function_image_generate": GEMINI_ICON,
+    "claude_bridge": CLAUDE_ICON,
+    "function_claude_ask": CLAUDE_ICON,
+    "chatgpt_bridge": OPENAI_ICON,
+    "function_chatgpt_ask": OPENAI_ICON,
+}
+
+# tool_id -> Font Awesome 6 Free solid glyph (no "fa-solid" prefix), for every node with no
+# real brand logo. Grouped by what the icon is standing in for.
+TOOL_FA_ICON_MAP: Dict[str, str] = {
+    # Control flow / structure
+    "function_logic_gate": "fa-signs-post",       # if/else branch -- literal signpost
+    "builtin_review_gate": "fa-repeat",           # loops back to an earlier node on fail
+    "human_review_checkpoint": "fa-user-check",
+    "generate_vault_map": "fa-folder-tree",
+    # Output / data-shape (the "{}" family)
+    "export_to_json": "fa-file-code",
+    "format_json": "fa-file-code",
+    "import_from_json": "fa-file-code",
+    "export_to_markdown": "fa-markdown",
+    "export_to_pdf": "fa-file-pdf",
+    "import_from_pdf": "fa-file-pdf",
+    # Conversion (one file format into another)
+    "curriculum_guide_to_tos": "fa-right-left",
+    "word_to_excel_exam": "fa-right-left",
+    "abc_uploader": "fa-right-left",
+    # Generic import (no single obvious file type/brand)
+    "import_documents": "fa-file-import",
+    "import_transcripts": "fa-file-import",
+    "import_exam_pass_fail": "fa-file-import",
+    "import_marks_correlation": "fa-file-import",
+    # Web scraping
+    "webscraper": "fa-spider",
+    "web_scrape": "fa-spider",
+    # Power BI / NotebookLM -- no SVGL logo exists for either
+    "list_powerbi_reports": "fa-chart-column",
+    "refresh_powerbi_dataset": "fa-chart-column",
+    "notebooklm_bridge": "fa-book-open",
+    "function_notebooklm_create": "fa-book-open",
+    "function_notebooklm_upload_sources": "fa-book-open",
+    "function_notebooklm_prompt_loop": "fa-book-open",
+    # Text utilities
+    "function_concatenate": "fa-link",
+    "split_text": "fa-arrows-split-up-and-left",
+    # Skills (generic "AI capability", distinct from raw code/function blocks)
+    "skill_structured_data_normalization": "fa-wand-magic-sparkles",
+    "skill_dynamic_predictive_modeler": "fa-wand-magic-sparkles",
+    "skill_fts5_linguistic_search_vector": "fa-wand-magic-sparkles",
+}
+DEFAULT_FA_ICON = "fa-code"  # generic building block with no more specific icon -- the "</>" glyph
 
 # Cycled through when a new Process tag is created without an explicit color
 PROCESS_TAG_COLOR_PALETTE = [
@@ -755,8 +882,33 @@ async def workflow_builder_node_registry() -> JSONResponse:
         entries.append({**function, "kind": "function", "category": None, "md_path": None})
 
     entries.sort(key=lambda e: e["title"].lower())
+
+    # License/SKU gating + SVGL brand icon, driven by the entitlement layer in
+    # 00_System/data_processing/ -- see user_identity.py and svgl_icon_manager.py.
+    user_entitlements = UserIdentityManager.resolve_current_user()
+    for entry in entries:
+        model = entry.get("model")
+        required_capability = MODEL_CAPABILITY_MAP.get(model)
+        entry["required_capability"] = required_capability
+        entry["licensed"] = user_entitlements.has_capability(CapabilityFlag(required_capability)) if required_capability else True
+
+        tool_id = entry.get("tool_id")
+        svgl_url = TOOL_SVGL_MAP.get(tool_id)
+        if svgl_url:
+            entry["icon_source"] = "svgl"
+            entry["svgl_icon_url"] = svgl_url
+        else:
+            entry["icon_source"] = "fa"
+            entry["svgl_icon_url"] = None
+            entry["fa_icon"] = TOOL_FA_ICON_MAP.get(tool_id, DEFAULT_FA_ICON)
+
     return JSONResponse(content={
         "nodes": entries,
+        "user_entitlements": {
+            "user_principal_name": user_entitlements.user_principal_name,
+            "display_name": user_entitlements.display_name,
+            "capabilities": [c.value for c in user_entitlements.capabilities],
+        },
         "model_classifications": {
             "levels": CLASSIFICATION_LEVELS,
             "labels": CLASSIFICATION_LABELS,
@@ -803,6 +955,113 @@ async def get_workflow_definition(workflow_id: int) -> JSONResponse:
         return JSONResponse(content=result)
     finally:
         conn.close()
+
+
+@app.get("/api/workflow-builder/workflows/{workflow_id}/map")
+async def get_workflow_map(workflow_id: int) -> JSONResponse:
+    """Builds a detailed, read-only structural map of a saved workflow for the
+    Workflow Map page: nodes grouped into stage columns by graph depth, each carrying
+    its real icon (same SVGL/Font Awesome lookup as the Workflow Builder palette) and
+    full config for the detail panel. Reuses WorkflowEngine's own graph parser (handles
+    container flattening and review-gate loop-back cycles) rather than re-implementing
+    Drawflow export parsing here. Execution status isn't included -- the page overlays
+    that separately via the existing /api/workflow-builder/run (dry_run) endpoint."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name, description, graph_json FROM workflow_definitions WHERE id = ?;", (workflow_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Workflow not found.")
+        wf_name = row["name"]
+        wf_description = row["description"]
+        try:
+            graph_json = json.loads(row["graph_json"])
+        except (TypeError, ValueError):
+            graph_json = {}
+    finally:
+        conn.close()
+
+    # Raw per-node data (description/model/icon fields) straight from the Drawflow
+    # export -- WorkflowEngine._parse_graph below only keeps what execution needs.
+    raw_node_data: Dict[str, Dict[str, Any]] = {}
+    for module_data in (graph_json.get("drawflow") or {}).values():
+        for node_id, raw in ((module_data or {}).get("data") or {}).items():
+            raw_node_data[str(node_id)] = raw.get("data") or {}
+
+    engine = WorkflowEngine(dry_run=True)
+    nodes, forward_edges, backward_edges = engine._parse_graph(graph_json)
+
+    if not nodes:
+        return JSONResponse(content={"workflow_id": workflow_id, "name": wf_name, "description": wf_description, "stages": []})
+
+    entry_ids = engine._find_entry_nodes(nodes, backward_edges) or [next(iter(nodes))]
+
+    # BFS depth = stage number. Visited-set guards against infinite loops from a
+    # review-gate's backward edge (cycles are valid in this graph, see workflow_engine.py).
+    depth: Dict[str, int] = dict.fromkeys(entry_ids, 0)
+    visited = set(entry_ids)
+    queue = deque(entry_ids)
+    while queue:
+        cur = queue.popleft()
+        for nxt in forward_edges.get(cur, []):
+            if nxt not in visited:
+                visited.add(nxt)
+                depth[nxt] = depth[cur] + 1
+                queue.append(nxt)
+    for node_id in nodes:
+        if node_id not in depth:
+            depth[node_id] = (max(depth.values()) if depth else -1) + 1
+
+    user_entitlements = UserIdentityManager.resolve_current_user()
+
+    stage_map: Dict[int, List[Dict[str, Any]]] = {}
+    for node_id, node in nodes.items():
+        raw = raw_node_data.get(node_id, {})
+        tool_id = node.get("tool_id")
+        model = raw.get("model")
+        required_capability = MODEL_CAPABILITY_MAP.get(model)
+        licensed = user_entitlements.has_capability(CapabilityFlag(required_capability)) if required_capability else True
+
+        icon_source = raw.get("icon_source")
+        svgl_icon_url = raw.get("svgl_icon_url")
+        fa_icon = raw.get("fa_icon")
+        if not icon_source:
+            svgl_icon_url = TOOL_SVGL_MAP.get(tool_id)
+            if svgl_icon_url:
+                icon_source = "svgl"
+            else:
+                icon_source = "fa"
+                fa_icon = TOOL_FA_ICON_MAP.get(tool_id, DEFAULT_FA_ICON)
+
+        stage_map.setdefault(depth[node_id], []).append({
+            "node_id": node_id,
+            "title": node.get("title"),
+            "description": raw.get("description") or "",
+            "kind": node.get("kind"),
+            "tool_id": tool_id,
+            "category": node.get("category"),
+            "model": model,
+            "params": node.get("params") or {},
+            "required_capability": required_capability,
+            "licensed": licensed,
+            "icon_source": icon_source,
+            "svgl_icon_url": svgl_icon_url,
+            "fa_icon": fa_icon,
+            "is_human_checkpoint": tool_id == "human_review_checkpoint",
+        })
+
+    stages = [
+        {"stage_number": d + 1, "stage_id": f"stage_{d + 1}", "title": f"Stage {d + 1}", "nodes": stage_map[d]}
+        for d in sorted(stage_map.keys())
+    ]
+
+    return JSONResponse(content={
+        "workflow_id": workflow_id,
+        "name": wf_name,
+        "description": wf_description,
+        "stages": stages,
+    })
 
 
 @app.post("/api/workflow-builder/workflows")

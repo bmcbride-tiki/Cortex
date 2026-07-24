@@ -1,3 +1,18 @@
+# =============================================================================
+# list_teams_chat_messages.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: lists messages in a 1:1 or group Teams chat.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `list_chat_messages()`, called directly in-process (no subprocess).
+#     Mock-mode until a real Azure AD app registration exists.
+#   - `test_list_teams_chat_messages.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its `chat_id` as a
+#     JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

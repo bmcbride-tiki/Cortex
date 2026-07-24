@@ -1,3 +1,15 @@
+# =============================================================================
+# test_split_text.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that split_text.py's `run()` splits on a given/default
+#   delimiter and selects the right segment, and fails cleanly on an
+#   out-of-range index.
+#
+# WHAT IT INTERACTS WITH
+#   - `split_text.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

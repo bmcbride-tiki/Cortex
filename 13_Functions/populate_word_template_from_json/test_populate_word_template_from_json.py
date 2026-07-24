@@ -1,3 +1,17 @@
+# =============================================================================
+# test_populate_word_template_from_json.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that populate_word_template_from_json.py's `run()` fills
+#   multiple distinct named placeholders in a real generated `.docx`
+#   template, and fails cleanly on a missing template or empty data.
+#
+# WHAT IT INTERACTS WITH
+#   - `populate_word_template_from_json.py`, the file under test.
+#   - `python-docx`, used here to generate a throwaway template and read
+#     back the filled result.
+# =============================================================================
+
 import sys
 import tempfile
 from pathlib import Path

@@ -1,3 +1,15 @@
+# =============================================================================
+# test_export_to_json.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that export_to_json.py's `run()` re-formats already-valid JSON
+#   and wraps non-JSON text in `{"content": ...}`, writing real files to a
+#   temporary folder.
+#
+# WHAT IT INTERACTS WITH
+#   - `export_to_json.py`, the file under test.
+# =============================================================================
+
 import sys
 import json
 import tempfile

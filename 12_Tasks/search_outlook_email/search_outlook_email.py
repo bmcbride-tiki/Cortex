@@ -1,3 +1,19 @@
+# =============================================================================
+# search_outlook_email.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: searches Outlook for emails by keyword and/or sender -- unlike
+#   a plain folder listing, this filters.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `search_messages()`, called directly in-process (no subprocess).
+#     Mock-mode until a real Azure AD app registration exists.
+#   - `test_search_outlook_email.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its
+#     `query`/`sender`/`folder`/`top` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

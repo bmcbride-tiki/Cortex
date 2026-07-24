@@ -1,3 +1,15 @@
+# =============================================================================
+# test_export_to_word.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that export_to_word.py's `run()` writes a real `.docx` file
+#   with one paragraph per input line.
+#
+# WHAT IT INTERACTS WITH
+#   - `export_to_word.py`, the file under test.
+#   - `python-docx`, used here to read back and verify the generated file.
+# =============================================================================
+
 import sys
 import tempfile
 from pathlib import Path

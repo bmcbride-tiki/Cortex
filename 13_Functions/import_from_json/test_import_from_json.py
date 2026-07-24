@@ -1,3 +1,14 @@
+# =============================================================================
+# test_import_from_json.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that import_from_json.py's `run()` reads and pretty-prints a
+#   real `.json` file, and fails cleanly on a missing file.
+#
+# WHAT IT INTERACTS WITH
+#   - `import_from_json.py`, the file under test.
+# =============================================================================
+
 import sys
 import tempfile
 from pathlib import Path

@@ -1,3 +1,23 @@
+# =============================================================================
+# import_transcripts.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A zero-input Task: picks up every pending .txt/.docx transcript file
+#   sitting in `01_inbox/transcripts/`, parses metadata (date/type/trade/
+#   title) from its filename (`YYYY-MM-DD_Type_Trade_Title.ext`
+#   convention), archives the original into `02_vault/transcripts/`, and
+#   indexes its full text for search.
+#
+# WHAT IT INTERACTS WITH
+#   - `01_inbox/transcripts/`, read then cleared (originals deleted once
+#     safely copied into the vault).
+#   - `02_vault/transcripts/`, where archived originals end up.
+#   - `00_System/database.py`'s `get_db_connection()`, writing to
+#     `transcripts_metadata` and the `global_search_index` FTS5 table.
+#   - `python-docx`, for extracting text from `.docx` transcripts
+#     (`.txt` files are read directly).
+# =============================================================================
+
 import sys
 import shutil
 from pathlib import Path

@@ -1,3 +1,19 @@
+# =============================================================================
+# list_powerbi_reports.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A zero-input, one-click Process: lists reports (and their dataset IDs)
+#   in the default Power BI workspace.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `list_powerbi_reports()`, called directly in-process (no
+#     subprocess). Mock-mode until a real Azure AD app registration exists.
+#   - `test_list_powerbi_reports.py`, this file's paired test.
+#   - `core_router.py`, which discovers and launches this script the same
+#     way as every other Process.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

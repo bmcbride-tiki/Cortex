@@ -1,3 +1,14 @@
+# =============================================================================
+# test_send_teams_chat_message.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that send_teams_chat_message.py's `run()` returns a successful,
+#   "sent (mock)" result, using m365_graph_bridge's existing mock data.
+#
+# WHAT IT INTERACTS WITH
+#   - `send_teams_chat_message.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

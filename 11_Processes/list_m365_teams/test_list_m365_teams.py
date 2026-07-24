@@ -1,3 +1,15 @@
+# =============================================================================
+# test_list_m365_teams.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that list_m365_teams.py's `run()` returns a successful result
+#   with at least one team, using the mock data m365_graph_bridge already
+#   returns (no real Microsoft account needed).
+#
+# WHAT IT INTERACTS WITH
+#   - `list_m365_teams.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

@@ -1,3 +1,18 @@
+# =============================================================================
+# get_excel_range.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: reads a cell range from an Excel workbook via Graph's Workbook API.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `get_excel_range()`, called directly in-process (no subprocess).
+#     Mock-mode until a real Azure AD app registration exists.
+#   - `test_get_excel_range.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its
+#     `file_path`/`worksheet`/`range_address` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

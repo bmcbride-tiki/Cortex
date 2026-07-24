@@ -1,3 +1,20 @@
+# =============================================================================
+# refresh_powerbi_dataset.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: triggers a Power BI dataset refresh -- the real way to run a
+#   Power Query transformation programmatically (Power Query itself has no
+#   standalone API).
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `refresh_powerbi_dataset()`, called directly in-process (no
+#     subprocess). Mock-mode until a real Azure AD app registration exists.
+#   - `test_refresh_powerbi_dataset.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its `dataset_id`
+#     as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

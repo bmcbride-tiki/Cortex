@@ -1,3 +1,15 @@
+# =============================================================================
+# test_read_powerpoint.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that read_powerpoint.py's `run()` extracts real slide title/body
+#   text from a real generated `.pptx`, and fails cleanly on a missing file.
+#
+# WHAT IT INTERACTS WITH
+#   - `read_powerpoint.py`, the file under test.
+#   - `python-pptx`, used here to generate a throwaway source `.pptx`.
+# =============================================================================
+
 import sys
 import tempfile
 from pathlib import Path

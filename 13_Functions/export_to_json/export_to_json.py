@@ -1,3 +1,20 @@
+# =============================================================================
+# export_to_json.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: writes text to a new .json file. If the text is already
+#   valid JSON it's re-saved neatly formatted; otherwise it's wrapped in
+#   `{"content": ...}` so the output file is always valid JSON either way.
+#
+# WHAT IT INTERACTS WITH
+#   - No adapter/database dependency -- pure file I/O against whatever
+#     `output_dir` it's given.
+#   - `test_export_to_json.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category), passing
+#     its `text`/`output_dir`/`filename` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 import time

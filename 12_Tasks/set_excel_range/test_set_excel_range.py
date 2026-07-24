@@ -1,3 +1,15 @@
+# =============================================================================
+# test_set_excel_range.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that set_excel_range.py's `run()` returns a successful result
+#   reporting the correct number of rows written, using
+#   m365_graph_bridge's existing mock data.
+#
+# WHAT IT INTERACTS WITH
+#   - `set_excel_range.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

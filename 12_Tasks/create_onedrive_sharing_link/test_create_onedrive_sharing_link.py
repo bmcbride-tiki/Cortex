@@ -1,3 +1,15 @@
+# =============================================================================
+# test_create_onedrive_sharing_link.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that create_onedrive_sharing_link.py's `run()` returns a
+#   successful result with a real-looking share URL, using
+#   m365_graph_bridge's existing mock data.
+#
+# WHAT IT INTERACTS WITH
+#   - `create_onedrive_sharing_link.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

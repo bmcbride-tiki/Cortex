@@ -1,3 +1,18 @@
+# =============================================================================
+# import_from_pdf.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: reads a local .pdf file's pages and returns the extracted
+#   text.
+#
+# WHAT IT INTERACTS WITH
+#   - `pypdf` (`PdfReader`), for the actual page-text extraction.
+#   - `test_import_from_pdf.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category), passing
+#     its `file_path` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

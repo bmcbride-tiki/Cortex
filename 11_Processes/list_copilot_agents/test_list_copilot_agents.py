@@ -1,3 +1,16 @@
+# =============================================================================
+# test_list_copilot_agents.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that list_copilot_agents.py behaves correctly both when the
+#   Copilot browser automation succeeds and when it fails -- without
+#   actually launching a real browser (the underlying `list_agents` call
+#   is replaced with a fake/"mocked" version for the duration of each test).
+#
+# WHAT IT INTERACTS WITH
+#   - `list_copilot_agents.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 from unittest.mock import patch

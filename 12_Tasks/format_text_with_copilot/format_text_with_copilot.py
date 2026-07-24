@@ -1,3 +1,19 @@
+# =============================================================================
+# format_text_with_copilot.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: asks M365 Copilot to reformat/restyle a piece of text according
+#   to free-text style notes (e.g. "format as a formal briefing note").
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/copilot_bridge/copilot_bridge.py`'s `ask_copilot()`,
+#     called directly in-process (no subprocess) -- a real Playwright
+#     browser-automation call against the signed-in Edge session, not a mock.
+#   - `test_format_text_with_copilot.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its
+#     `text`/`style_notes` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

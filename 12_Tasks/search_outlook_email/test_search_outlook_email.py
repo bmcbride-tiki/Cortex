@@ -1,3 +1,14 @@
+# =============================================================================
+# test_search_outlook_email.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that search_outlook_email.py's `run()` correctly filters mock
+#   messages down to the ones matching a given sender.
+#
+# WHAT IT INTERACTS WITH
+#   - `search_outlook_email.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

@@ -1,3 +1,26 @@
+# =============================================================================
+# import_marks_correlation.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A zero-input Task: picks up pending "Marks Correlation" .xlsx reports
+#   (their "Section Scores Details" sheet) from `01_inbox/reports/`,
+#   derives training classes / exam attempts / per-section scores from
+#   the raw rows (including detecting re-written exam attempts by
+#   chronologically ranking each student's attempts per class), and loads
+#   all three into their matching tables. Archives each processed file
+#   into `01_inbox/processed/`.
+#
+# WHAT IT INTERACTS WITH
+#   - `01_inbox/reports/` (or a caller-supplied override folder via
+#     `reports_dir_override`), read for pending `.xlsx` files;
+#     `01_inbox/processed/`, where they're archived.
+#   - `00_System/database.py`'s `get_db_connection()`, writing to
+#     `training_classes`, `apprentice_exam_attempts`, and
+#     `apprentice_section_scores`.
+#   - `pandas`/`numpy`, for reading, cleaning, and rank-computing over the
+#     Excel sheet.
+# =============================================================================
+
 import sys
 import shutil
 import pandas as pd

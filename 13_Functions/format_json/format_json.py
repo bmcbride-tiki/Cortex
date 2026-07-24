@@ -1,3 +1,18 @@
+# =============================================================================
+# format_json.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: parses text as JSON and re-serializes it pretty-printed;
+#   fails clearly if the text isn't valid JSON.
+#
+# WHAT IT INTERACTS WITH
+#   - No adapter/database/file dependency -- pure in-memory text transform.
+#   - `test_format_json.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category), passing
+#     its `text` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from typing import Dict, Any

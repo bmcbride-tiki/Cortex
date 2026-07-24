@@ -6,6 +6,26 @@ tags: ['automation', 'parser', 'docx', 'xlsx']
 schema_version: '1.0.0'
 ---
 Self-contained, UI-free engine for converting Curriculum Guide Word documents into TOS Excel workbooks.
+
+WHAT THIS FILE DOES
+    Takes an Alberta-style Curriculum Guide .docx (periods -> sections ->
+    topics, with hours/percentage weights) and writes those same values
+    into a copy of the TOS Excel template, matching each Curriculum Guide
+    section to its corresponding "Section N" block on the right sheet by
+    name. Adds a summary sheet to the output workbook for review. Entirely
+    self-contained -- no adapter/API dependency, just python-docx + openpyxl.
+
+WHAT IT INTERACTS WITH
+    - The input Curriculum Guide .docx file, supplied as a CLI argument or
+      prompted for interactively.
+    - `TOS_Template_May_2026.xlsx`, this folder's locked template asset
+      (copied, never modified in place).
+    - `99_Outbox/curriculum_guide_to_tos/`, the default output folder for
+      the generated workbook (a `<user> - Curriculum Guide to TOS -
+      <date>.xlsx` file, collision-suffixed if one already exists).
+    - `core_router.py`/`server.py`'s upload endpoint
+      (`/api/uploads/curriculum-guide-to-tos`), which saves an uploaded
+      file into this folder's `incoming/` and dispatches this script.
 """
 
 from __future__ import annotations

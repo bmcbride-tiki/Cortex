@@ -1,3 +1,18 @@
+# =============================================================================
+# post_teams_channel_message.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: posts a message to a Teams channel.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `post_channel_message()`, called directly in-process (no
+#     subprocess). Mock-mode until a real Azure AD app registration exists.
+#   - `test_post_teams_channel_message.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its
+#     `team_id`/`channel_id`/`message` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

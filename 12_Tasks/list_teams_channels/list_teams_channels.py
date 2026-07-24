@@ -1,3 +1,18 @@
+# =============================================================================
+# list_teams_channels.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: lists a Team's channels.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `list_channels()`, called directly in-process (no subprocess).
+#     Mock-mode until a real Azure AD app registration exists.
+#   - `test_list_teams_channels.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its `team_id` as a
+#     JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

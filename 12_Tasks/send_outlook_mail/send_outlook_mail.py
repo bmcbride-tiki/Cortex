@@ -1,3 +1,18 @@
+# =============================================================================
+# send_outlook_mail.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: sends an email via Outlook.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s `send_mail()`,
+#     called directly in-process (no subprocess). Mock-mode until a real
+#     Azure AD app registration exists.
+#   - `test_send_outlook_mail.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its
+#     `to`/`subject`/`body` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

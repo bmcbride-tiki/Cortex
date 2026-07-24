@@ -1,3 +1,18 @@
+# =============================================================================
+# import_from_word.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: reads a local .docx file's paragraphs and returns the
+#   extracted text.
+#
+# WHAT IT INTERACTS WITH
+#   - `python-docx` (`Document`), for the actual paragraph-text extraction.
+#   - `test_import_from_word.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category), passing
+#     its `file_path` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

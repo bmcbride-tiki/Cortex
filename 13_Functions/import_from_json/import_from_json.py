@@ -1,3 +1,18 @@
+# =============================================================================
+# import_from_json.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: reads a local .json file and returns its pretty-printed
+#   contents as text.
+#
+# WHAT IT INTERACTS WITH
+#   - The given local `.json` file, read directly off disk.
+#   - `test_import_from_json.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category), passing
+#     its `file_path` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

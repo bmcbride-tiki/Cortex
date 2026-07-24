@@ -1,3 +1,15 @@
+# =============================================================================
+# test_list_onenote_pages.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that list_onenote_pages.py's `run()` returns a successful
+#   result with at least one page, using m365_graph_bridge's existing
+#   mock data.
+#
+# WHAT IT INTERACTS WITH
+#   - `list_onenote_pages.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

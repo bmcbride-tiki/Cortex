@@ -1,3 +1,19 @@
+# =============================================================================
+# download_m365_file.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: downloads a file from OneDrive/SharePoint into a local folder,
+#   so a downstream tool (Import from Word, Read PowerPoint, etc.) can read it.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `download_file()`, called directly in-process (no subprocess).
+#     Mock-mode until a real Azure AD app registration exists.
+#   - `test_download_m365_file.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its
+#     `file_path`/`local_output_dir` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

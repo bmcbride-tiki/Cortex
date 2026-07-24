@@ -1,3 +1,15 @@
+# =============================================================================
+# test_format_text_with_copilot.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that format_text_with_copilot.py rejects an empty `text`
+#   without touching the browser, and that a mocked Copilot call builds a
+#   prompt containing both the style notes and the input text.
+#
+# WHAT IT INTERACTS WITH
+#   - `format_text_with_copilot.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 from unittest.mock import patch

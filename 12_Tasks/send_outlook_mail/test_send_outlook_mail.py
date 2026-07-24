@@ -1,3 +1,15 @@
+# =============================================================================
+# test_send_outlook_mail.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that send_outlook_mail.py's `run()` returns a successful result
+#   with a real-looking message ID, using m365_graph_bridge's existing
+#   mock data.
+#
+# WHAT IT INTERACTS WITH
+#   - `send_outlook_mail.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

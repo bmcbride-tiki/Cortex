@@ -1,3 +1,18 @@
+# =============================================================================
+# get_sharepoint_site.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: gets one specific SharePoint Online site's details by path.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `get_sharepoint_site()`, called directly in-process (no subprocess).
+#     Mock-mode until a real Azure AD app registration exists.
+#   - `test_get_sharepoint_site.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its `site_path` as
+#     a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

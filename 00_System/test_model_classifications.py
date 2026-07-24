@@ -1,3 +1,25 @@
+# =============================================================================
+# test_model_classifications.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Automated checks confirming `model_classifications.py`'s "most
+#   restrictive AI model wins" logic actually behaves as documented -- that
+#   a single model reports its own classification level, that mixing models
+#   correctly reports the strictest one among them, and that an empty or
+#   unrecognized model list reports nothing rather than guessing.
+#
+# WHAT IT INTERACTS WITH
+#   - `model_classifications.py`'s `classification_ceiling()`, the single
+#     function under test here.
+#
+# KEY FUNCTIONALITY NOTES
+#   - No test framework (pytest, unittest) required -- every check is a
+#     plain function using Python's built-in `assert`, runnable either via
+#     `pytest test_model_classifications.py` or directly as
+#     `python test_model_classifications.py` (see the `__main__` block,
+#     which calls all three in order and prints a pass message).
+# =============================================================================
+
 import sys
 from pathlib import Path
 

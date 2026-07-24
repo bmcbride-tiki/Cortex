@@ -1,3 +1,15 @@
+# =============================================================================
+# test_get_sharepoint_site.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that get_sharepoint_site.py's `run()` returns a successful
+#   result with a real-looking site ID, using m365_graph_bridge's existing
+#   mock data.
+#
+# WHAT IT INTERACTS WITH
+#   - `get_sharepoint_site.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

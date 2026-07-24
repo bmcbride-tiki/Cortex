@@ -1,3 +1,15 @@
+# =============================================================================
+# test_create_onenote_page.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that create_onenote_page.py's `run()` returns a successful
+#   result with a real-looking page ID, using m365_graph_bridge's existing
+#   mock data.
+#
+# WHAT IT INTERACTS WITH
+#   - `create_onenote_page.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

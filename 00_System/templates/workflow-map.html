@@ -1,0 +1,232 @@
+<div class="flex flex-col gap-3 h-full animate-fade-in" id="wfm-root">
+    <div class="bg-surface border border-border rounded-xl p-3 flex items-center gap-2 flex-wrap shrink-0">
+        <select id="wfm-workflow-select" class="bg-canvas border border-border rounded px-2 py-1.5 text-body text-xs focus:outline-none focus:border-primary min-w-[14rem]">
+            <option value="">-- Select a saved workflow --</option>
+        </select>
+        <div class="w-px h-5 bg-border mx-1"></div>
+        <button onclick="window.wfmRunTrace()" id="wfm-trace-btn" class="px-3 py-1.5 bg-success/10 hover:bg-success text-success-400 hover:text-heading border border-success/20 text-[11px] font-semibold rounded transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+            <i class="fa-solid fa-play"></i> Preview Dry-Run Trace
+        </button>
+        <span id="wfm-workflow-desc" class="text-[11px] text-muted font-mono truncate"></span>
+    </div>
+
+    <div class="flex-1 flex gap-3 min-h-0">
+        <div id="wfm-stage-scroll" class="flex-1 bg-surface border border-border rounded-xl overflow-x-auto overflow-y-hidden p-4">
+            <div id="wfm-stage-row" class="flex items-stretch gap-6 h-full">
+                <div class="text-muted font-mono text-xs p-2">Select a saved workflow to view its map.</div>
+            </div>
+        </div>
+        <div class="w-80 shrink-0 bg-surface border border-border rounded-xl flex flex-col overflow-hidden">
+            <div class="px-4 py-3 border-b border-border shrink-0">
+                <h4 class="text-xs font-semibold text-heading uppercase tracking-wider">Node Details</h4>
+            </div>
+            <div id="wfm-detail-body" class="flex-1 overflow-y-auto custom-scrollbar p-4 text-xs space-y-3">
+                <div class="text-muted">Click a node on the map to inspect it.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-surface border border-border rounded-xl shrink-0 h-36 flex flex-col">
+        <div class="px-4 py-2 border-b border-border flex items-center justify-between shrink-0">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-muted">Execution Trace</span>
+            <span id="wfm-trace-status" class="text-[10px] font-mono text-muted">No trace run yet</span>
+        </div>
+        <div id="wfm-trace-log" class="flex-1 overflow-y-auto custom-scrollbar p-3 font-mono text-[11px] space-y-1 leading-relaxed">
+            <div class="text-muted">// Pick a workflow, then click "Preview Dry-Run Trace" to see per-node status.</div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .wfm-stage-col { display: flex; flex-direction: column; min-width: 220px; gap: 10px; }
+    .wfm-stage-header { font-size: 10px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted); padding-bottom: 6px; border-bottom: 1px solid var(--color-border); }
+    .wfm-node-card { display: flex; align-items: stretch; background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: 10px; cursor: pointer; transition: border-color .15s ease; overflow: hidden; }
+    .wfm-node-card:hover { border-color: color-mix(in oklch, var(--color-primary-400) 50%, var(--color-border)); }
+    .wfm-node-card.wfm-selected { border-color: var(--color-primary-400); box-shadow: 0 0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent); }
+    .wfm-node-card.wfm-greyed { opacity: 0.45; border-style: dashed; }
+    .wfm-node-card.wfm-status-success { border-color: var(--color-success-400); }
+    .wfm-node-card.wfm-status-failed { border-color: var(--color-danger-400); }
+    .wfm-icon-chip { flex-shrink: 0; width: 32px; display: flex; align-items: center; justify-content: center; }
+    .wfm-icon-chip img { width: 17px; height: 17px; object-fit: contain; }
+    .wfm-icon-chip.wfm-icon-chip-brand { background: #f4f4f5; }
+    .wfm-node-body { padding: 8px 10px; min-width: 0; flex: 1; }
+    .wfm-node-title { font-size: 11px; font-weight: 600; color: var(--color-heading); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wfm-node-kind { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: var(--color-muted); margin-top: 2px; font-family: var(--font-mono); }
+    .wfm-stage-arrow { display: flex; align-items: center; color: var(--color-muted); font-size: 18px; }
+</style>
+
+<script>
+(function() {
+    const KIND_ICON_VARS = { task: "--color-primary-400", process: "--color-info-400", adapter: "--color-danger-400", skill: "--color-warning-400", function: "--color-secondary-400" };
+
+    let currentStages = [];
+    let currentWorkflowId = null;
+    let selectedNodeId = null;
+    let traceByNodeId = {};
+
+    function escapeHtml(str) {
+        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+    function iconChipHtml(node) {
+        if (node.icon_source === "svgl" && node.svgl_icon_url) {
+            return `<div class="wfm-icon-chip wfm-icon-chip-brand"><img src="${escapeHtml(node.svgl_icon_url)}" onerror="this.parentElement.style.display='none'" alt=""></div>`;
+        }
+        const colorVar = KIND_ICON_VARS[node.kind] || "--color-muted";
+        const faIcon = node.fa_icon || "fa-code";
+        return `<div class="wfm-icon-chip" style="background: color-mix(in oklch, var(${colorVar}) 18%, transparent);">
+            <i class="fa-solid ${escapeHtml(faIcon)}" style="color: var(${colorVar}); font-size: 14px;"></i>
+        </div>`;
+    }
+
+    function findNode(nodeId) {
+        for (const stage of currentStages) {
+            const found = stage.nodes.find(n => n.node_id === nodeId);
+            if (found) return found;
+        }
+        return null;
+    }
+
+    function renderMap() {
+        const row = document.getElementById("wfm-stage-row");
+        if (!currentStages.length) {
+            row.innerHTML = `<div class="text-muted font-mono text-xs p-2">This workflow has no nodes yet.</div>`;
+            return;
+        }
+        const parts = [];
+        currentStages.forEach((stage, i) => {
+            const nodesHtml = stage.nodes.map(n => {
+                const trace = traceByNodeId[n.node_id];
+                const statusClass = trace ? `wfm-status-${trace.status}` : "";
+                const greyed = n.licensed === false ? "wfm-greyed" : "";
+                const selected = n.node_id === selectedNodeId ? "wfm-selected" : "";
+                return `
+                    <div class="wfm-node-card ${statusClass} ${greyed} ${selected}" data-node-id="${escapeHtml(n.node_id)}">
+                        ${iconChipHtml(n)}
+                        <div class="wfm-node-body">
+                            <div class="wfm-node-title">${escapeHtml(n.title || n.tool_id || n.node_id)}</div>
+                            <div class="wfm-node-kind">${escapeHtml(n.kind || "")}</div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+            parts.push(`<div class="wfm-stage-col"><div class="wfm-stage-header">${escapeHtml(stage.title)}</div>${nodesHtml}</div>`);
+            if (i < currentStages.length - 1) {
+                parts.push(`<div class="wfm-stage-arrow"><i class="fa-solid fa-chevron-right"></i></div>`);
+            }
+        });
+        row.innerHTML = parts.join("");
+        row.querySelectorAll(".wfm-node-card").forEach(el => {
+            el.addEventListener("click", () => selectNode(el.dataset.nodeId));
+        });
+    }
+
+    function selectNode(nodeId) {
+        selectedNodeId = nodeId;
+        renderMap();
+        const node = findNode(nodeId);
+        const body = document.getElementById("wfm-detail-body");
+        if (!node) { body.innerHTML = `<div class="text-muted">Node not found.</div>`; return; }
+
+        const trace = traceByNodeId[nodeId];
+        const paramsJson = JSON.stringify(node.params || {}, null, 2);
+        const licenseNote = node.licensed === false
+            ? `<div class="p-2 rounded bg-danger/10 border border-danger/20 text-danger-400 text-[11px]"><i class="fa-solid fa-lock"></i> Requires ${escapeHtml(node.required_capability || "")} license -- not licensed for the current user.</div>`
+            : "";
+        const checkpointNote = node.is_human_checkpoint
+            ? `<div class="p-2 rounded bg-warning/10 border border-warning/20 text-warning-400 text-[11px]">Human review checkpoint -- resolved from the <b>Review Queue</b> page, not here.</div>`
+            : "";
+        const traceBlock = trace
+            ? `<div class="space-y-1">
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Last Trace Result</label>
+                <div class="text-[11px] font-mono uppercase ${trace.status === "success" ? "text-success-400" : "text-danger-400"}">${escapeHtml(trace.status)}</div>
+                <pre class="bg-canvas border border-border rounded p-2 text-[10px] whitespace-pre-wrap break-words max-h-40 overflow-y-auto custom-scrollbar">${escapeHtml(trace.output || "")}</pre>
+              </div>`
+            : `<div class="text-muted text-[11px]">No trace yet -- click "Preview Dry-Run Trace" above.</div>`;
+
+        body.innerHTML = `
+            <div>
+                <div class="text-sm font-semibold text-heading">${escapeHtml(node.title || node.tool_id)}</div>
+                <div class="text-[10px] font-mono uppercase text-muted mt-0.5">${escapeHtml(node.kind || "")}${node.category ? " &middot; " + escapeHtml(node.category) : ""}</div>
+            </div>
+            ${node.description ? `<p class="text-muted leading-relaxed">${escapeHtml(node.description)}</p>` : ""}
+            ${licenseNote}
+            ${checkpointNote}
+            <div class="space-y-1">
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Configured Parameters</label>
+                <pre class="bg-canvas border border-border rounded p-2 text-[10px] whitespace-pre-wrap break-words max-h-32 overflow-y-auto custom-scrollbar">${escapeHtml(paramsJson)}</pre>
+            </div>
+            ${traceBlock}
+        `;
+    }
+
+    function resetTrace() {
+        traceByNodeId = {};
+        document.getElementById("wfm-trace-status").textContent = "No trace run yet";
+        document.getElementById("wfm-trace-log").innerHTML = `<div class="text-muted">// Pick a workflow, then click "Preview Dry-Run Trace" to see per-node status.</div>`;
+    }
+
+    window.wfmRunTrace = function() {
+        if (!currentWorkflowId) return;
+        const btn = document.getElementById("wfm-trace-btn");
+        const statusEl = document.getElementById("wfm-trace-status");
+        const log = document.getElementById("wfm-trace-log");
+        btn.disabled = true;
+        statusEl.textContent = "Running dry-run trace...";
+        log.innerHTML = `<div class="text-muted">// Running dry-run trace...</div>`;
+
+        fetch("/api/workflow-builder/run", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ workflow_id: currentWorkflowId, dry_run: true })
+        }).then(r => r.json()).then(result => {
+            btn.disabled = false;
+            traceByNodeId = {};
+            (result.steps || []).forEach(step => {
+                if (step.node_id) traceByNodeId[step.node_id] = step;
+            });
+            statusEl.textContent = result.success ? "Trace completed -- all steps OK" : "Trace completed -- one or more steps failed";
+            log.innerHTML = (result.steps || []).map((s, i) => {
+                const color = s.status === "success" ? "text-success-400" : "text-danger-400";
+                return `<div><span class="text-muted">${String(i + 1).padStart(2, "0")}.</span> <span class="${color} uppercase">${escapeHtml(s.status)}</span> <span class="text-heading">${escapeHtml(s.title || s.node_id || "")}</span></div>`;
+            }).join("") || `<div class="text-muted">No steps executed.</div>`;
+            renderMap();
+            if (selectedNodeId) selectNode(selectedNodeId);
+        }).catch(() => {
+            btn.disabled = false;
+            statusEl.textContent = "Trace failed to run.";
+        });
+    };
+
+    document.getElementById("wfm-workflow-select").addEventListener("change", (e) => {
+        const id = e.target.value;
+        currentWorkflowId = id || null;
+        selectedNodeId = null;
+        resetTrace();
+        document.getElementById("wfm-trace-btn").disabled = !id;
+        document.getElementById("wfm-detail-body").innerHTML = `<div class="text-muted">Click a node on the map to inspect it.</div>`;
+
+        if (!id) {
+            currentStages = [];
+            renderMap();
+            document.getElementById("wfm-workflow-desc").textContent = "";
+            return;
+        }
+        fetch(`/api/workflow-builder/workflows/${id}/map`).then(r => r.json()).then(data => {
+            currentStages = data.stages || [];
+            document.getElementById("wfm-workflow-desc").textContent = data.description || "";
+            renderMap();
+        });
+    });
+
+    fetch("/api/workflow-builder/workflows").then(r => r.json()).then(data => {
+        const sel = document.getElementById("wfm-workflow-select");
+        (data.workflows || []).forEach(wf => {
+            const opt = document.createElement("option");
+            opt.value = wf.id;
+            opt.textContent = wf.name;
+            sel.appendChild(opt);
+        });
+    });
+})();
+</script>

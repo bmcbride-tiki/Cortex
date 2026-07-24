@@ -17,12 +17,12 @@ Automates ingestion of raw meeting transcripts (`.txt` or `.docx`) dropped into 
 
 ## Input
 
-* `.txt` or `.docx` file(s) placed in `01_Inbox/transcripts/`. No CLI arguments — running the script processes whatever files are currently pending.
+* `.txt` or `.docx` file(s) placed in `01_inbox/transcripts/`. No CLI arguments — running the script processes whatever files are currently pending.
 * Filenames are optionally parsed using the convention `YYYY-MM-DD_Type_Trade_Title.[ext]` (e.g. `2026-06-18_Meeting_Sheet-Metal_Apprentice-Sync.docx`). Missing segments fall back to today's date, `Internal` type, and `General` trade.
 
 ## Processing Logic
 
-1. Scan `01_Inbox/transcripts/` for pending `.txt`/`.docx` files.
+1. Scan `01_inbox/transcripts/` for pending `.txt`/`.docx` files.
 2. Extract body text — `.docx` files are read paragraph-by-paragraph plus any tables (common for Teams-exported Speaker | Time | Message transcripts); `.txt` files are read directly.
 3. Parse date/type/trade/title metadata out of the filename.
 4. Copy the original file into `02_vault/transcripts/` with a timestamp-suffixed filename (permanent archive, never overwritten).

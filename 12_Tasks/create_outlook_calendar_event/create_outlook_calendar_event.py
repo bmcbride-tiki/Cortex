@@ -1,3 +1,19 @@
+# =============================================================================
+# create_outlook_calendar_event.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: creates an Outlook calendar event (subject, start/end time,
+#   attendees).
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `create_calendar_event()`, called directly in-process (no
+#     subprocess). Mock-mode until a real Azure AD app registration exists.
+#   - `test_create_outlook_calendar_event.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its event details
+#     as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

@@ -1,3 +1,22 @@
+# =============================================================================
+# fill_docx_template.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: fills every `{{ content }}`/`{{content}}` token in a .docx
+#   template with a single block of text and writes the completed file.
+#   For templates with several distinct named placeholders instead of one,
+#   see `populate_word_template_from_json.py`.
+#
+# WHAT IT INTERACTS WITH
+#   - The given `template_path` .docx file, read via `python-docx`.
+#   - `02_vault/generated/` (default output location if `output_dir` isn't
+#     given).
+#   - `test_fill_docx_template.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category), passing
+#     its `content_text`/`template_path`/`output_dir` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 import time

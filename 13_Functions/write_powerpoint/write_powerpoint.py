@@ -1,3 +1,19 @@
+# =============================================================================
+# write_powerpoint.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: creates a new .pptx file with one slide per double-newline
+#   -separated block of text (first line of each block becomes the slide
+#   title, the rest becomes the body).
+#
+# WHAT IT INTERACTS WITH
+#   - `python-pptx` (`Presentation`), for the actual slide creation.
+#   - `test_write_powerpoint.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category), passing
+#     its `text`/`output_dir`/`filename` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 import time

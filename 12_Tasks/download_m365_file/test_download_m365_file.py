@@ -1,3 +1,14 @@
+# =============================================================================
+# test_download_m365_file.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that download_m365_file.py's `run()` actually writes a local
+#   file to a temporary folder, using m365_graph_bridge's existing mock data.
+#
+# WHAT IT INTERACTS WITH
+#   - `download_m365_file.py`, the file under test.
+# =============================================================================
+
 import sys
 import tempfile
 from pathlib import Path

@@ -1,3 +1,18 @@
+# =============================================================================
+# send_teams_chat_message.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: sends a message in a 1:1 or group Teams chat.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `send_chat_message()`, called directly in-process (no subprocess).
+#     Mock-mode until a real Azure AD app registration exists.
+#   - `test_send_teams_chat_message.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its
+#     `chat_id`/`message` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

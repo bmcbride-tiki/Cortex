@@ -1,3 +1,22 @@
+# =============================================================================
+# generate_pptx_from_word_with_copilot.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: has M365 Copilot generate/populate a PowerPoint from a Word
+#   file. Tagged model="copilot" in server.py's TOOL_MODELS (not plain
+#   "m365"), even though it dispatches through m365_graph_bridge, since it
+#   represents Copilot's presentation-generation feature specifically.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `generate_pptx_from_word()`, called directly in-process (no
+#     subprocess). Mock mode performs a mechanical conversion, not genuine
+#     AI restructuring -- see that function's own docstring.
+#   - `test_generate_pptx_from_word_with_copilot.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its
+#     `word_file_path`/`output_dir`/`filename` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

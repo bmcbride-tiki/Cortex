@@ -1,0 +1,28 @@
+---
+tool_id: 'test_send_outlook_mail'
+title: 'Send Outlook Mail Tests'
+classification: '06_Tasks'
+data_policy: 'internal'
+execution_engine: 'pure_code'
+tags: [type/test, domain/04-task, tier/zero-input, function/testing, scope/outlook, connects/send-outlook-mail]
+---
+
+# test-send-outlook-mail
+
+> **Status:** Active. Runnable both via `pytest` and directly (`python test_send_outlook_mail.py`).
+
+## Purpose
+
+Confirms [[send_outlook_mail]]'s `run()` returns a successful result with a real-looking message ID, using m365_graph_bridge's existing mock data.
+
+## Processing Logic
+
+`test_run_sends_mail` -- calls `run()` directly and asserts `success` is `True` and `message_id` starts with `msg_`.
+
+## Output
+
+Passes silently (or prints a pass message when run directly); a failed `assert` raises with a traceback.
+
+## Notes for AI reuse
+
+Calls the real `run()` end to end rather than mocking anything, since [[send_outlook_mail]] itself is already mock-mode.

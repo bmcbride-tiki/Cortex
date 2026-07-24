@@ -1,3 +1,19 @@
+# =============================================================================
+# list_sharepoint_list_items.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: gets a Microsoft List's items, each with a `fields` object of
+#   column values.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `list_sharepoint_list_items()`, called directly in-process (no
+#     subprocess). Mock-mode until a real Azure AD app registration exists.
+#   - `test_list_sharepoint_list_items.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its
+#     `site_id`/`list_id` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

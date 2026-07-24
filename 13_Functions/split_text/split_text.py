@@ -1,3 +1,18 @@
+# =============================================================================
+# split_text.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: splits text on a delimiter and returns the segment at a
+#   given index.
+#
+# WHAT IT INTERACTS WITH
+#   - No adapter/database/file dependency -- pure in-memory text transform.
+#   - `test_split_text.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category), passing
+#     its `text`/`delimiter`/`index` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from typing import Dict, Any

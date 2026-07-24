@@ -1,3 +1,14 @@
+# =============================================================================
+# test_list_m365_files.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that list_m365_files.py's `run()` returns a successful result
+#   with at least one file, using m365_graph_bridge's existing mock data.
+#
+# WHAT IT INTERACTS WITH
+#   - `list_m365_files.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

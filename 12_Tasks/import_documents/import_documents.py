@@ -1,3 +1,28 @@
+# =============================================================================
+# import_documents.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A zero-input Task: picks up every pending .docx/.pdf file sitting in
+#   `01_inbox/documents/`, pulls out simple "Label: Value" metadata (title,
+#   date, trade) from the document's own text (falling back to parsing the
+#   filename if a field isn't found in the body), archives the original
+#   file into `02_vault/documents/`, and indexes its full text for search.
+#   Runs in two phases: extract everything to a JSONL scratch file first,
+#   then load that JSONL into the database -- so a crash partway through
+#   loading doesn't lose the already-extracted text.
+#
+# WHAT IT INTERACTS WITH
+#   - `01_inbox/documents/`, read then cleared (originals deleted once
+#     safely copied into the vault).
+#   - `02_vault/documents/`, where archived originals end up.
+#   - `00_System/database.py`'s `get_db_connection()`, writing to the
+#     `documents_metadata` table and the `global_search_index` FTS5 table.
+#   - `python-docx` (.docx) / `pypdf` (.pdf), for extracting body text.
+#   - `test_import_documents.py`, this file's paired test (covers the
+#     label-extraction and filename-fallback logic only, not the full
+#     file-system/DB run).
+# =============================================================================
+
 import json
 import re
 import sys

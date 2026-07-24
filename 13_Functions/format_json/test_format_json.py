@@ -1,3 +1,14 @@
+# =============================================================================
+# test_format_json.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that format_json.py's `run()` pretty-prints valid JSON and
+#   fails cleanly (rather than crashing) on invalid JSON.
+#
+# WHAT IT INTERACTS WITH
+#   - `format_json.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

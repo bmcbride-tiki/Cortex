@@ -1,3 +1,15 @@
+# =============================================================================
+# test_import_from_word.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that import_from_word.py's `run()` extracts real paragraph text
+#   from a real generated `.docx`, and fails cleanly on a missing file.
+#
+# WHAT IT INTERACTS WITH
+#   - `import_from_word.py`, the file under test.
+#   - `python-docx`, used here only to generate a throwaway source `.docx`.
+# =============================================================================
+
 import sys
 import tempfile
 from pathlib import Path

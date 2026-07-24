@@ -1,3 +1,18 @@
+# =============================================================================
+# export_to_markdown.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: writes text as-is to a new .md file.
+#
+# WHAT IT INTERACTS WITH
+#   - No adapter/database dependency -- pure file I/O against whatever
+#     `output_dir` it's given.
+#   - `test_export_to_markdown.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category), passing
+#     its `text`/`output_dir`/`filename` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 import time

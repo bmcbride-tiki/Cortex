@@ -4,40 +4,56 @@ title: 'Core Router'
 classification: '00_System_Core'
 data_policy: 'internal'
 execution_engine: 'pure_code'
-tags: [type/module, domain/system-core, tier/zero-input, function/routing, scope/automation-dispatch, connects/server, connects/workflow-engine, connects/gemini-bridge, connects/copilot-bridge]
+tags: [type/module, domain/system-core, tier/zero-input, function/routing, function/workflow-execution, function/license-gating, scope/automation-dispatch, scope/workflow-builder, connects/server, connects/workflow-engine, connects/data-processing, connects/logger, connects/gemini-bridge, connects/copilot-bridge]
 ---
 
 # core-router
 
-> **Status:** Active. Not a standalone script -- has no `__main__` block. Imported by [[server]], instantiated once (`router = CoreRouter()`), and reused for the lifetime of the process. Also imported independently by [[workflow_engine]] (its own `CoreRouter()` instance) to dispatch Task/Process/AI-bridge nodes.
+> **Status:** Active. Not a standalone script -- has no `__main__` block. Imported by [[server]], which instantiates one `CoreRouter()` and reuses it for the process lifetime. Also imported independently by [[workflow_engine]] (its own `CoreRouter()` instance) to dispatch Task/Process/AI-bridge nodes. This file holds **two unrelated classes** -- see Purpose below.
 
 ## Purpose
 
-Bridges the Cortex web console to the filesystem-based automation catalogue under `30_Automation_Scripts/`. It has two jobs: (1) build the manifest of runnable tools the frontend displays on the Processes/Tasks/Workflows pages, purely by scanning folder structure -- no manual registration file to keep in sync -- and (2) execute any one of those tools as an isolated subprocess when the console's "Run" button is clicked.
+This file has two distinct jobs, done by two separate classes that share a file only for historical reasons -- they don't call each other:
+
+1. **`CoreRouter`** -- bridges the Cortex web console to the filesystem-based automation catalogue under the numbered category folders (`11_Processes/`, `12_Tasks/`, `13_Workflows/`, `13_Functions/`, `14_Adapters/`). Scans those folders to build the manifest the frontend displays, and launches any one of those tools as an isolated subprocess when triggered.
+2. **`CoreWorkflowRouter`** -- an in-process (no subprocess) step executor for the newer `WorkflowPayload`-based execution model (see [[workflow_schema]] in `data_processing/`). Runs a single Python callable against a payload, enforces per-step license/capability gating via [[user_identity]], and logs through `logger.py`'s `CortexLogger`. Used by `canvas_parser.py`'s `VisualWorkflowExecutor` and exercised end-to-end by `sandbox_smoke_test.py`; not yet wired into the live Workflow Builder page (that page still runs through [[workflow_engine]], not this class).
 
 ## Processing Logic
 
-### `get_visible_apps() -> Dict[str, List[Dict]]`
+### `CoreRouter.get_visible_apps() -> Dict[str, List[Dict]]`
 
-1. Walk `30_Automation_Scripts/05_Processes`, `06_Tasks`, and `07_Workflows`. Every subfolder not starting with `_` or `.` becomes one manifest entry, keyed by folder name as `tool_id`.
-2. Derive a display `title` by replacing underscores with spaces and title-casing the `tool_id`.
-3. Auto-generate a generic one-line `description` from the category (`"process pipeline"` / `"automation task"` / `"multi-stage workflow"`) -- there's no per-tool override; the real explanation lives in that tool's own `.md` companion.
-4. Record `md_path` as `<tool_folder>/<tool_id>.md` (POSIX-style path) so the UI's "MD" button can open it via the `mde://` protocol handler.
-5. Separately scan `00_System_Core/adapters/`; any subfolder containing a `<folder-name-with-underscores>.py` script (e.g. `copilot-bridge/copilot_bridge.py`) is registered the same way, but always under the `05_Processes` bucket in the returned manifest, with a description noting it's a "Generative AI adapter".
+1. Walk each category folder via `CATEGORY_DIR_MAP` -- a translation table from the frontend's old category keys (`05_Processes`, `06_Tasks`, `07_Workflows`, `09_Functions`, `08_Adapters`, still the API contract) to where those folders actually live today (`11_Processes`, `12_Tasks`, `13_Workflows`, `13_Functions`, `14_Adapters`). Every subfolder not starting with `_` or `.` becomes one manifest entry, keyed by folder name as `tool_id`.
+2. Derive a display `title` from the `tool_id` (underscores -> spaces, title-cased), except for `TITLE_OVERRIDES` (full rename, e.g. `abc_uploader` -> "ABC Builder") and `ACRONYM_WORDS` (fixed per-word casing, e.g. "tos" -> "TOS").
+3. Auto-generate a generic one-line `description` from the category (`"process pipeline"` / `"multi-stage workflow"` / `"AI bridge adapter"` / `"automation task"`) -- no per-tool override; the real explanation lives in that tool's own `.md` companion.
+4. Record both `md_path` and `py_path` (vault-relative, POSIX-style) so the UI can open a tool's docs or launch it directly.
 
-### `execute_app_logic(category, tool_id, args=[]) -> (bool, str)`
+### `CoreRouter.execute_app_logic(category, tool_id, args=[]) -> (bool, str)`
 
-1. Resolve the script path as `30_Automation_Scripts/<category>/<tool_id>/<tool_id>.py`. If that doesn't exist, fall back to `00_System_Core/adapters/<tool_id with underscores replaced by hyphens>/<tool_id>.py` (the adapter-folder-naming convention).
-2. If neither resolves, return `(False, "Routing Error: ...")` immediately.
-3. Otherwise build `[sys.executable, script_path, *args]` (all args stringified) and run it via `subprocess.run(..., capture_output=True, text=True, cwd=<repo root>)`. On Windows, `creationflags=CREATE_NEW_PROCESS_GROUP` decouples the child from the parent console so a Uvicorn `--reload` restart can't kill an in-flight Playwright/automation run.
-4. `PYTHONDONTWRITEBYTECODE=1` is forced into the child's environment.
-5. Combine stdout and (prefixed) stderr into one log string. Return `(True, "[SUCCESS]\n<log>")` on exit code 0, else `(False, "[PROCESS ABORTED] ...\n<log>")`.
+Resolves `<category folder>/<tool_id>/<tool_id>.py` via `CATEGORY_DIR_MAP`, then hands off to `_run_script`. `execute_script(script_path, args)` is the sibling entry point for `run://` protocol links, where the path is already resolved and vault-containment already checked by [[server]]'s `_resolve_vault_path`.
+
+### `CoreRouter._run_script(script_path, cwd, args) -> (bool, str)`
+
+Launches the script as a completely separate OS process via `subprocess.run` (never imported in-process), so a crash or hang in the script can't take down the web server, and a Uvicorn `--reload` restart can't kill an in-flight run (`CREATE_NEW_PROCESS_GROUP` on Windows). Combines stdout and stderr into one text blob (stderr appended after a `[RUNTIME STDERR LOG]` marker) and returns `(True, "[SUCCESS]\n...")` or `(False, "[PROCESS ABORTED] ...")` based on exit code.
+
+### `CoreWorkflowRouter.execute_block_async(block_func, payload, next_step_id, block_type, required_capability) -> WorkflowPayload`
+
+1. Resolves the current user's entitlements onto `payload.context` if not already resolved (via [[user_identity]]'s `UserIdentityManager`).
+2. If `required_capability` is set and the user isn't licensed for it, logs an error and raises `PermissionError` -- the step never runs.
+3. Otherwise calls `block_func(payload.input)` (awaited if it's a coroutine function, called directly otherwise), folds any `new_files` in its returned dict into `payload.input.files` as real `FileReference`s, and calls `payload.transition_to_next_step(...)` to produce the next step's payload.
+4. Every stage of this (start, success, failure) is logged as structured JSON via `logger.py`'s `CortexLogger`, tagged with the workflow's `workflow_id`/`correlation_id`.
+
+### `CoreWorkflowRouter.get_building_block_availability(payload, block_capability_map) -> Dict[str, Dict]`
+
+Given a `{block_name: CapabilityFlag}` map, returns each block's `enabled`/`status` (`AVAILABLE` or `GREYED_OUT`)/`required_capability`/`reason` for the current user -- what the Workflow Builder UI uses to grey out a palette entry or canvas node the user isn't licensed for.
 
 ## Output
 
-* `get_visible_apps()`: `{"05_Processes": [...], "06_Tasks": [...], "07_Workflows": [...]}`, each entry `{tool_id, title, description, md_path}`. Consumed directly by [[server]]'s `GET /apps` endpoint.
-* `execute_app_logic(...)`: a `(success, message)` tuple. Consumed by [[server]]'s `POST /execute/{category}/{tool_id}` endpoint (returned to the frontend as `{"success": ..., "message": ...}` for the shared process-launch modal's console log) and by [[workflow_engine]]'s `task`/`process` nodes and every AI-bridge helper ([[gemini_bridge]], [[copilot_bridge]]).
+* `CoreRouter.get_visible_apps()`: `{"05_Processes": [...], "06_Tasks": [...], ...}` (legacy keys), each entry `{tool_id, title, description, md_path, py_path}`. Consumed by [[server]]'s `GET /apps` and `GET /api/workflow-builder/node-registry` endpoints.
+* `CoreRouter.execute_app_logic(...)` / `execute_script(...)`: a `(success, message)` tuple, surfaced to the frontend's console-log popups.
+* `CoreWorkflowRouter.execute_block_async(...)`: a new `WorkflowPayload` for the next step, or a raised `PermissionError`/other exception on failure.
 
 ## Notes for AI reuse
 
-A tool becomes runnable from Cortex purely by existing at `30_Automation_Scripts/<category>/<tool_id>/<tool_id>.py` (script name must match its parent folder name) with a same-named `.md` companion alongside it -- no code change to `core_router.py` itself is ever required to add a new tool. The same is true for adapters under `00_System_Core/adapters/` -- see [[gemini_bridge]] and [[copilot_bridge]] for the two currently registered this way.
+A tool becomes runnable via `CoreRouter` purely by existing at `<category folder>/<tool_id>/<tool_id>.py` (script name must match its parent folder name) with a same-named `.md` companion alongside it -- no code change to this file is ever required to add a new one.
+
+`CoreWorkflowRouter` is a separate, newer execution model living in the same file -- don't conflate the two. If a future change makes the live Workflow Builder page run through `CoreWorkflowRouter` instead of [[workflow_engine]], update this doc's Status line and `workflow_engine.md` together.

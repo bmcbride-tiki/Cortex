@@ -1,0 +1,28 @@
+---
+tool_id: 'test_create_onedrive_sharing_link'
+title: 'Create OneDrive Sharing Link Tests'
+classification: '06_Tasks'
+data_policy: 'internal'
+execution_engine: 'pure_code'
+tags: [type/test, domain/04-task, tier/zero-input, function/testing, scope/onedrive, connects/create-onedrive-sharing-link]
+---
+
+# test-create-onedrive-sharing-link
+
+> **Status:** Active. Runnable both via `pytest` and directly (`python test_create_onedrive_sharing_link.py`).
+
+## Purpose
+
+Confirms [[create_onedrive_sharing_link]]'s `run()` returns a successful result with a real-looking share URL, using m365_graph_bridge's existing mock data.
+
+## Processing Logic
+
+`test_run_creates_link` -- calls `run()` directly and asserts `success` is `True` and `share_url` starts with `https://`.
+
+## Output
+
+Passes silently (or prints a pass message when run directly); a failed `assert` raises with a traceback.
+
+## Notes for AI reuse
+
+Calls the real `run()` end to end rather than mocking anything, since [[create_onedrive_sharing_link]] itself is already mock-mode.

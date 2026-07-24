@@ -1,3 +1,19 @@
+# =============================================================================
+# create_onedrive_sharing_link.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: creates a shareable link for a OneDrive file, given its path.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `create_onedrive_sharing_link()`, called directly in-process (no
+#     subprocess). Mock-mode until a real Azure AD app registration exists.
+#   - `test_create_onedrive_sharing_link.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its `file_path`
+#     argument as a JSON payload when launched from the Workflow Builder or
+#     a Tasks-page popup.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

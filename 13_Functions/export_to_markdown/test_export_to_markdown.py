@@ -1,3 +1,14 @@
+# =============================================================================
+# test_export_to_markdown.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that export_to_markdown.py's `run()` writes text unchanged into
+#   a real `.md` file in a temporary folder.
+#
+# WHAT IT INTERACTS WITH
+#   - `export_to_markdown.py`, the file under test.
+# =============================================================================
+
 import sys
 import tempfile
 from pathlib import Path

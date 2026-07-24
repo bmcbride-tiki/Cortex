@@ -1,3 +1,19 @@
+# =============================================================================
+# upload_m365_file.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: uploads a local file to OneDrive/SharePoint.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `upload_file()`, called directly in-process (no subprocess) --
+#     validates the local file is real even in mock mode. Mock-mode until
+#     a real Azure AD app registration exists.
+#   - `test_upload_m365_file.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its
+#     `local_path`/`destination_path` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

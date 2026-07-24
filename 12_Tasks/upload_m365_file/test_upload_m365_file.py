@@ -1,3 +1,15 @@
+# =============================================================================
+# test_upload_m365_file.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that upload_m365_file.py's `run()` returns a successful result
+#   with a real-looking item ID, using a real temporary local file and
+#   m365_graph_bridge's existing mock upload logic.
+#
+# WHAT IT INTERACTS WITH
+#   - `upload_m365_file.py`, the file under test.
+# =============================================================================
+
 import sys
 import tempfile
 from pathlib import Path

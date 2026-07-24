@@ -1,3 +1,17 @@
+# =============================================================================
+# test_generate_pptx_from_word_with_copilot.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that generate_pptx_from_word_with_copilot.py's `run()` produces
+#   a real .pptx file on disk from a small generated .docx source, using
+#   m365_graph_bridge's existing mock conversion logic.
+#
+# WHAT IT INTERACTS WITH
+#   - `generate_pptx_from_word_with_copilot.py`, the file under test.
+#   - `python-docx`, used here only to generate a throwaway source .docx
+#     for the test to convert.
+# =============================================================================
+
 import sys
 import tempfile
 from pathlib import Path

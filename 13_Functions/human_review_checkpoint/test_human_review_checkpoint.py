@@ -1,3 +1,19 @@
+# =============================================================================
+# test_human_review_checkpoint.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that human_review_checkpoint.py's `run()` writes a real review
+#   file in each supported format (docx/json/markdown), inserts a real
+#   `workflow_checkpoints` row, defaults to docx when no format is given,
+#   and rejects an unsupported format cleanly.
+#
+# WHAT IT INTERACTS WITH
+#   - `human_review_checkpoint.py`, the file under test.
+#   - `00_System/database.py`'s real `get_db_connection()` -- these tests
+#     write real rows into `brain_state.db`'s `workflow_checkpoints` table,
+#     they don't mock the database.
+# =============================================================================
+
 import sys
 import json
 import tempfile

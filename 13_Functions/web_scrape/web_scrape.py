@@ -1,3 +1,22 @@
+# =============================================================================
+# web_scrape.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: fetches a URL and extracts its visible, readable text
+#   (script/style blocks stripped), capped at 5000 characters so one
+#   scrape can't flood a downstream AI prompt's context. Only use this for
+#   pages you have the right to access.
+#
+# WHAT IT INTERACTS WITH
+#   - Whatever external URL it's given, via a real `requests.get()` call
+#     (no mock mode -- this genuinely fetches live pages).
+#   - `lxml`, for stripping script/style tags and extracting visible text.
+#   - `test_web_scrape.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category), passing
+#     its `url` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from typing import Dict, Any

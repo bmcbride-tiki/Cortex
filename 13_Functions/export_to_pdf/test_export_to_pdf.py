@@ -1,3 +1,15 @@
+# =============================================================================
+# test_export_to_pdf.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that export_to_pdf.py's `run()` writes a real `.pdf` file for
+#   plain text, and fails cleanly (rather than crashing) on a character
+#   outside fpdf2's built-in Latin-1 font support.
+#
+# WHAT IT INTERACTS WITH
+#   - `export_to_pdf.py`, the file under test.
+# =============================================================================
+
 import sys
 import tempfile
 from pathlib import Path

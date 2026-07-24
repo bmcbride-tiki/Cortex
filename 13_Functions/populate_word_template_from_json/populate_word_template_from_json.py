@@ -1,3 +1,20 @@
+# =============================================================================
+# populate_word_template_from_json.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: fills a .docx template's `{{key}}` placeholders from a
+#   JSON object's keys, one placeholder per key (e.g. `{{name}}`,
+#   `{{date}}`, `{{trade}}`). For a single `{{ content }}` token instead,
+#   see `fill_docx_template.py`.
+#
+# WHAT IT INTERACTS WITH
+#   - The given `template_path` .docx file, read via `python-docx`.
+#   - `test_populate_word_template_from_json.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category), passing
+#     its `data`/`template_path`/`output_dir` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 import time

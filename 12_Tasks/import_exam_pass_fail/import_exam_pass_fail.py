@@ -1,3 +1,24 @@
+# =============================================================================
+# import_exam_pass_fail.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A zero-input Task: picks up pending "Pass Fail" .xlsx reports from
+#   `01_inbox/reports/`, parses their fixed layout (region/exam summary
+#   rows starting at row 6, specific column positions) with pandas,
+#   normalizes trade/period/classification via forward-fill (the source
+#   sheet uses merged cells so those values only appear on the first row
+#   of each group), and loads the results into `exam_pass_fail_aggregates`.
+#   Archives each processed file into `01_inbox/processed/`.
+#
+# WHAT IT INTERACTS WITH
+#   - `01_inbox/reports/`, read for pending files whose name contains
+#     "pass" or "fail"; `01_inbox/processed/`, where they're archived
+#     (timestamp-suffixed on a name collision).
+#   - `00_System/database.py`'s `get_db_connection()`, writing to
+#     `exam_pass_fail_aggregates`.
+#   - `pandas`, for reading/cleaning the Excel sheet.
+# =============================================================================
+
 import sys
 import shutil
 import pandas as pd

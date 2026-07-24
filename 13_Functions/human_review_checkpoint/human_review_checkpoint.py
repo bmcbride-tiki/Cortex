@@ -1,3 +1,25 @@
+# =============================================================================
+# human_review_checkpoint.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: the app's one real human-in-the-loop mechanism. Writes
+#   upstream workflow content out to a real file (.docx/.json/.md) for a
+#   person to open and edit, and registers a row in the
+#   `workflow_checkpoints` table so it shows up in the Cortex web app's
+#   Review Queue page, where someone can mark it resolved.
+#
+# WHAT IT INTERACTS WITH
+#   - `00_System/database.py`'s `get_db_connection()`, writing a `pending`
+#     row into `workflow_checkpoints`.
+#   - `python-docx`, for the `.docx` output format.
+#   - `server.py`'s `GET /api/workflow-checkpoints` / `POST
+#     /api/workflow-checkpoints/{id}/resolve` endpoints and the Review
+#     Queue page, the other side of this checkpoint's lifecycle.
+#   - `test_human_review_checkpoint.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category).
+# =============================================================================
+
 import sys
 from pathlib import Path
 from datetime import datetime

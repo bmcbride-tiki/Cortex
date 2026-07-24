@@ -1,3 +1,15 @@
+# =============================================================================
+# test_list_recent_onedrive_files.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that list_recent_onedrive_files.py's `run()` returns a
+#   successful result with at least one file, using the mock data
+#   m365_graph_bridge already returns (no real Microsoft account needed).
+#
+# WHAT IT INTERACTS WITH
+#   - `list_recent_onedrive_files.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

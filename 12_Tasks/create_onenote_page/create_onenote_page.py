@@ -1,3 +1,19 @@
+# =============================================================================
+# create_onenote_page.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: creates a new OneNote page (with a title and HTML content) in a
+#   given section.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `create_onenote_page()`, called directly in-process (no subprocess).
+#     Mock-mode until a real Azure AD app registration exists.
+#   - `test_create_onenote_page.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its
+#     `section_id`/`title`/`content` arguments as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

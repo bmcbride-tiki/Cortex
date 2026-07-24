@@ -1,3 +1,15 @@
+# =============================================================================
+# test_import_from_pdf.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that import_from_pdf.py's `run()` extracts real text from a
+#   real generated `.pdf`, and fails cleanly on a missing file.
+#
+# WHAT IT INTERACTS WITH
+#   - `import_from_pdf.py`, the file under test.
+#   - `fpdf2`, used here only to generate a throwaway source `.pdf`.
+# =============================================================================
+
 import sys
 import tempfile
 from pathlib import Path

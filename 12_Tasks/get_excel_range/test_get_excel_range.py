@@ -1,3 +1,15 @@
+# =============================================================================
+# test_get_excel_range.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that get_excel_range.py's `run()` returns a successful result
+#   with the expected number of rows, using m365_graph_bridge's existing
+#   mock data.
+#
+# WHAT IT INTERACTS WITH
+#   - `get_excel_range.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

@@ -1,3 +1,27 @@
+# =============================================================================
+# import_class_schedule.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: scrapes the (real, public) Alberta Tradesecrets training
+#   catalogue website for one school year -- every trade's class schedule
+#   (training provider, campus, period, class code, start/end dates) --
+#   and loads the results into the database. Takes a school year
+#   (`YYYY-YYYY`) as its one argument.
+#
+# WHAT IT INTERACTS WITH
+#   - `https://tradesecrets.alberta.ca/...training-catalogue/`, the real
+#     external website this scrapes via plain HTTP GET requests (not
+#     browser automation) -- first the base catalogue page for the
+#     trade/code list, then one page per trade for its class schedule.
+#   - `output/<school_year>.json`, a raw JSON dump of every scraped record
+#     (written before the database load, so the raw scrape is preserved
+#     even if the DB load partially fails).
+#   - `00_System/database.py`'s `get_db_connection()`, writing to the
+#     `class_schedules` table (`INSERT OR REPLACE`, keyed so re-running
+#     the same school year updates rather than duplicates rows).
+#   - `requests`/`lxml`, for the HTTP fetch and HTML parsing (XPath).
+# =============================================================================
+
 import sys
 import re
 import json

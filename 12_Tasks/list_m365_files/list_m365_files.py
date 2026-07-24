@@ -1,3 +1,18 @@
+# =============================================================================
+# list_m365_files.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: lists files in a given OneDrive/SharePoint folder path.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s `list_files()`,
+#     called directly in-process (no subprocess). Mock-mode until a real
+#     Azure AD app registration exists.
+#   - `test_list_m365_files.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its `folder_path`
+#     as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

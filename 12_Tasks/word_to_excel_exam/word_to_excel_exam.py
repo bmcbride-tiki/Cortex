@@ -6,6 +6,27 @@ tags: ['automation', 'parser', 'docx', 'xlsx']
 schema_version: '1.0.0'
 ---
 Self-contained, UI-free engine for converting Word exam banks into Excel ingestion layouts.
+
+WHAT THIS FILE DOES
+    Parses a Word exam question bank into structured question records
+    (stem, four options, correct answer, difficulty, rationale) and writes
+    them into a copy of the item-import Excel template. Supports three
+    distinct source document formats via separate parsers, selected by the
+    caller (`format_type`): "ai" (AI Generated & Validated, heading-based),
+    "ai2" (bold-run-based "Rob" format), and "ce" (nested-table CE format).
+    Entirely self-contained -- no adapter/API dependency, just python-docx
+    + openpyxl.
+
+WHAT IT INTERACTS WITH
+    - The input Word question bank .docx, supplied as a CLI argument.
+    - `item_import_template.xlsx`, this folder's locked template asset
+      (copied, never modified in place).
+    - `output/`, the default output folder for the generated workbook (a
+      `<user>-Question Importer - <date>.xlsx` file, collision-suffixed).
+    - `core_router.py`/`server.py`'s upload endpoint
+      (`/api/uploads/word-to-excel-exam`), which saves an uploaded file
+      into this folder's `incoming/` and dispatches this script with the
+      chosen `format_type`.
 """
 
 import re

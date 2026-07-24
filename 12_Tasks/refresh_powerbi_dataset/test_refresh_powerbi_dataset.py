@@ -1,3 +1,15 @@
+# =============================================================================
+# test_refresh_powerbi_dataset.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that refresh_powerbi_dataset.py's `run()` returns a successful
+#   result with a real-looking refresh request ID, using
+#   m365_graph_bridge's existing mock data.
+#
+# WHAT IT INTERACTS WITH
+#   - `refresh_powerbi_dataset.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

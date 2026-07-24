@@ -1,3 +1,19 @@
+# =============================================================================
+# get_onenote_page_content.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: gets a OneNote page's content as HTML (Graph's real OneNote
+#   pages are HTML-based, not plain text).
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `get_onenote_page_content()`, called directly in-process (no
+#     subprocess). Mock-mode until a real Azure AD app registration exists.
+#   - `test_get_onenote_page_content.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its `page_id` as a
+#     JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

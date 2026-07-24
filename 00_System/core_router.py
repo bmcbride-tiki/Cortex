@@ -70,8 +70,16 @@ sys.dont_write_bytecode = True
 
 import os
 import subprocess
+import asyncio
+import inspect
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Callable, Optional
+
+from data_processing.workflow_schema import WorkflowPayload, FileReference
+from data_processing.user_identity import CapabilityFlag, UserIdentityManager
+from logger import CortexLogger
+
+workflow_logger = CortexLogger.get_logger("CoreWorkflowRouter")
 
 # Old pre-strip category names (still used as the manifest/API contract keys
 # the frontend expects) mapped to where those categories actually live now.
@@ -276,3 +284,101 @@ class CoreRouter:
 
         except Exception as err:
             return False, f"[SYSTEM ROUTING EXCEPTION] Critical sub-process tracking initialization failure: {str(err)}"
+
+
+class CoreWorkflowRouter:
+    """In-process step executor for the visual workflow builder, validating each
+    block's input/output against the WorkflowPayload schema (00_System/data_processing/).
+    Distinct from CoreRouter above, which launches 11_Processes/12_Tasks/etc. scripts
+    as isolated subprocesses -- this instead runs a single in-memory block callable
+    (e.g. a 13_Functions transform) against an already-validated payload.
+    """
+    def __init__(self, database_session: Any = None) -> None:
+        self.db = database_session
+
+    async def execute_block_async(
+        self,
+        block_func: Callable[[Any], Dict[str, Any]],
+        payload: WorkflowPayload,
+        next_step_id: str,
+        block_type: str = "process",
+        required_capability: Optional[CapabilityFlag] = None
+    ) -> WorkflowPayload:
+        """
+        Asynchronously executes a building block (skill, task, or adapter),
+        validates the output, appends generated file references, and transitions the payload.
+        License/capability-gated blocks (required_capability set) are checked against the
+        current user's entitlements before running; unlicensed access raises PermissionError.
+        """
+        correlation_id = payload.context.correlation_id
+
+        if not payload.context.user_entitlements:
+            payload.context.user_entitlements = UserIdentityManager.resolve_current_user(payload.context.auth_references)
+
+        if required_capability and not payload.validate_capability_access(required_capability):
+            err_msg = (
+                f"Access Denied: User '{payload.context.user_entitlements.user_principal_name}' lacks required "
+                f"license/capability '{required_capability.value}' for block '{block_func.__name__}'."
+            )
+            workflow_logger.error(err_msg, extra={"workflow_id": payload.workflow_id, "correlation_id": correlation_id})
+            raise PermissionError(err_msg)
+
+        workflow_logger.info(
+            f"Executing {block_type} block at step '{payload.step_id}' (User: {payload.context.user_entitlements.user_principal_name})",
+            extra={"workflow_id": payload.workflow_id, "correlation_id": correlation_id}
+        )
+
+        try:
+            if inspect.iscoroutinefunction(block_func):
+                block_result = await block_func(payload.input)
+            else:
+                block_result = block_func(payload.input)
+
+            if not isinstance(block_result, dict):
+                raise ValueError(f"Block function '{block_func.__name__}' must return a dict.")
+
+            if "new_files" in block_result:
+                for f_dict in block_result.pop("new_files"):
+                    file_ref = FileReference(**f_dict) if isinstance(f_dict, dict) else f_dict
+                    payload.input.files.append(file_ref)
+
+            next_payload = payload.transition_to_next_step(
+                next_step_id=next_step_id,
+                block_output=block_result,
+                block_type=block_type
+            )
+
+            workflow_logger.info(
+                f"Successfully transitioned to step '{next_step_id}'",
+                extra={"workflow_id": payload.workflow_id, "correlation_id": correlation_id}
+            )
+            return next_payload
+
+        except Exception as e:
+            workflow_logger.error(
+                f"Error executing step '{payload.step_id}': {str(e)}",
+                extra={"workflow_id": payload.workflow_id, "correlation_id": correlation_id}
+            )
+            raise
+
+    def execute_block(self, block_func: Callable, payload: WorkflowPayload, next_step_id: str, block_type: str = "process") -> WorkflowPayload:
+        """Synchronous wrapper for async workflow execution."""
+        return asyncio.run(self.execute_block_async(block_func, payload, next_step_id, block_type))
+
+    def get_building_block_availability(self, payload: WorkflowPayload, block_capability_map: Dict[str, CapabilityFlag]) -> Dict[str, Dict[str, Any]]:
+        """
+        Helper for the UI/workflow-builder view layer to determine which blocks
+        should be enabled or greyed out for the current user's entitlements.
+        """
+        user_ent = payload.context.user_entitlements or UserIdentityManager.resolve_current_user(payload.context.auth_references)
+
+        status_map: Dict[str, Dict[str, Any]] = {}
+        for block_name, cap in block_capability_map.items():
+            is_allowed = user_ent.has_capability(cap)
+            status_map[block_name] = {
+                "enabled": is_allowed,
+                "status": "AVAILABLE" if is_allowed else "GREYED_OUT",
+                "required_capability": cap.value,
+                "reason": None if is_allowed else f"Requires active license/SKU for {cap.value}"
+            }
+        return status_map

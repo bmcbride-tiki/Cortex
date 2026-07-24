@@ -13,12 +13,17 @@
             </div>
         </div>
         <div class="p-2 border-b border-border shrink-0">
-            <div draggable="true" id="wfb-container-palette-item" class="p-2.5 rounded-lg border border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 cursor-grab active:cursor-grabbing transition-colors">
-                <div class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-medium text-heading truncate"><i class="fa-solid fa-box-archive text-primary-400 mr-1"></i>Container</span>
-                    <span class="text-[9px] font-mono uppercase shrink-0 text-primary-400">Container</span>
+            <div draggable="true" id="wfb-container-palette-item" class="flex items-stretch rounded-lg border border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 cursor-grab active:cursor-grabbing transition-colors overflow-hidden">
+                <div class="wfb-icon-chip" style="background: color-mix(in oklch, var(--color-primary-400) 18%, transparent);">
+                    <i class="fa-solid fa-box-archive" style="color: var(--color-primary-400); font-size: 15px;"></i>
                 </div>
-                <p class="text-[10px] text-muted leading-snug mt-1">Holds its own mini sub-flow. Double-click on the canvas to open it.</p>
+                <div class="flex-1 min-w-0 p-2.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-medium text-heading truncate">Container</span>
+                        <span class="text-[9px] font-mono uppercase shrink-0 text-primary-400">Container</span>
+                    </div>
+                    <p class="text-[10px] text-muted leading-snug mt-1">Holds its own mini sub-flow. Double-click on the canvas to open it.</p>
+                </div>
             </div>
         </div>
         <div id="wfb-palette-list" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
@@ -99,12 +104,20 @@
     #wfb-canvas .drawflow-node.selected { border-color: var(--color-primary); box-shadow: 0 0 0 2px color-mix(in oklch, var(--color-primary) 30%, transparent); }
     #wfb-canvas .drawflow-node.kind-container { border-style: dashed; border-color: color-mix(in oklch, var(--color-primary) 50%, var(--color-border)); }
     #wfb-canvas .drawflow-node.kind-human-checkpoint { border-width: 2px; border-color: var(--color-warning-400); }
+    #wfb-canvas .drawflow-node.kind-greyed { opacity: 0.45; border-style: dashed; }
+    #wfb-canvas .drawflow-node.kind-greyed .wfb-node-title { color: var(--color-muted); }
     #wfb-canvas .drawflow-node .input, #wfb-canvas .drawflow-node .output { background: var(--color-primary-400); height: 14px; width: 14px; border: 2px solid var(--color-surface); }
     #wfb-canvas .connection .main-path { stroke: var(--color-primary-400); stroke-width: 3px; }
     #wfb-canvas .connection .main-path:hover { stroke: var(--color-danger-400); cursor: pointer; }
-    .wfb-node-card { padding: 10px 14px; }
-    .wfb-node-card .wfb-node-title { font-size: 12px; font-weight: 600; color: var(--color-heading); }
+    .wfb-node-card { display: flex; align-items: stretch; border-radius: 10px; overflow: hidden; }
+    .wfb-node-card .wfb-node-body { padding: 10px 14px; min-width: 0; flex: 1; }
+    .wfb-node-card .wfb-node-title { font-size: 12px; font-weight: 600; color: var(--color-heading); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .wfb-node-card .wfb-node-kind { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted); margin-top: 2px; font-family: var(--font-mono); }
+    /* n8n-style icon chip: spans the full height of whatever row/card it's in, so a
+       small logo/glyph never looks stranded next to a taller text block. */
+    .wfb-icon-chip { flex-shrink: 0; width: 34px; display: flex; align-items: center; justify-content: center; }
+    .wfb-icon-chip img { width: 18px; height: 18px; object-fit: contain; }
+    .wfb-icon-chip.wfb-icon-chip-brand { background: #f4f4f5; }
 </style>
 
 <script>
@@ -112,6 +125,25 @@
         const FIELD_PARTIAL_TOOL_IDS = ["import_class_schedule", "import_marks_correlation", "word_to_excel_exam"];
         const KIND_LABELS = { task: "Task", process: "Process", adapter: "Adapter", skill: "Skill", function: "Function" };
         const KIND_COLORS = { task: "text-primary-400", process: "text-info-400", adapter: "text-danger-400", skill: "text-warning-400", function: "text-secondary-400" };
+        // Same per-kind palette as KIND_COLORS above, as CSS var names -- used to tint the
+        // icon chip background for nodes with no real brand logo (server sends icon_source:
+        // "fa" for those; icon_source: "svgl" nodes get a plain white chip so the brand's own
+        // colors show through instead, same convention n8n uses for third-party logos).
+        const KIND_ICON_VARS = { task: "--color-primary-400", process: "--color-info-400", adapter: "--color-danger-400", skill: "--color-warning-400", function: "--color-secondary-400" };
+
+        // Shared by the palette list and the canvas node card so both show the identical
+        // icon -- a real product SVG (icon_source: "svgl") in a neutral chip, or a Font
+        // Awesome glyph (icon_source: "fa") tinted to the node's kind color.
+        function nodeIconChipHtml(meta) {
+            if (meta.icon_source === "svgl" && meta.svgl_icon_url) {
+                return `<div class="wfb-icon-chip wfb-icon-chip-brand"><img src="${escapeHtml(meta.svgl_icon_url)}" onerror="this.parentElement.style.display='none'" alt=""></div>`;
+            }
+            const colorVar = KIND_ICON_VARS[meta.kind] || "--color-muted";
+            const faIcon = meta.fa_icon || "fa-code";
+            return `<div class="wfb-icon-chip" style="background: color-mix(in oklch, var(${colorVar}) 18%, transparent);">
+                <i class="fa-solid ${escapeHtml(faIcon)}" style="color: var(${colorVar}); font-size: 15px;"></i>
+            </div>`;
+        }
         // Specific tool_ids that get a distinct canvas treatment beyond their normal kind
         // styling -- keyed by tool_id rather than a whole new node kind, so any future
         // human-in-the-loop function can opt in the same way without engine changes.
@@ -178,15 +210,25 @@
                 return;
             }
 
-            container.innerHTML = filtered.map(n => `
-                <div draggable="true" data-node-id="${escapeHtml(n.tool_id)}" class="wfb-palette-item p-2.5 rounded-lg border border-border bg-canvas/50 hover:border-primary/40 hover:bg-canvas cursor-grab active:cursor-grabbing transition-colors">
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="text-xs font-medium text-heading truncate">${escapeHtml(n.title)}</span>
-                        <span class="text-[9px] font-mono uppercase shrink-0 ${KIND_COLORS[n.kind] || "text-muted"}">${KIND_LABELS[n.kind] || n.kind}</span>
+            container.innerHTML = filtered.map(n => {
+                const lockIcon = n.licensed === false ? `<i class="fa-solid fa-lock text-muted text-[10px]" title="Requires ${escapeHtml(n.required_capability || "")} license"></i>` : "";
+                const greyedClass = n.licensed === false ? "opacity-45 grayscale" : "";
+                return `
+                <div draggable="true" data-node-id="${escapeHtml(n.tool_id)}" class="wfb-palette-item flex items-stretch rounded-lg border border-border bg-canvas/50 hover:border-primary/40 hover:bg-canvas cursor-grab active:cursor-grabbing transition-colors overflow-hidden ${greyedClass}">
+                    ${nodeIconChipHtml(n)}
+                    <div class="flex-1 min-w-0 p-2.5">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-medium text-heading truncate">${escapeHtml(n.title)}</span>
+                            <span class="flex items-center gap-1.5 shrink-0">
+                                ${lockIcon}
+                                <span class="text-[9px] font-mono uppercase ${KIND_COLORS[n.kind] || "text-muted"}">${KIND_LABELS[n.kind] || n.kind}</span>
+                            </span>
+                        </div>
+                        <p class="text-[10px] text-muted leading-snug mt-1 line-clamp-2">${escapeHtml(n.description || "")}</p>
                     </div>
-                    <p class="text-[10px] text-muted leading-snug mt-1 line-clamp-2">${escapeHtml(n.description || "")}</p>
                 </div>
-            `).join("");
+            `;
+            }).join("");
 
             container.querySelectorAll(".wfb-palette-item").forEach(el => {
                 el.addEventListener("dragstart", (e) => {
@@ -298,12 +340,17 @@
         // --- Canvas / node lifecycle ----------------------------------------------------
 
         function nodeHtml(meta) {
-            const isCheckpoint = HUMAN_CHECKPOINT_TOOL_IDS.includes(meta.tool_id);
-            const icon = isCheckpoint ? `<i class="fa-solid fa-user-check text-warning-400 mr-1"></i>` : "";
+            const lockBadge = meta.licensed === false
+                ? `<div class="mt-1 inline-flex items-center gap-1 text-[9px] font-mono uppercase text-muted"><i class="fa-solid fa-lock"></i>Greyed Out &middot; License Required</div>`
+                : "";
             return `
                 <div class="wfb-node-card">
-                    <div class="wfb-node-title">${icon}${escapeHtml(meta.title)}</div>
-                    <div class="wfb-node-kind">${KIND_LABELS[meta.kind] || meta.kind}</div>
+                    ${nodeIconChipHtml(meta)}
+                    <div class="wfb-node-body">
+                        <div class="wfb-node-title">${escapeHtml(meta.title)}</div>
+                        <div class="wfb-node-kind">${KIND_LABELS[meta.kind] || meta.kind}</div>
+                        ${lockBadge}
+                    </div>
                 </div>
             `;
         }
@@ -311,11 +358,16 @@
         function containerNodeHtml(title) {
             return `
                 <div class="wfb-node-card">
-                    <div class="wfb-node-title"><i class="fa-solid fa-box-archive text-primary-400 mr-1"></i>${escapeHtml(title)}</div>
-                    <div class="wfb-node-kind">Container</div>
-                    <button type="button" class="wfb-container-open-btn mt-1.5 w-full text-[10px] font-mono px-2 py-1 rounded bg-primary/15 hover:bg-primary/25 text-primary-400 transition-colors" onmousedown="event.stopPropagation()">
-                        Open <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
-                    </button>
+                    <div class="wfb-icon-chip" style="background: color-mix(in oklch, var(--color-primary-400) 18%, transparent);">
+                        <i class="fa-solid fa-box-archive" style="color: var(--color-primary-400); font-size: 15px;"></i>
+                    </div>
+                    <div class="wfb-node-body">
+                        <div class="wfb-node-title">${escapeHtml(title)}</div>
+                        <div class="wfb-node-kind">Container</div>
+                        <button type="button" class="wfb-container-open-btn mt-1.5 w-full text-[10px] font-mono px-2 py-1 rounded bg-primary/15 hover:bg-primary/25 text-primary-400 transition-colors" onmousedown="event.stopPropagation()">
+                            Open <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+                        </button>
+                    </div>
                 </div>
             `;
         }
@@ -338,9 +390,14 @@
                 title: meta.title,
                 description: meta.description || "",
                 model: meta.model || null,
+                licensed: meta.licensed,
+                icon_source: meta.icon_source || "fa",
+                svgl_icon_url: meta.svgl_icon_url || null,
+                fa_icon: meta.fa_icon || null,
                 params: {},
             };
-            const cssClass = HUMAN_CHECKPOINT_TOOL_IDS.includes(meta.tool_id) ? "kind-human-checkpoint" : `kind-${meta.kind}`;
+            let cssClass = HUMAN_CHECKPOINT_TOOL_IDS.includes(meta.tool_id) ? "kind-human-checkpoint" : `kind-${meta.kind}`;
+            if (meta.licensed === false) cssClass += " kind-greyed";
             editor.addNode(meta.tool_id, 1, 1, posX, posY, cssClass, data, nodeHtml(meta), false);
             recomputeClassificationBadge();
         }

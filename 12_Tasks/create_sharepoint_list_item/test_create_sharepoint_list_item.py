@@ -1,3 +1,15 @@
+# =============================================================================
+# test_create_sharepoint_list_item.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that create_sharepoint_list_item.py's `run()` returns a
+#   successful result with a real-looking item ID, using
+#   m365_graph_bridge's existing mock data.
+#
+# WHAT IT INTERACTS WITH
+#   - `create_sharepoint_list_item.py`, the file under test.
+# =============================================================================
+
 import sys
 from pathlib import Path
 

@@ -1,3 +1,18 @@
+# =============================================================================
+# list_outlook_calendar_events.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: lists Outlook calendar events between a start and end date.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `list_calendar_events()`, called directly in-process (no subprocess).
+#     Mock-mode until a real Azure AD app registration exists.
+#   - `test_list_outlook_calendar_events.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its
+#     `start_date`/`end_date` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

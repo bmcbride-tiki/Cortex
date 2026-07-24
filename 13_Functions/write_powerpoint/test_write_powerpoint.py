@@ -1,3 +1,16 @@
+# =============================================================================
+# test_write_powerpoint.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   Checks that write_powerpoint.py's `run()` creates a real `.pptx` with
+#   one slide per double-newline-separated text block, titled from each
+#   block's first line.
+#
+# WHAT IT INTERACTS WITH
+#   - `write_powerpoint.py`, the file under test.
+#   - `python-pptx`, used here to read back and verify the generated file.
+# =============================================================================
+
 import sys
 import tempfile
 from pathlib import Path

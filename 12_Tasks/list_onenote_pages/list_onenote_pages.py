@@ -1,3 +1,18 @@
+# =============================================================================
+# list_onenote_pages.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Task: lists the pages inside a given OneNote notebook.
+#
+# WHAT IT INTERACTS WITH
+#   - `14_Adapters/m365_graph_bridge/m365_graph_bridge.py`'s
+#     `list_onenote_pages()`, called directly in-process (no subprocess).
+#     Mock-mode until a real Azure AD app registration exists.
+#   - `test_list_onenote_pages.py`, this file's paired test.
+#   - `core_router.py`/`server.py`, which pass this Task its `notebook_id`
+#     as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 from pathlib import Path

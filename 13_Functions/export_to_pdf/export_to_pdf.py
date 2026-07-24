@@ -1,3 +1,20 @@
+# =============================================================================
+# export_to_pdf.py
+# -----------------------------------------------------------------------------
+# WHAT THIS FILE DOES
+#   A Function: writes text into a new .pdf file (one line per row via
+#   `fpdf2`).
+#
+# WHAT IT INTERACTS WITH
+#   - `fpdf2` (`FPDF`), which does the actual PDF rendering. Its built-in
+#     font only supports Latin-1 characters, so text outside that range
+#     fails cleanly with an explanatory message rather than crashing.
+#   - `test_export_to_pdf.py`, this file's paired test.
+#   - `core_router.py`/`workflow_engine.py`, which dispatch this Function
+#     the same way as any Task (generic `09_Functions` category), passing
+#     its `text`/`output_dir`/`filename` as a JSON payload.
+# =============================================================================
+
 import sys
 import json
 import time
