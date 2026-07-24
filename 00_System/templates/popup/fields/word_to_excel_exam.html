@@ -1,0 +1,62 @@
+<!-- Reusable field partial for word_to_excel_exam. Uses a typed local file path rather
+     than a browser upload -- this is a trusted single-user local app (same convention as
+     import_marks_correlation's custom folder path), and a Workflow Builder graph node has
+     no live browser upload to draw from when a saved workflow actually runs. -->
+<div class="space-y-1">
+    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Source Document Path (.docx)</label>
+    <input type="text" data-field="source-path" placeholder="e.g. C:\Data\exam_questions.docx" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading font-mono focus:outline-none focus:border-primary">
+</div>
+
+<div class="space-y-1.5 mt-4">
+    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Source Format</label>
+    <div class="border border-border rounded-lg divide-y divide-border">
+        <label class="flex items-start gap-2.5 p-3 hover:bg-canvas cursor-pointer transition-colors">
+            <input type="radio" data-field="format" name="wte-format-radio" value="ai" checked class="mt-0.5 accent-primary shrink-0">
+            <div class="min-w-0">
+                <div class="font-medium text-heading">AI</div>
+                <div class="text-[11px] text-muted leading-relaxed">AI Generated &amp; Validated -- "Item N" markers, plain A)-D) options, explicit Correct Answer/Key line.</div>
+            </div>
+        </label>
+        <label class="flex items-start gap-2.5 p-3 hover:bg-canvas cursor-pointer transition-colors">
+            <input type="radio" data-field="format" name="wte-format-radio" value="ai2" class="mt-0.5 accent-primary shrink-0">
+            <div class="min-w-0">
+                <div class="font-medium text-heading">AI2</div>
+                <div class="text-[11px] text-muted leading-relaxed">AI-2 (Rob) -- correct option is indicated by bold text rather than an explicit answer line.</div>
+            </div>
+        </label>
+        <label class="flex items-start gap-2.5 p-3 hover:bg-canvas cursor-pointer transition-colors">
+            <input type="radio" data-field="format" name="wte-format-radio" value="ce" class="mt-0.5 accent-primary shrink-0">
+            <div class="min-w-0">
+                <div class="font-medium text-heading">CE</div>
+                <div class="text-[11px] text-muted leading-relaxed">CE Formatted -- hierarchical Word tables, correct option flagged with an asterisk.</div>
+            </div>
+        </label>
+    </div>
+</div>
+
+<script>
+    window.initWordToExcelExamFields = function(container, savedParams, onValidityChange) {
+        const pathInput = container.querySelector('[data-field="source-path"]');
+        const args = (savedParams && savedParams.args) || [];
+        pathInput.value = args[0] || "";
+
+        const formatRadios = container.querySelectorAll('[data-field="format"]');
+        const savedFormat = args[1] || "ai";
+        formatRadios.forEach(r => { r.checked = (r.value === savedFormat); });
+
+        function validate() {
+            const valid = pathInput.value.trim().length > 0;
+            if (onValidityChange) onValidityChange(valid);
+            return valid;
+        }
+        pathInput.oninput = validate;
+        formatRadios.forEach(r => r.addEventListener("change", validate));
+        validate();
+    };
+
+    window.readWordToExcelExamFields = function(container) {
+        const pathInput = container.querySelector('[data-field="source-path"]');
+        const checked = container.querySelector('[data-field="format"]:checked');
+        return { args: [pathInput.value.trim(), checked ? checked.value : "ai"] };
+    };
+</script>

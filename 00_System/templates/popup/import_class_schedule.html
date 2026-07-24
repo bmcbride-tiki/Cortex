@@ -1,0 +1,130 @@
+<!-- Import Class Schedule: dedicated control window (single School Year input, format-enforced).
+     Loaded on demand by window.loadPopup('import_class_schedule', 'openClassScheduleModal') -- see
+     the shared loader in index.html. -->
+<div id="class-schedule-modal" class="fixed inset-0 bg-canvas/80 backdrop-blur-sm hidden items-center justify-center z-modal p-4">
+    <div class="bg-surface border border-border w-full max-w-sm rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in max-h-[90vh]">
+        <div class="px-5 py-4 border-b border-border bg-canvas/50 flex justify-between items-start gap-3 shrink-0">
+            <div class="min-w-0">
+                <h4 class="text-sm font-semibold tracking-wide text-heading flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-days text-primary-400"></i>
+                    Class Schedule Catalogue Scraper
+                </h4>
+                <p class="text-[11px] text-muted mt-1 leading-relaxed">Scrapes the Alberta Tradesecrets training catalogue for a given school year.</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <a href="mde://30_Automation_Scripts/06_Tasks/import_class_schedule/import_class_schedule.md" title="Open Class Schedule notes in the markdown editor" class="w-6 h-6 rounded-md bg-canvas border border-border flex items-center justify-center text-[8px] font-mono font-bold tracking-tight text-muted hover:text-primary-400 hover:border-primary/40 transition-colors">MD</a>
+                <button onclick="window.closeClassScheduleModal()" class="text-muted hover:text-heading transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-5 space-y-4 text-xs overflow-y-auto custom-scrollbar">
+            <div id="cs-fields-mount"></div>
+
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Console Log</label>
+                    <span id="cs-status" class="text-[10px] font-mono text-muted">Ready</span>
+                </div>
+                <div id="cs-console" class="w-full h-32 bg-canvas rounded-lg p-3 font-mono text-[11px] overflow-y-auto custom-scrollbar space-y-1 border border-border leading-relaxed">
+                    <div class="text-muted">// Enter a school year and click Run.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-5 py-3 border-t border-border bg-canvas/50 flex justify-end gap-2 shrink-0">
+            <button onclick="window.closeClassScheduleModal()" class="px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading transition-colors">Close</button>
+            <button id="cs-run-btn" onclick="window.runClassSchedule()" disabled class="px-4 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors flex items-center gap-2 opacity-50 cursor-not-allowed">
+                <i class="fa-solid fa-play"></i> Run
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let csRunning = false;
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+
+        function csLog(msg, colorClass) {
+            const box = document.getElementById("cs-console");
+            const timestamp = new Date().toISOString().split("T")[1].substring(0, 8);
+            const safeMsg = escapeHtml(msg).replace(/\n/g, "<br>&nbsp;&nbsp;");
+            box.innerHTML += `<div class="${colorClass || "text-muted"}">[${timestamp}] ${safeMsg}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function csSetStatus(text, colorClass) {
+            const el = document.getElementById("cs-status");
+            el.innerText = text;
+            el.className = `text-[10px] font-mono ${colorClass || "text-muted"}`;
+        }
+
+        let csFieldsValid = false;
+
+        function csSetRunEnabled(valid) {
+            csFieldsValid = valid;
+            const runBtn = document.getElementById("cs-run-btn");
+            const enabled = valid && !csRunning;
+            runBtn.disabled = !enabled;
+            runBtn.classList.toggle("opacity-50", !enabled);
+            runBtn.classList.toggle("cursor-not-allowed", !enabled);
+        }
+
+        window.runClassSchedule = async function() {
+            const mount = document.getElementById("cs-fields-mount");
+            const params = window.readClassScheduleFields(mount);
+            if (csRunning || !csFieldsValid) return;
+
+            csRunning = true;
+            csSetRunEnabled(csFieldsValid);
+            csSetStatus("Running...", "text-warning-400");
+            csLog(`Dispatching import_class_schedule for school year ${params.args[0]}...`, "text-info-400");
+
+            try {
+                const response = await fetch("/execute/06_Tasks/import_class_schedule", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ args: params.args })
+                });
+                const data = await response.json();
+                if (data.message) csLog(data.message, data.success ? "text-body" : "text-danger-400");
+                if (data.success) {
+                    csLog("Process complete.", "text-success-400");
+                    csSetStatus("Complete", "text-success-400");
+                } else {
+                    csLog("Process failed.", "text-danger-400");
+                    csSetStatus("Failed", "text-danger-400");
+                }
+            } catch (err) {
+                csLog(`System error: ${err.message}`, "text-danger-400");
+                csSetStatus("Error", "text-danger-400");
+            } finally {
+                csRunning = false;
+                csSetRunEnabled(csFieldsValid);
+            }
+        };
+
+        window.openClassScheduleModal = async function() {
+            csSetStatus("Ready", "text-muted");
+            document.getElementById("cs-console").innerHTML = `<div class="text-muted">// Enter a school year and click Run.</div>`;
+            document.getElementById("class-schedule-modal").classList.remove("hidden");
+            document.getElementById("class-schedule-modal").classList.add("flex");
+
+            const mount = document.getElementById("cs-fields-mount");
+            await window.loadFieldPartial("import_class_schedule", mount);
+            window.initClassScheduleFields(mount, {}, csSetRunEnabled);
+        };
+
+        window.closeClassScheduleModal = function() {
+            document.getElementById("class-schedule-modal").classList.add("hidden");
+            document.getElementById("class-schedule-modal").classList.remove("flex");
+        };
+    })();
+</script>

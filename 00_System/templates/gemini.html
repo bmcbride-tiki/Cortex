@@ -1,0 +1,237 @@
+<!-- templates/gemini.html -->
+<div class="space-y-6 animate-fade-in text-heading">
+    <div class="bg-surface border border-border rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h2 class="text-md font-semibold tracking-wide text-heading flex items-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles text-primary-400"></i> Gemini Generative Orchestrator
+            </h2>
+            <p class="text-xs text-muted mt-0.5">Runs through your signed-in Gemini browser session (shared SSO with your Microsoft 365 account) for text generation, Deep Research, and image generation. No API key.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="triggerGeminiAuthSession()" class="px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading flex items-center gap-1.5 transition-colors">
+                <i class="fa-solid fa-key text-warning-400"></i> Initialize Session Auth
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5 space-y-4">
+            <div class="bg-surface border border-border rounded-xl p-5 space-y-4">
+                <h3 class="font-semibold text-heading flex items-center gap-2 text-xs uppercase tracking-wider font-mono">
+                    <i class="fa-solid fa-sliders text-primary-400"></i> Flow-Through Configuration
+                </h3>
+                <hr class="border-border">
+
+                <div class="space-y-1.5 text-xs">
+                    <label class="block text-muted font-mono tracking-wider uppercase text-[10px]">Step 1: Select Generation Mode</label>
+                    <select id="gemini-mode" onchange="updateGeminiModeUI()" class="w-full bg-canvas border border-border rounded px-3 py-2 text-body focus:outline-none focus:border-primary">
+                        <option value="ask">Text Generation</option>
+                        <option value="search">Deep Research (Multi-Step Agent)</option>
+                        <option value="generate_image">Image Generation (Imagen)</option>
+                    </select>
+                </div>
+
+                <div class="space-y-1.5 text-xs">
+                    <label id="gemini-context-label" class="block text-muted font-mono tracking-wider uppercase text-[10px]">Step 2: Workspace Input Context Text</label>
+                    <textarea id="gemini-context-text" rows="5" class="w-full bg-canvas border border-border rounded p-3 text-heading font-mono text-[11px] focus:outline-none focus:border-primary custom-scrollbar resize-none" placeholder="Enter custom context text or an image description..."></textarea>
+                </div>
+
+                <div class="space-y-1.5 text-xs">
+                    <label class="block text-muted font-mono tracking-wider uppercase text-[10px]">Step 3: Choose Generative Prompt Template</label>
+                    <select id="gemini-prompt-template" onchange="updateGeminiPromptPreview()" class="w-full bg-canvas border border-border rounded px-3 py-2 text-body focus:outline-none focus:border-primary">
+                        <option value="none" selected>None (Send Input Exactly as Written)</option>
+                    </select>
+                </div>
+
+                <div class="space-y-1.5 text-xs">
+                    <label class="block text-muted font-mono tracking-wider uppercase text-[10px]">Constructed Pipeline Preview (Sent to Gemini)</label>
+                    <div id="gemini-prompt-preview" class="w-full h-24 bg-canvas border border-surface-2 rounded p-3 text-muted font-mono text-[11px] overflow-y-auto custom-scrollbar leading-relaxed">
+                        Prompt compilation preview appears here...
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="executeGeminiWorkflow()" class="w-full py-2.5 bg-primary-600 hover:bg-primary text-heading rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 shadow-md">
+                        <i class="fa-solid fa-play"></i> Execute Gemini Pipeline
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-7 flex flex-col space-y-4">
+            <div class="bg-surface border border-border rounded-xl p-5 flex-1 flex flex-col min-h-[400px]">
+                <div class="flex justify-between items-center pb-3 border-b border-border">
+                    <h3 class="font-semibold text-heading flex items-center gap-2 text-xs uppercase tracking-wider font-mono">
+                        <i class="fa-solid fa-terminal text-info-400"></i> Active Ingestion Output Logger
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyGeminiTerminalOutput()" class="px-2 py-1 bg-canvas hover:bg-surface-2 border border-border text-[10px] font-mono rounded text-body flex items-center gap-1 transition-colors">
+                            <i class="fa-solid fa-copy"></i> Copy to Clipboard
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 bg-canvas rounded-lg p-4 font-mono text-[11px] text-success-400 overflow-y-auto custom-scrollbar mt-4 space-y-2 border border-border leading-relaxed min-h-[300px]" id="gemini-terminal">
+                    <div class="text-muted">// Workbrain Gemini Ingestion Portal initialized.</div>
+                    <div class="text-muted">// Ready to trigger dynamic system orchestrations...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-surface border border-border rounded-xl p-6 space-y-4 text-xs font-sans">
+        <h4 class="font-semibold text-heading flex items-center gap-2 text-xs uppercase tracking-wider font-mono">
+            <i class="fa-solid fa-code text-secondary-400"></i> Python Flow-Through Script Integration Manual
+        </h4>
+        <hr class="border-border">
+        <p class="text-body">Workbrain scripts can call this Gemini bridge directly via its JSON-payload CLI contract. Authentication reuses your machine's signed-in Gemini session (shared SSO) -- run the <code class="px-1.5 py-0.5 bg-canvas text-info-400 rounded font-mono">init</code> action once, then every later call reuses those saved cookies headlessly:</p>
+
+        <pre class="bg-canvas border border-surface-2 p-4 rounded-lg text-muted font-mono text-[10px] leading-relaxed overflow-x-auto whitespace-pre">python gemini_bridge.py "{\"action\": \"init\"}"
+python gemini_bridge.py "{\"action\": \"ask\", \"prompt\": \"Summarize this text...\"}"
+python gemini_bridge.py "{\"action\": \"search\", \"prompt\": \"What changed in the latest Red Seal standard?\"}"
+python gemini_bridge.py "{\"action\": \"generate_image\", \"prompt\": \"A friendly robot mascot\"}"</pre>
+    </div>
+</div>
+
+<script>
+    (function() {
+        function escapeHtml(str) {
+            const div = document.createElement("div");
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        window.updateGeminiModeUI = function() {
+            const mode = document.getElementById("gemini-mode").value;
+            const label = document.getElementById("gemini-context-label");
+            const textArea = document.getElementById("gemini-context-text");
+
+            if (mode === "generate_image") {
+                label.innerText = "Step 2: Image Description Prompt";
+                textArea.placeholder = "Describe the image you want Imagen to generate...";
+            } else if (mode === "search") {
+                label.innerText = "Step 2: Deep Research Query Text";
+                textArea.placeholder = "Enter the question you want Gemini's Deep Research agent to investigate...";
+            } else {
+                label.innerText = "Step 2: Workspace Input Context Text";
+                textArea.placeholder = "Enter custom context text or prompt directives...";
+            }
+            updateGeminiPromptPreview();
+        };
+
+        window.updateGeminiPromptPreview = function() {
+            const contextText = document.getElementById("gemini-context-text").value || "[Context Text Placeholder]";
+            const templateType = document.getElementById("gemini-prompt-template").value;
+            const previewBox = document.getElementById("gemini-prompt-preview");
+
+            let templateStr = "{input}";
+            if (templateType === "none") {
+                templateStr = "{input}";
+            }
+
+            previewBox.innerText = templateStr.replace("{input}", contextText);
+        };
+
+        window.appendTerminalLog = function(msg, colorClass = "success-400") {
+            const term = document.getElementById("gemini-terminal");
+            const dateStr = new Date().toISOString().split('T')[1].substring(0, 8);
+            term.innerHTML += `<div class="text-${colorClass}">[${dateStr}] ${escapeHtml(msg)}</div>`;
+            term.scrollTop = term.scrollHeight;
+        };
+
+        window.triggerGeminiAuthSession = async function() {
+            if (!confirm("Launch a visible browser window to sign in to Gemini via your organization's shared SSO? (Will keep active for 3 minutes)")) return;
+
+            appendTerminalLog("[SYSTEM] Dispatching Gemini session initializer...", "info-400");
+            try {
+                const res = await fetch('/execute/05_Processes/gemini_bridge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ args: [JSON.stringify({ action: "init" })] })
+                });
+                const result = await res.json();
+                appendTerminalLog(`[SYSTEM LOG] Auth wizard response: ${result.message}`, "muted");
+            } catch (err) {
+                appendTerminalLog(`[CRITICAL] Browser boot error: ${err.message}`, "danger-400");
+            }
+        };
+
+        window.executeGeminiWorkflow = async function() {
+            const promptPreview = document.getElementById("gemini-prompt-preview").innerText;
+            const mode = document.getElementById("gemini-mode").value;
+            if (!promptPreview || promptPreview.includes("[Context Text Placeholder]")) {
+                alert("Please add query text or an image description first.");
+                return;
+            }
+
+            appendTerminalLog("[INGESTION] Dispatching request via signed-in Gemini session...", "info-400");
+            appendTerminalLog(`[INGESTION] Mode: ${mode}`, "muted");
+            if (mode === "search") {
+                appendTerminalLog("[INGESTION] Deep Research can take several minutes -- this pane will sit idle until it completes.", "warning-400");
+            }
+
+            try {
+                const res = await fetch('/execute/05_Processes/gemini_bridge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ args: [JSON.stringify({ action: mode, prompt: promptPreview })] })
+                });
+
+                if (!res.ok) throw new Error("HTTP gateway timeout during Gemini API call.");
+                const data = await res.json();
+
+                const stdout = data.message || "";
+                // gemini_bridge.py always prints exactly one JSON line; find that line
+                // specifically rather than slicing to the end of the string, since stderr
+                // logs (or other trailing output) appended after it would break JSON.parse.
+                const jsonLine = stdout.split("\n").find(line => line.trim().startsWith('{"success"'));
+                if (data.success && jsonLine) {
+                    const parsed = JSON.parse(jsonLine.trim());
+
+                    appendTerminalLog("[SUCCESS] Generation response parsed successfully!", "success-400");
+
+                    const term = document.getElementById("gemini-terminal");
+                    if (parsed.file_path) {
+                        const basename = parsed.file_path.replace(/\\/g, "/").split("/").pop();
+                        const imgUrl = `/generated-images/${encodeURIComponent(basename)}`;
+                        term.innerHTML += `
+                            <div class="mt-4 p-4 bg-surface border border-border rounded-lg text-heading font-sans text-xs selection:bg-primary/20">
+                                <div class="font-mono text-info-400 border-b border-border pb-2 mb-2 flex items-center gap-1.5 uppercase text-[10px]">
+                                    <i class="fa-solid fa-image"></i> Gemini Generated Image
+                                </div>
+                                <img src="${imgUrl}" alt="Gemini generated image" class="max-w-full rounded border border-border mb-2">
+                                <div class="text-muted text-[10px] font-mono break-all">Saved locally to: ${escapeHtml(parsed.file_path)}</div>
+                                <a href="${imgUrl}" download="${escapeHtml(basename)}" class="inline-flex items-center gap-1.5 mt-2 px-2 py-1 bg-canvas hover:bg-surface-2 border border-border text-[10px] font-mono rounded text-body transition-colors">
+                                    <i class="fa-solid fa-download"></i> Download / Save As...
+                                </a>
+                            </div>
+                        `;
+                    } else {
+                        term.innerHTML += `
+                            <div class="mt-4 p-4 bg-surface border border-border rounded-lg text-heading whitespace-pre-wrap font-sans text-xs selection:bg-primary/20">
+                                <div class="font-mono text-info-400 border-b border-border pb-2 mb-2 flex items-center gap-1.5 uppercase text-[10px]">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Gemini Response
+                                </div>
+                                ${escapeHtml(parsed.response || "")}
+                            </div>
+                        `;
+                    }
+                    term.scrollTop = term.scrollHeight;
+                } else {
+                    appendTerminalLog(`[FAILURE] Execution abort context:\n${stdout}`, "danger-400");
+                }
+            } catch (err) {
+                appendTerminalLog(`[CRITICAL] Run pipeline abort: ${err.message}`, "danger-400");
+            }
+        };
+
+        window.copyGeminiTerminalOutput = function() {
+            const text = document.getElementById("gemini-terminal").innerText;
+            navigator.clipboard.writeText(text);
+            alert("Terminal logs copied safely to clipboard buffer.");
+        };
+
+        document.getElementById("gemini-context-text").addEventListener("input", updateGeminiPromptPreview);
+        updateGeminiModeUI();
+    })();
+</script>

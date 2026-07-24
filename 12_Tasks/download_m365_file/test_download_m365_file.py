@@ -1,0 +1,18 @@
+import sys
+import tempfile
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from download_m365_file import DownloadM365File
+
+
+def test_run_writes_local_file():
+    with tempfile.TemporaryDirectory() as tmp:
+        result = DownloadM365File().run("/Reports/Budget.xlsx", tmp)
+        assert result["success"] is True
+        assert Path(result["local_path"]).exists()
+
+
+if __name__ == "__main__":
+    test_run_writes_local_file()
+    print("All download_m365_file self-checks passed.")

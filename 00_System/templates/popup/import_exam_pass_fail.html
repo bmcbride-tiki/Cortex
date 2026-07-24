@@ -1,0 +1,135 @@
+<!-- Import Exam Pass/Fail: dedicated control window (multi-file upload + run).
+     Loaded on demand by window.loadPopup('import_exam_pass_fail', 'openImportExamPassFailModal'). -->
+<div id="import-exam-pass-fail-modal" class="fixed inset-0 bg-canvas/80 backdrop-blur-sm hidden items-center justify-center z-modal p-4">
+    <div class="bg-surface border border-border w-full max-w-xl rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in max-h-[90vh]">
+        <div class="px-5 py-4 border-b border-border bg-canvas/50 flex justify-between items-start gap-3 shrink-0">
+            <div class="min-w-0">
+                <h4 class="text-sm font-semibold tracking-wide text-heading flex items-center gap-2">
+                    <i class="fa-solid fa-check-double text-primary-400"></i>
+                    Import Exam Pass/Fail
+                </h4>
+                <p class="text-[11px] text-muted mt-1 leading-relaxed">Imports region-level Exam Pass/Fail aggregate reports into the training records database.</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <a href="mde://30_Automation_Scripts/06_Tasks/import_exam_pass_fail/import_exam_pass_fail.md" title="Open Import Exam Pass/Fail notes in the markdown editor" class="w-6 h-6 rounded-md bg-canvas border border-border flex items-center justify-center text-[8px] font-mono font-bold tracking-tight text-muted hover:text-primary-400 hover:border-primary/40 transition-colors">MD</a>
+                <button onclick="window.closeImportExamPassFailModal()" class="text-muted hover:text-heading transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-5 space-y-4 text-xs overflow-y-auto custom-scrollbar">
+            <div class="space-y-1">
+                <label for="iepf-files" class="block text-muted font-mono uppercase tracking-wider text-[10px]">Pass/Fail Report File(s) (.xlsx)</label>
+                <input type="file" id="iepf-files" accept=".xlsx" multiple class="w-full text-[11px] text-muted file:mr-2 file:py-1.5 file:px-3 file:rounded file:border file:border-border file:bg-canvas file:text-heading file:text-[11px] file:cursor-pointer">
+                <p class="text-[10px] text-muted leading-relaxed">Filenames should contain "pass" or "fail" -- the importer only picks up matching workbooks once they land in 01_inbox/reports.</p>
+            </div>
+
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Console Log</label>
+                    <span id="iepf-status" class="text-[10px] font-mono text-muted">Ready</span>
+                </div>
+                <div id="iepf-console" class="w-full h-32 bg-canvas rounded-lg p-3 font-mono text-[11px] overflow-y-auto custom-scrollbar space-y-1 border border-border leading-relaxed">
+                    <div class="text-muted">// Choose file(s) and click Run.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-5 py-3 border-t border-border bg-canvas/50 flex justify-end gap-2 shrink-0">
+            <button onclick="window.closeImportExamPassFailModal()" class="px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading transition-colors">Close</button>
+            <button id="iepf-run-btn" onclick="window.runImportExamPassFail()" disabled class="px-4 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors flex items-center gap-2 opacity-50 cursor-not-allowed">
+                <i class="fa-solid fa-play"></i> Run
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let iepfRunning = false;
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+
+        function iepfLog(msg, colorClass) {
+            const box = document.getElementById("iepf-console");
+            const timestamp = new Date().toISOString().split("T")[1].substring(0, 8);
+            const safeMsg = escapeHtml(msg).replace(/\n/g, "<br>&nbsp;&nbsp;");
+            box.innerHTML += `<div class="${colorClass || "text-muted"}">[${timestamp}] ${safeMsg}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function iepfSetStatus(text, colorClass) {
+            const el = document.getElementById("iepf-status");
+            el.innerText = text;
+            el.className = `text-[10px] font-mono ${colorClass || "text-muted"}`;
+        }
+
+        function iepfUpdateRunEnabled() {
+            const fileInput = document.getElementById("iepf-files");
+            const runBtn = document.getElementById("iepf-run-btn");
+            const hasFiles = fileInput.files && fileInput.files.length > 0;
+            runBtn.disabled = !hasFiles || iepfRunning;
+            runBtn.classList.toggle("opacity-50", !hasFiles || iepfRunning);
+            runBtn.classList.toggle("cursor-not-allowed", !hasFiles || iepfRunning);
+        }
+
+        window.runImportExamPassFail = async function() {
+            const fileInput = document.getElementById("iepf-files");
+            const files = Array.from(fileInput.files || []);
+            if (iepfRunning || files.length === 0) return;
+
+            iepfRunning = true;
+            iepfUpdateRunEnabled();
+            iepfSetStatus("Running...", "text-warning-400");
+            iepfLog(`Uploading ${files.length} file(s) and running import_exam_pass_fail...`, "text-info-400");
+
+            const formData = new FormData();
+            files.forEach(f => formData.append("files", f));
+
+            try {
+                const response = await fetch("/api/uploads/exam-pass-fail", { method: "POST", body: formData });
+                const data = await response.json();
+                if (!response.ok) {
+                    iepfLog(data.detail || "Upload rejected.", "text-danger-400");
+                    iepfSetStatus("Failed", "text-danger-400");
+                } else {
+                    if (data.message) iepfLog(data.message, data.success ? "text-body" : "text-danger-400");
+                    if (data.success) {
+                        iepfLog("Process complete.", "text-success-400");
+                        iepfSetStatus("Complete", "text-success-400");
+                    } else {
+                        iepfLog("Process failed.", "text-danger-400");
+                        iepfSetStatus("Failed", "text-danger-400");
+                    }
+                }
+            } catch (err) {
+                iepfLog(`System error: ${err.message}`, "text-danger-400");
+                iepfSetStatus("Error", "text-danger-400");
+            } finally {
+                iepfRunning = false;
+                fileInput.value = "";
+                iepfUpdateRunEnabled();
+            }
+        };
+
+        window.openImportExamPassFailModal = function() {
+            document.getElementById("iepf-files").value = "";
+            document.getElementById("iepf-files").oninput = iepfUpdateRunEnabled;
+            iepfSetStatus("Ready", "text-muted");
+            document.getElementById("iepf-console").innerHTML = `<div class="text-muted">// Choose file(s) and click Run.</div>`;
+            iepfUpdateRunEnabled();
+            document.getElementById("import-exam-pass-fail-modal").classList.remove("hidden");
+            document.getElementById("import-exam-pass-fail-modal").classList.add("flex");
+        };
+
+        window.closeImportExamPassFailModal = function() {
+            document.getElementById("import-exam-pass-fail-modal").classList.add("hidden");
+            document.getElementById("import-exam-pass-fail-modal").classList.remove("flex");
+        };
+    })();
+</script>

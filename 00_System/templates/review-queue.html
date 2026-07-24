@@ -1,0 +1,81 @@
+<div class="space-y-4 animate-fade-in">
+    <div class="flex items-center gap-2">
+        <button data-rq-tab="pending" class="rq-tab px-3 py-1.5 rounded-lg text-xs font-medium border border-border transition-colors">Pending</button>
+        <button data-rq-tab="reviewed" class="rq-tab px-3 py-1.5 rounded-lg text-xs font-medium border border-border transition-colors">Reviewed</button>
+        <button data-rq-tab="all" class="rq-tab px-3 py-1.5 rounded-lg text-xs font-medium border border-border transition-colors">All</button>
+    </div>
+    <div id="rq-list" class="space-y-3">
+        <div class="text-muted font-mono text-xs animate-pulse p-4">Loading review queue...</div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let currentTab = "pending";
+
+        function tabButtonClasses(tab) {
+            const active = tab === currentTab;
+            return active
+                ? "bg-primary/15 text-primary-400 border-primary/30"
+                : "text-muted hover:text-heading hover:bg-surface-2";
+        }
+
+        function renderTabs() {
+            document.querySelectorAll(".rq-tab").forEach(btn => {
+                btn.className = `rq-tab px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${tabButtonClasses(btn.dataset.rqTab)}`;
+            });
+        }
+
+        function renderCheckpoint(cp) {
+            const isPending = cp.status === "pending";
+            return `
+                <div class="bg-surface border border-border rounded-xl p-4 flex items-start justify-between gap-4">
+                    <div class="min-w-0 space-y-1.5">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-user-check ${isPending ? 'text-warning-400' : 'text-success-400'}"></i>
+                            <span class="text-sm font-semibold text-heading">${window.escapeAttrText(cp.workflow_label)}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase border ${isPending ? 'text-warning-400 border-warning/20 bg-warning/10' : 'text-success-400 border-success/20 bg-success/10'}">${cp.status}</span>
+                        </div>
+                        ${cp.instructions ? `<p class="text-xs text-muted leading-relaxed">${window.escapeAttrText(cp.instructions)}</p>` : ""}
+                        <p class="text-[11px] font-mono text-muted break-all">${window.escapeAttrText(cp.file_path)}</p>
+                        <p class="text-[10px] text-muted">Paused: ${cp.created}${cp.reviewed ? ` &middot; Reviewed: ${cp.reviewed}` : ""}</p>
+                    </div>
+                    ${isPending ? `<button onclick="window.rqResolve(${cp.id})" class="shrink-0 px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary-400 hover:text-heading text-xs rounded border border-primary/20 font-medium transition-colors">Mark Reviewed</button>` : ""}
+                </div>
+            `;
+        }
+
+        function reload() {
+            const list = document.getElementById("rq-list");
+            fetch(`/api/workflow-checkpoints?status=${currentTab}`)
+                .then(r => r.json())
+                .then(data => {
+                    const checkpoints = data.checkpoints || [];
+                    list.innerHTML = checkpoints.length
+                        ? checkpoints.map(renderCheckpoint).join("")
+                        : `<div class="text-muted font-mono text-xs p-4">No ${currentTab === "all" ? "" : currentTab + " "}checkpoints.</div>`;
+                })
+                .catch(() => {
+                    list.innerHTML = `<div class="p-4 bg-danger/10 border border-danger/20 rounded-xl text-danger-400 font-mono text-xs">Failed to load the review queue.</div>`;
+                });
+        }
+
+        window.rqResolve = function(id) {
+            fetch(`/api/workflow-checkpoints/${id}/resolve`, { method: "POST" })
+                .then(r => r.json())
+                .then(() => reload())
+                .catch(() => alert("Could not mark checkpoint reviewed."));
+        };
+
+        document.querySelectorAll(".rq-tab").forEach(btn => {
+            btn.addEventListener("click", () => {
+                currentTab = btn.dataset.rqTab;
+                renderTabs();
+                reload();
+            });
+        });
+
+        renderTabs();
+        reload();
+    })();
+</script>

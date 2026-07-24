@@ -1,0 +1,447 @@
+<!-- templates/copilot.html -->
+<div class="space-y-6 animate-fade-in text-heading">
+    <div class="bg-surface border border-border rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h2 class="text-md font-semibold tracking-wide text-heading flex items-center gap-2">
+                <i class="fa-solid fa-robot text-primary-400"></i> M365 Copilot Generative Orchestrator
+            </h2>
+            <p class="text-xs text-muted mt-0.5">Runs through your signed-in Edge browser session (enterprise SSO) for text generation, image generation (Designer), and chatting with your own @-mentionable Copilot agents. No API key.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="triggerCopilotAuthSession()" class="px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading flex items-center gap-1.5 transition-colors">
+                <i class="fa-solid fa-key text-warning-400"></i> Initialize Edge Session Auth
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5 space-y-4">
+            <div class="bg-surface border border-border rounded-xl p-5 space-y-4">
+                <h3 class="font-semibold text-heading flex items-center gap-2 text-xs uppercase tracking-wider font-mono">
+                    <i class="fa-solid fa-sliders text-primary-400"></i> Flow-Through Configuration
+                </h3>
+                <hr class="border-border">
+
+                <div class="space-y-1.5 text-xs">
+                    <label class="block text-muted font-mono tracking-wider uppercase text-[10px]">Step 1: Select Action Mode</label>
+                    <select id="copilot-mode" onchange="updateCopilotModeUI()" class="w-full bg-canvas border border-border rounded px-3 py-2 text-body focus:outline-none focus:border-primary">
+                        <option value="ask">Text Generation (Ask Copilot)</option>
+                        <option value="generate_image">Image Generation (Designer)</option>
+                        <option value="ask_agent">Chat with a Specific Agent (@mention)</option>
+                        <option value="list_agents">List My Agents</option>
+                    </select>
+                </div>
+
+                <div id="copilot-agent-select-container" class="space-y-1.5 text-xs hidden">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-muted font-mono tracking-wider uppercase text-[10px]">Step 2: Select Agent to @mention</label>
+                        <button onclick="loadCopilotAgents()" class="px-2 py-0.5 bg-canvas hover:bg-surface-2 border border-border text-[10px] font-mono rounded text-body flex items-center gap-1 transition-colors">
+                            <i class="fa-solid fa-rotate"></i> Refresh List
+                        </button>
+                    </div>
+                    <select id="copilot-agent-dropdown" onchange="updatePromptPreview()" class="w-full bg-canvas border border-border rounded px-3 py-2 text-body focus:outline-none focus:border-primary font-mono">
+                        <option value="">-- Click "Refresh List" to load your agents --</option>
+                    </select>
+                </div>
+
+                <div id="copilot-input-source-container" class="space-y-1.5 text-xs">
+                    <label class="block text-muted font-mono tracking-wider uppercase text-[10px]">Step 2: Select Data Input Source</label>
+                    <select id="copilot-input-source" onchange="toggleInputSourceMode()" class="w-full bg-canvas border border-border rounded px-3 py-2 text-body focus:outline-none focus:border-primary">
+                        <option value="raw">Raw Plaintext/Custom Query Prompt</option>
+                        <option value="transcript">Indexed Meeting Transcript (From SQLite Database)</option>
+                    </select>
+                </div>
+
+                <div id="copilot-transcript-select-container" class="space-y-1.5 text-xs hidden">
+                    <label class="block text-muted font-mono tracking-wider uppercase text-[10px]">Select Database Transcript Row</label>
+                    <select id="copilot-transcript-dropdown" onchange="loadSelectedTranscriptContent()" class="w-full bg-canvas border border-border rounded px-3 py-2 text-body focus:outline-none focus:border-primary font-mono">
+                        <option value="">-- Loading dynamic transcript indexes... --</option>
+                    </select>
+                </div>
+
+                <div id="copilot-context-text-container" class="space-y-1.5 text-xs">
+                    <label id="copilot-context-label" class="block text-muted font-mono tracking-wider uppercase text-[10px]">Step 3: Workspace Input Context Text</label>
+                    <textarea id="copilot-context-text" rows="5" class="w-full bg-canvas border border-border rounded p-3 text-heading font-mono text-[11px] focus:outline-none focus:border-primary custom-scrollbar resize-none" placeholder="Enter custom context text or select an indexed transcript from above..."></textarea>
+                </div>
+
+                <div id="copilot-template-container" class="space-y-1.5 text-xs">
+                    <label class="block text-muted font-mono tracking-wider uppercase text-[10px]">Step 4: Choose Generative Prompt Template</label>
+                    <select id="copilot-prompt-template" onchange="updatePromptPreview()" class="w-full bg-canvas border border-border rounded px-3 py-2 text-body focus:outline-none focus:border-primary">
+                        <option value="brief">Executive Briefing & Actionable Decisions</option>
+                        <option value="tasks">SME Task List & Milestone Milestones Matrix</option>
+                        <option value="email">Draft Follow-Up Email Response Draft</option>
+                        <option value="raw">None (Send Input Context Exactly as Written)</option>
+                    </select>
+                </div>
+
+                <div id="copilot-preview-container" class="space-y-1.5 text-xs">
+                    <label class="block text-muted font-mono tracking-wider uppercase text-[10px]">Constructed Pipeline Preview (Sent to Edge)</label>
+                    <div id="copilot-prompt-preview" class="w-full h-24 bg-canvas border border-surface-2 rounded p-3 text-muted font-mono text-[11px] overflow-y-auto custom-scrollbar leading-relaxed">
+                        Prompt compilation preview appears here...
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="executeCopilotWorkflow()" class="w-full py-2.5 bg-primary-600 hover:bg-primary text-heading rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 shadow-md">
+                        <i class="fa-solid fa-play"></i> Execute Copilot Pipeline
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-7 flex flex-col space-y-4">
+            <div class="bg-surface border border-border rounded-xl p-5 flex-1 flex flex-col min-h-[400px]">
+                <div class="flex justify-between items-center pb-3 border-b border-border">
+                    <h3 class="font-semibold text-heading flex items-center gap-2 text-xs uppercase tracking-wider font-mono">
+                        <i class="fa-solid fa-terminal text-info-400"></i> Active Ingestion Output Logger
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyCopilotTerminalOutput()" class="px-2 py-1 bg-canvas hover:bg-surface-2 border border-border text-[10px] font-mono rounded text-body flex items-center gap-1 transition-colors">
+                            <i class="fa-solid fa-copy"></i> Copy to Clipboard
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 bg-canvas rounded-lg p-4 font-mono text-[11px] text-success-400 overflow-y-auto custom-scrollbar mt-4 space-y-2 border border-border leading-relaxed min-h-[300px]" id="copilot-terminal">
+                    <div class="text-muted">// Workbrain Microsoft 365 Copilot Ingestion Portal initialized.</div>
+                    <div class="text-muted">// Ready to trigger dynamic system orchestrations...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-surface border border-border rounded-xl p-6 space-y-4 text-xs font-sans">
+        <h4 class="font-semibold text-heading flex items-center gap-2 text-xs uppercase tracking-wider font-mono">
+            <i class="fa-solid fa-code text-secondary-400"></i> Python Flow-Through Script Integration Manual
+        </h4>
+        <hr class="border-border">
+        <p class="text-body">Workbrain scripts can call this Copilot bridge directly via its JSON-payload CLI contract. Authentication reuses your machine's signed-in Edge session (enterprise SSO) -- run the <code class="px-1.5 py-0.5 bg-canvas text-info-400 rounded font-mono">init</code> action once, then every later call reuses that saved session headlessly:</p>
+
+        <pre class="bg-canvas border border-surface-2 p-4 rounded-lg text-muted font-mono text-[10px] leading-relaxed overflow-x-auto whitespace-pre">python copilot_bridge.py "{\"action\": \"init\"}"
+python copilot_bridge.py "{\"action\": \"ask\", \"prompt\": \"Summarize this text...\"}"
+python copilot_bridge.py "{\"action\": \"generate_image\", \"prompt\": \"A friendly robot mascot\"}"
+python copilot_bridge.py "{\"action\": \"list_agents\"}"
+python copilot_bridge.py "{\"action\": \"ask_agent\", \"agent\": \"Hal-9000\", \"prompt\": \"What's on my plate today?\"}"</pre>
+    </div>
+</div>
+
+<script>
+    (function() {
+        function escapeHtml(str) {
+            const div = document.createElement("div");
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        let transcriptsCache = {};
+        let cachedAgents = [];
+
+        async function loadTranscriptsIndex() {
+            try {
+                const res = await fetch('/api/copilot/transcripts');
+                if (!res.ok) throw new Error("Could not trace transcripts lists from server.");
+                const data = await res.json();
+
+                const dropdown = document.getElementById("copilot-transcript-dropdown");
+                dropdown.innerHTML = `<option value="">-- Choose target meeting transcript row --</option>`;
+
+                data.forEach(t => {
+                    dropdown.innerHTML += `<option value="${t.id}">[${t.source_type}] ${t.title} (${t.trade || 'All Trades'})</option>`;
+                });
+            } catch (err) {
+                console.error("Transcript loading caught error: ", err);
+            }
+        }
+
+        window.toggleInputSourceMode = function() {
+            const mode = document.getElementById("copilot-input-source").value;
+            const selectContainer = document.getElementById("copilot-transcript-select-container");
+            const label = document.getElementById("copilot-context-label");
+            const textArea = document.getElementById("copilot-context-text");
+
+            if (mode === "raw") {
+                selectContainer.classList.add("hidden");
+                label.innerText = "Step 3: Workspace Input Context Text";
+                textArea.disabled = false;
+                textArea.value = "";
+                textArea.placeholder = "Enter custom plaintext or prompt directives...";
+            } else {
+                selectContainer.classList.remove("hidden");
+                label.innerText = "Step 3: Loaded Transcript Preview (Read Only)";
+                textArea.disabled = true;
+                textArea.value = "";
+                textArea.placeholder = "Choose a database transcript from the select box above to inject meeting records...";
+                loadTranscriptsIndex();
+            }
+            updatePromptPreview();
+        };
+
+        window.loadSelectedTranscriptContent = async function() {
+            const id = document.getElementById("copilot-transcript-dropdown").value;
+            if (!id) return;
+
+            appendTerminalLog(`[SYSTEM] Retrieving text bytes for transcript ID ${id} from vault...`, "muted");
+            try {
+                const res = await fetch(`/api/copilot/transcript-content/${id}`);
+                if (!res.ok) throw new Error("Transcript retrieval interface error.");
+                const data = await res.json();
+
+                document.getElementById("copilot-context-text").value = data.content;
+                appendTerminalLog(`[SUCCESS] Loaded ${data.content.length} characters of context from "${data.title}"`, "success-400");
+                updatePromptPreview();
+            } catch (err) {
+                appendTerminalLog(`[ERROR] Failed to read transcript context: ${err.message}`, "danger-400");
+            }
+        };
+
+        window.updateCopilotModeUI = function() {
+            const mode = document.getElementById("copilot-mode").value;
+            const agentContainer = document.getElementById("copilot-agent-select-container");
+            const inputSourceContainer = document.getElementById("copilot-input-source-container");
+            const contextContainer = document.getElementById("copilot-context-text-container");
+            const templateContainer = document.getElementById("copilot-template-container");
+            const previewContainer = document.getElementById("copilot-preview-container");
+            const label = document.getElementById("copilot-context-label");
+            const textArea = document.getElementById("copilot-context-text");
+
+            agentContainer.classList.toggle("hidden", mode !== "ask_agent");
+            templateContainer.classList.toggle("hidden", mode !== "ask");
+            inputSourceContainer.classList.toggle("hidden", mode === "list_agents" || mode === "generate_image");
+            contextContainer.classList.toggle("hidden", mode === "list_agents");
+            previewContainer.classList.toggle("hidden", mode === "list_agents");
+
+            if (mode === "generate_image") {
+                label.innerText = "Step 2: Image Description Prompt";
+                textArea.placeholder = "Describe the image you want Copilot Designer to generate...";
+            } else if (mode === "ask_agent") {
+                label.innerText = "Step 3: Message to Send the Selected Agent";
+                textArea.placeholder = "What do you want to ask this agent?";
+            } else if (mode === "list_agents") {
+                // No prompt needed for this mode.
+            } else {
+                label.innerText = "Step 3: Workspace Input Context Text";
+                textArea.placeholder = "Enter custom plaintext or prompt directives...";
+            }
+
+            if (mode === "ask_agent" && cachedAgents.length === 0) {
+                loadCopilotAgents();
+            }
+
+            updatePromptPreview();
+        };
+
+        window.loadCopilotAgents = async function() {
+            appendTerminalLog("[SYSTEM] Fetching your @-mentionable agent list from Copilot...", "info-400");
+            try {
+                const res = await fetch('/execute/05_Processes/copilot_bridge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ args: [JSON.stringify({ action: "list_agents" })] })
+                });
+                const data = await res.json();
+                const parsed = extractBridgeJson(data.message || "");
+                if (!parsed || !parsed.success) {
+                    throw new Error((parsed && parsed.response) || "Could not list agents.");
+                }
+
+                cachedAgents = parsed.agents || [];
+                const dropdown = document.getElementById("copilot-agent-dropdown");
+                dropdown.innerHTML = cachedAgents.map(a => `<option value="${escapeHtml(a.name)}">${escapeHtml(a.name)}</option>`).join("");
+                appendTerminalLog(`[SUCCESS] Loaded ${cachedAgents.length} agents.`, "success-400");
+                updatePromptPreview();
+            } catch (err) {
+                appendTerminalLog(`[ERROR] Failed to load agents: ${err.message}`, "danger-400");
+            }
+        };
+
+        window.updatePromptPreview = function() {
+            const mode = document.getElementById("copilot-mode").value;
+            const contextText = document.getElementById("copilot-context-text").value || "[Context Text Placeholder]";
+            const previewBox = document.getElementById("copilot-prompt-preview");
+
+            if (mode === "list_agents") {
+                previewBox.innerText = "(no prompt needed -- lists agents available to @mention)";
+                return;
+            }
+
+            if (mode === "generate_image" || mode === "ask_agent") {
+                previewBox.innerText = contextText;
+                return;
+            }
+
+            const templateType = document.getElementById("copilot-prompt-template").value;
+            let templateStr = "";
+            if (templateType === "brief") {
+                templateStr = "Analyze this meeting transcript and produce an executive briefing detailing named trades experts, operational bottlenecks, key decisions, and scheduled milestones:\n\n{input}";
+            } else if (templateType === "tasks") {
+                templateStr = "Identify and extract all actionable milestones, assigned tasks, dates, and named stakeholders from this meeting. Build a clear task summary:\n\n{input}";
+            } else if (templateType === "email") {
+                templateStr = "Draft a comprehensive follow-up email based on the decisions, technical parameters, and participants listed in this transcript context:\n\n{input}";
+            } else {
+                templateStr = "{input}";
+            }
+
+            previewBox.innerText = templateStr.replace("{input}", contextText);
+        };
+
+        window.appendTerminalLog = function(msg, colorClass = "success-400") {
+            const term = document.getElementById("copilot-terminal");
+            const dateStr = new Date().toISOString().split('T')[1].substring(0, 8);
+            term.innerHTML += `<div class="text-${colorClass}">[${dateStr}] ${escapeHtml(msg)}</div>`;
+            term.scrollTop = term.scrollHeight;
+        };
+
+        window.triggerCopilotAuthSession = async function() {
+            if (!confirm("Launch visible headed Microsoft Edge browser profile window to verify login states? (Will keep active for 3 minutes)")) return;
+
+            appendTerminalLog("[SYSTEM] Dispatching MS Edge headed profile initializer...", "info-400");
+            try {
+                const res = await fetch('/execute/05_Processes/copilot_bridge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ args: [JSON.stringify({ action: "init" })] })
+                });
+                const result = await res.json();
+                appendTerminalLog(`[SYSTEM LOG] Auth wizard response: ${result.message}`, "muted");
+            } catch (err) {
+                appendTerminalLog(`[CRITICAL] Browser boot error: ${err.message}`, "danger-400");
+            }
+        };
+
+        // copilot_bridge.py always prints exactly one JSON line. Find that line
+        // specifically rather than slicing from the first match to the end of the
+        // string, since stderr logs (or other trailing output) appended after it
+        // would otherwise break JSON.parse.
+        function extractBridgeJson(stdout) {
+            const jsonLine = stdout.split("\n").find(line => line.trim().startsWith('{"success"'));
+            if (!jsonLine) return null;
+            try {
+                return JSON.parse(jsonLine.trim());
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function renderAgentsList(agents) {
+            const term = document.getElementById("copilot-terminal");
+            const rows = agents.map(a => `
+                <div class="flex items-start gap-2 py-1.5 border-b border-border last:border-0">
+                    <span class="font-mono text-info-400 shrink-0">@${escapeHtml(a.name)}</span>
+                    <span class="text-muted">${escapeHtml(a.description || "")}</span>
+                </div>
+            `).join("");
+            term.innerHTML += `
+                <div class="mt-4 p-4 bg-surface border border-border rounded-lg text-heading font-sans text-xs selection:bg-primary/20">
+                    <div class="font-mono text-info-400 border-b border-border pb-2 mb-2 flex items-center gap-1.5 uppercase text-[10px]">
+                        <i class="fa-solid fa-users"></i> Agents Available to @mention (${agents.length})
+                    </div>
+                    ${rows}
+                </div>
+            `;
+            term.scrollTop = term.scrollHeight;
+        }
+
+        function renderImageResult(filePath) {
+            const term = document.getElementById("copilot-terminal");
+            const basename = filePath.replace(/\\/g, "/").split("/").pop();
+            const imgUrl = `/generated-images/${encodeURIComponent(basename)}`;
+            term.innerHTML += `
+                <div class="mt-4 p-4 bg-surface border border-border rounded-lg text-heading font-sans text-xs selection:bg-primary/20">
+                    <div class="font-mono text-info-400 border-b border-border pb-2 mb-2 flex items-center gap-1.5 uppercase text-[10px]">
+                        <i class="fa-solid fa-image"></i> Copilot Designer Generated Image
+                    </div>
+                    <img src="${imgUrl}" alt="Copilot generated image" class="max-w-full rounded border border-border mb-2">
+                    <div class="text-muted text-[10px] font-mono break-all">Saved locally to: ${escapeHtml(filePath)}</div>
+                    <a href="${imgUrl}" download="${escapeHtml(basename)}" class="inline-flex items-center gap-1.5 mt-2 px-2 py-1 bg-canvas hover:bg-surface-2 border border-border text-[10px] font-mono rounded text-body transition-colors">
+                        <i class="fa-solid fa-download"></i> Download / Save As...
+                    </a>
+                </div>
+            `;
+            term.scrollTop = term.scrollHeight;
+        }
+
+        function renderTextResult(text, heading) {
+            const term = document.getElementById("copilot-terminal");
+            term.innerHTML += `
+                <div class="mt-4 p-4 bg-surface border border-border rounded-lg text-heading whitespace-pre-wrap font-sans text-xs selection:bg-primary/20">
+                    <div class="font-mono text-info-400 border-b border-border pb-2 mb-2 flex items-center gap-1.5 uppercase text-[10px]">
+                        <i class="fa-solid fa-robot"></i> ${escapeHtml(heading)}
+                    </div>
+                    ${escapeHtml(text)}
+                </div>
+            `;
+            term.scrollTop = term.scrollHeight;
+        }
+
+        window.executeCopilotWorkflow = async function() {
+            const mode = document.getElementById("copilot-mode").value;
+            const promptPreview = document.getElementById("copilot-prompt-preview").innerText;
+
+            if (mode !== "list_agents" && (!promptPreview || promptPreview.includes("[Context Text Placeholder]"))) {
+                alert("Please add query text or populate a database transcript context first.");
+                return;
+            }
+
+            let payload;
+            if (mode === "ask") {
+                payload = { action: "ask", prompt: promptPreview, headless: true };
+            } else if (mode === "generate_image") {
+                payload = { action: "generate_image", prompt: promptPreview };
+            } else if (mode === "list_agents") {
+                payload = { action: "list_agents" };
+            } else if (mode === "ask_agent") {
+                const agent = document.getElementById("copilot-agent-dropdown").value;
+                if (!agent) {
+                    alert("Please refresh and select an agent to @mention first.");
+                    return;
+                }
+                payload = { action: "ask_agent", agent: agent, prompt: promptPreview };
+            }
+
+            appendTerminalLog("[INGESTION] Booting Playwright automation thread...", "info-400");
+            appendTerminalLog("[INGESTION] Accessing persistent user session profile...", "muted");
+            appendTerminalLog(`[INGESTION] Mode: ${mode}`, "muted");
+            if (mode === "generate_image") {
+                appendTerminalLog("[INGESTION] Designer image generation can take up to a minute or more.", "warning-400");
+            }
+
+            try {
+                const res = await fetch('/execute/05_Processes/copilot_bridge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ args: [JSON.stringify(payload)] })
+                });
+
+                if (!res.ok) throw new Error("HTTP gateway timeout during browser interaction.");
+                const data = await res.json();
+                const stdout = data.message || "";
+                const parsed = extractBridgeJson(stdout);
+
+                if (data.success && parsed && parsed.success) {
+                    appendTerminalLog("[SUCCESS] Generation response parsed successfully!", "success-400");
+                    if (parsed.file_path) {
+                        renderImageResult(parsed.file_path);
+                    } else if (parsed.agents) {
+                        renderAgentsList(parsed.agents);
+                    } else {
+                        renderTextResult(parsed.response || "", mode === "ask_agent" ? "Copilot Agent Response" : "M365 Copilot Grounded Answer");
+                    }
+                } else {
+                    const errMsg = (parsed && parsed.response) || stdout;
+                    appendTerminalLog(`[FAILURE] Execution abort context:\n${errMsg}`, "danger-400");
+                }
+            } catch (err) {
+                appendTerminalLog(`[CRITICAL] Run pipeline abort: ${err.message}`, "danger-400");
+            }
+        };
+
+        window.copyCopilotTerminalOutput = function() {
+            const text = document.getElementById("copilot-terminal").innerText;
+            navigator.clipboard.writeText(text);
+            alert("Terminal logs copied safely to clipboard buffer.");
+        };
+
+        document.getElementById("copilot-context-text").addEventListener("input", updatePromptPreview);
+        updateCopilotModeUI();
+    })();
+</script>

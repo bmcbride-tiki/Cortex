@@ -1,0 +1,159 @@
+<!-- Import Transcripts: dedicated control window (pending-file list + optional manual
+     upload + run). Loaded on demand by
+     window.loadPopup('import_transcripts', 'openImportTranscriptsModal'). -->
+<div id="import-transcripts-modal" class="fixed inset-0 bg-canvas/80 backdrop-blur-sm hidden items-center justify-center z-modal p-4">
+    <div class="bg-surface border border-border w-full max-w-xl rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in max-h-[90vh]">
+        <div class="px-5 py-4 border-b border-border bg-canvas/50 flex justify-between items-start gap-3 shrink-0">
+            <div class="min-w-0">
+                <h4 class="text-sm font-semibold tracking-wide text-heading flex items-center gap-2">
+                    <i class="fa-solid fa-file-lines text-primary-400"></i>
+                    Import Transcripts
+                </h4>
+                <p class="text-[11px] text-muted mt-1 leading-relaxed">Vaults and indexes meeting transcript files (.txt / .docx).</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <a href="mde://30_Automation_Scripts/06_Tasks/import_transcripts/import_transcripts.md" title="Open Import Transcripts notes in the markdown editor" class="w-6 h-6 rounded-md bg-canvas border border-border flex items-center justify-center text-[8px] font-mono font-bold tracking-tight text-muted hover:text-primary-400 hover:border-primary/40 transition-colors">MD</a>
+                <button onclick="window.closeImportTranscriptsModal()" class="text-muted hover:text-heading transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-5 space-y-4 text-xs overflow-y-auto custom-scrollbar">
+            <div class="space-y-1.5">
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Pending Files (01_Inbox/transcripts)</label>
+                <div id="it-file-list" class="border border-border rounded-lg divide-y divide-border max-h-36 overflow-y-auto custom-scrollbar">
+                    <div class="p-3 text-muted">Loading pending files...</div>
+                </div>
+            </div>
+
+            <div class="space-y-1">
+                <label for="it-files" class="block text-muted font-mono uppercase tracking-wider text-[10px]">Manually Upload Transcript File(s) (optional)</label>
+                <input type="file" id="it-files" accept=".txt,.docx" multiple class="w-full text-[11px] text-muted file:mr-2 file:py-1.5 file:px-3 file:rounded file:border file:border-border file:bg-canvas file:text-heading file:text-[11px] file:cursor-pointer">
+                <p class="text-[10px] text-muted leading-relaxed">Leave empty to just process whatever's already pending above.</p>
+            </div>
+
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Console Log</label>
+                    <span id="it-status" class="text-[10px] font-mono text-muted">Ready</span>
+                </div>
+                <div id="it-console" class="w-full h-32 bg-canvas rounded-lg p-3 font-mono text-[11px] overflow-y-auto custom-scrollbar space-y-1 border border-border leading-relaxed">
+                    <div class="text-muted">// Click Run to process transcripts.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-5 py-3 border-t border-border bg-canvas/50 flex justify-end gap-2 shrink-0">
+            <button onclick="window.closeImportTranscriptsModal()" class="px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading transition-colors">Close</button>
+            <button id="it-run-btn" onclick="window.runImportTranscripts()" class="px-4 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-play"></i> Run
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let itRunning = false;
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+
+        function itLog(msg, colorClass) {
+            const box = document.getElementById("it-console");
+            const timestamp = new Date().toISOString().split("T")[1].substring(0, 8);
+            const safeMsg = escapeHtml(msg).replace(/\n/g, "<br>&nbsp;&nbsp;");
+            box.innerHTML += `<div class="${colorClass || "text-muted"}">[${timestamp}] ${safeMsg}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function itSetStatus(text, colorClass) {
+            const el = document.getElementById("it-status");
+            el.innerText = text;
+            el.className = `text-[10px] font-mono ${colorClass || "text-muted"}`;
+        }
+
+        function renderFileList(files) {
+            const container = document.getElementById("it-file-list");
+            if (!files || files.length === 0) {
+                container.innerHTML = `<div class="p-3 text-muted">No pending files in 01_Inbox/transcripts.</div>`;
+                return;
+            }
+            container.innerHTML = files.map(name => `
+                <div class="flex items-center gap-2 p-2.5 text-heading">
+                    <i class="fa-solid fa-file-lines text-primary-400 text-[11px]"></i>
+                    <span class="truncate">${escapeHtml(name)}</span>
+                </div>
+            `).join("");
+        }
+
+        function reloadPendingFiles() {
+            return fetch("/api/inbox").then(r => r.json()).then(data => {
+                renderFileList(data.transcripts || []);
+            }).catch(() => {
+                document.getElementById("it-file-list").innerHTML = `<div class="p-3 text-danger-400">Could not load pending files.</div>`;
+            });
+        }
+
+        window.runImportTranscripts = async function() {
+            if (itRunning) return;
+            const fileInput = document.getElementById("it-files");
+            const files = Array.from(fileInput.files || []);
+
+            itRunning = true;
+            const runBtn = document.getElementById("it-run-btn");
+            runBtn.disabled = true;
+            runBtn.classList.add("opacity-50", "cursor-not-allowed");
+            itSetStatus("Running...", "text-warning-400");
+            itLog(files.length > 0 ? `Uploading ${files.length} file(s) and running import_transcripts...` : "Running import_transcripts against pending inbox files...", "text-info-400");
+
+            const formData = new FormData();
+            files.forEach(f => formData.append("files", f));
+
+            try {
+                const response = await fetch("/api/uploads/transcripts", { method: "POST", body: formData });
+                const data = await response.json();
+                if (!response.ok) {
+                    itLog(data.detail || "Upload rejected.", "text-danger-400");
+                    itSetStatus("Failed", "text-danger-400");
+                } else {
+                    if (data.message) itLog(data.message, data.success ? "text-body" : "text-danger-400");
+                    if (data.success) {
+                        itLog("Process complete.", "text-success-400");
+                        itSetStatus("Complete", "text-success-400");
+                    } else {
+                        itLog("Process failed.", "text-danger-400");
+                        itSetStatus("Failed", "text-danger-400");
+                    }
+                }
+            } catch (err) {
+                itLog(`System error: ${err.message}`, "text-danger-400");
+                itSetStatus("Error", "text-danger-400");
+            } finally {
+                itRunning = false;
+                runBtn.disabled = false;
+                runBtn.classList.remove("opacity-50", "cursor-not-allowed");
+                fileInput.value = "";
+                reloadPendingFiles();
+            }
+        };
+
+        window.openImportTranscriptsModal = function() {
+            document.getElementById("it-files").value = "";
+            itSetStatus("Ready", "text-muted");
+            document.getElementById("it-console").innerHTML = `<div class="text-muted">// Click Run to process transcripts.</div>`;
+            document.getElementById("import-transcripts-modal").classList.remove("hidden");
+            document.getElementById("import-transcripts-modal").classList.add("flex");
+            reloadPendingFiles();
+        };
+
+        window.closeImportTranscriptsModal = function() {
+            document.getElementById("import-transcripts-modal").classList.add("hidden");
+            document.getElementById("import-transcripts-modal").classList.remove("flex");
+        };
+    })();
+</script>

@@ -1,0 +1,129 @@
+<!-- Web Scraper: dedicated control window (URL + folder/file caps). Loaded on demand by
+     window.loadPopup('webscraper', 'openWebscraperModal') -- see the shared loader in index.html. -->
+<div id="webscraper-modal" class="fixed inset-0 bg-canvas/80 backdrop-blur-sm hidden items-center justify-center z-modal p-4">
+    <div class="bg-surface border border-border w-full max-w-md rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in max-h-[90vh]">
+        <div class="px-5 py-4 border-b border-border bg-canvas/50 flex justify-between items-start gap-3 shrink-0">
+            <div class="min-w-0">
+                <h4 class="text-sm font-semibold tracking-wide text-heading flex items-center gap-2">
+                    <i class="fa-solid fa-spider text-primary-400"></i>
+                    Web Scraper
+                </h4>
+                <p class="text-[11px] text-muted mt-1 leading-relaxed">Crawls a website starting from a URL and indexes page content into cortex.db.</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <a href="mde://12_Tasks/webscraper/webscraper.md" title="Open Web Scraper notes in the markdown editor" class="w-6 h-6 rounded-md bg-canvas border border-border flex items-center justify-center text-[8px] font-mono font-bold tracking-tight text-muted hover:text-primary-400 hover:border-primary/40 transition-colors">MD</a>
+                <button onclick="window.closeWebscraperModal()" class="text-muted hover:text-heading transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-5 space-y-4 text-xs overflow-y-auto custom-scrollbar">
+            <div id="wsc-fields-mount"></div>
+
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Console Log</label>
+                    <span id="wsc-status" class="text-[10px] font-mono text-muted">Ready</span>
+                </div>
+                <div id="wsc-console" class="w-full h-40 bg-canvas rounded-lg p-3 font-mono text-[11px] overflow-y-auto custom-scrollbar space-y-1 border border-border leading-relaxed">
+                    <div class="text-muted">// Enter a URL and click Run.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-5 py-3 border-t border-border bg-canvas/50 flex justify-end gap-2 shrink-0">
+            <button onclick="window.closeWebscraperModal()" class="px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading transition-colors">Close</button>
+            <button id="wsc-run-btn" onclick="window.runWebscraper()" disabled class="px-4 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors flex items-center gap-2 opacity-50 cursor-not-allowed">
+                <i class="fa-solid fa-play"></i> Run
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let wscRunning = false;
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+
+        function wscLog(msg, colorClass) {
+            const box = document.getElementById("wsc-console");
+            const timestamp = new Date().toISOString().split("T")[1].substring(0, 8);
+            const safeMsg = escapeHtml(msg).replace(/\n/g, "<br>&nbsp;&nbsp;");
+            box.innerHTML += `<div class="${colorClass || "text-muted"}">[${timestamp}] ${safeMsg}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function wscSetStatus(text, colorClass) {
+            const el = document.getElementById("wsc-status");
+            el.innerText = text;
+            el.className = `text-[10px] font-mono ${colorClass || "text-muted"}`;
+        }
+
+        let wscFieldsValid = false;
+
+        function wscSetRunEnabled(valid) {
+            wscFieldsValid = valid;
+            const runBtn = document.getElementById("wsc-run-btn");
+            const enabled = valid && !wscRunning;
+            runBtn.disabled = !enabled;
+            runBtn.classList.toggle("opacity-50", !enabled);
+            runBtn.classList.toggle("cursor-not-allowed", !enabled);
+        }
+
+        window.runWebscraper = async function() {
+            const mount = document.getElementById("wsc-fields-mount");
+            const params = window.readWebscraperFields(mount);
+            if (wscRunning || !wscFieldsValid) return;
+
+            wscRunning = true;
+            wscSetRunEnabled(wscFieldsValid);
+            wscSetStatus("Running...", "text-warning-400");
+            wscLog(`Dispatching webscraper against ${params.args[0]} (max ${params.args[1]} folders, ${params.args[2]} files)...`, "text-info-400");
+
+            try {
+                const response = await fetch("/execute/06_Tasks/webscraper", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ args: params.args })
+                });
+                const data = await response.json();
+                if (data.message) wscLog(data.message, data.success ? "text-body" : "text-danger-400");
+                if (data.success) {
+                    wscLog("Process complete.", "text-success-400");
+                    wscSetStatus("Complete", "text-success-400");
+                } else {
+                    wscLog("Process failed.", "text-danger-400");
+                    wscSetStatus("Failed", "text-danger-400");
+                }
+            } catch (err) {
+                wscLog(`System error: ${err.message}`, "text-danger-400");
+                wscSetStatus("Error", "text-danger-400");
+            } finally {
+                wscRunning = false;
+                wscSetRunEnabled(wscFieldsValid);
+            }
+        };
+
+        window.openWebscraperModal = async function() {
+            wscSetStatus("Ready", "text-muted");
+            document.getElementById("wsc-console").innerHTML = `<div class="text-muted">// Enter a URL and click Run.</div>`;
+            document.getElementById("webscraper-modal").classList.remove("hidden");
+            document.getElementById("webscraper-modal").classList.add("flex");
+
+            const mount = document.getElementById("wsc-fields-mount");
+            await window.loadFieldPartial("webscraper", mount);
+            window.initWebscraperFields(mount, {}, wscSetRunEnabled);
+        };
+
+        window.closeWebscraperModal = function() {
+            document.getElementById("webscraper-modal").classList.add("hidden");
+            document.getElementById("webscraper-modal").classList.remove("flex");
+        };
+    })();
+</script>

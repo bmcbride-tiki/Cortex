@@ -1,0 +1,39 @@
+<!-- Reusable field partial for import_class_schedule -- mounted by both popup/import_class_schedule.html
+     (modal) and workflow_builder.html (right panel config). See window.loadFieldPartial
+     in index.html. Elements are addressed via data-field, not ids, since this fragment
+     can be mounted more than once across the app's lifetime. -->
+<div class="space-y-1.5">
+    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">School Year</label>
+    <input type="text" data-field="school-year" placeholder="2026-2027" maxlength="9" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading font-mono focus:outline-none focus:border-primary">
+    <p data-field="validation-msg" class="text-[10px] text-danger-400 hidden">Format must be YYYY-YYYY with consecutive years (e.g. 2026-2027).</p>
+    <p class="text-[10px] text-muted">The only input this tool needs. The first year maps to the catalogue's Year filter.</p>
+</div>
+
+<script>
+    window.isValidSchoolYear = function(value) {
+        const match = /^(\d{4})-(\d{4})$/.exec((value || "").trim());
+        if (!match) return false;
+        return parseInt(match[2], 10) === parseInt(match[1], 10) + 1;
+    };
+
+    window.initClassScheduleFields = function(container, savedParams, onValidityChange) {
+        const input = container.querySelector('[data-field="school-year"]');
+        const msg = container.querySelector('[data-field="validation-msg"]');
+        input.value = (savedParams && savedParams.args && savedParams.args[0]) || "";
+
+        function validate() {
+            const value = input.value;
+            const valid = value.trim().length > 0 && window.isValidSchoolYear(value);
+            msg.classList.toggle("hidden", value.trim().length === 0 || valid);
+            if (onValidityChange) onValidityChange(valid);
+            return valid;
+        }
+        input.oninput = validate;
+        validate();
+    };
+
+    window.readClassScheduleFields = function(container) {
+        const input = container.querySelector('[data-field="school-year"]');
+        return { args: [input.value.trim()] };
+    };
+</script>

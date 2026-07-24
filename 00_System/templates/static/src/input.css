@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/* Templates live two levels up from this file; make sure the class scanner sees them,
+   including the templates/popup/ subfolder (popup fragments weren't being scanned before,
+   which silently dropped any Tailwind class used only inside a popup). */
+@source "../../**/*.html";
+
+@theme {
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+    /* Surfaces */
+    --color-canvas: oklch(0.16 0.02 250);
+    --color-sidebar: oklch(0.125 0.02 250);
+    --color-surface: oklch(0.19 0.02 250);
+    --color-surface-2: oklch(0.235 0.02 250);
+    --color-border: oklch(0.28 0.02 250);
+    --color-border-strong: oklch(0.35 0.02 250);
+
+    /* Text */
+    --color-heading: oklch(0.95 0.005 250);
+    --color-body: oklch(0.78 0.01 250);
+    --color-muted: oklch(0.58 0.015 250);
+
+    /* Brand + semantic (Bootstrap/AdminLTE-flavored roles) */
+    --color-primary: oklch(0.62 0.19 264);
+    --color-primary-600: oklch(0.54 0.19 264);
+    --color-primary-400: oklch(0.72 0.15 264);
+    --color-secondary: oklch(0.55 0.012 250);
+    --color-secondary-400: oklch(0.68 0.012 250);
+    --color-success: oklch(0.72 0.17 150);
+    --color-success-400: oklch(0.80 0.14 150);
+    --color-info: oklch(0.74 0.12 220);
+    --color-info-400: oklch(0.82 0.09 220);
+    --color-warning: oklch(0.80 0.15 85);
+    --color-warning-400: oklch(0.86 0.12 85);
+    --color-danger: oklch(0.66 0.20 25);
+    --color-danger-400: oklch(0.76 0.17 25);
+
+    --z-dropdown: 20;
+    --z-sticky: 30;
+    --z-modal-backdrop: 40;
+    --z-modal: 50;
+    --z-toast: 60;
+    --z-tooltip: 70;
+
+    --animate-fade-in: fade-in 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+}
+
+/* Light theme override. Applied via data-theme="light" on <html>, set by the
+   settings page and persisted in localStorage (see index.html). */
+:root[data-theme="light"] {
+    --color-canvas: oklch(0.97 0.01 250);
+    --color-sidebar: oklch(0.94 0.012 250);
+    --color-surface: oklch(0.995 0.003 250);
+    --color-surface-2: oklch(0.96 0.008 250);
+    --color-border: oklch(0.88 0.012 250);
+    --color-border-strong: oklch(0.78 0.015 250);
+
+    --color-heading: oklch(0.22 0.02 250);
+    --color-body: oklch(0.38 0.015 250);
+    --color-muted: oklch(0.55 0.014 250);
+}
+
+@layer utilities {
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: var(--color-canvas); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-border-strong); }
+}
+
+@layer components {
+    .sidebar {
+        width: 15rem;
+        transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .sidebar.is-collapsed { width: 4.5rem; }
+
+    .sidebar .brand-label,
+    .sidebar .nav-label {
+        opacity: 1;
+        max-width: 10rem;
+        transition: opacity 0.15s ease, max-width 0.15s ease, margin 0.15s ease;
+    }
+    .sidebar.is-collapsed .brand-label,
+    .sidebar.is-collapsed .nav-label {
+        opacity: 0;
+        max-width: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .sidebar.is-collapsed .nav-section-label { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}

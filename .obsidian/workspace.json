@@ -1,0 +1,218 @@
+{
+  "main": {
+    "id": "753f75ca20e4f738",
+    "type": "split",
+    "children": [
+      {
+        "id": "4dda97500d13d25a",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "323d3a119b647123",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "93a2b85d3dd9c70c",
+    "type": "split",
+    "children": [
+      {
+        "id": "999860be5792d21b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "42fa333a364a39c5",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "d20e5340dae0c045",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "337077df40b27467",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "4fd02f3a6b2f8a38",
+    "type": "split",
+    "children": [
+      {
+        "id": "8dbd83ce354322a0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d14aea9dec30aba5",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "ac6793e376039b7d",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "969366b5d948d7c6",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "04144ec076e0c6cd",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "d99e68e557ef5b6c",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "323d3a119b647123",
+  "lastOpenFiles": [
+    "00_System/templates/workflow-builder.html.tmp.7916.e4bc1c0e3ea5",
+    "00_System/templates/workflow-builder.html.tmp.7916.10bc7dc35912",
+    "00_System/__pycache__/server.cpython-313.pyc",
+    "00_System/server.py.tmp.7916.4965fb485229",
+    "00_System/server.py.tmp.7916.ba87c4a99551",
+    "00_System/__pycache__/workflow_engine.cpython-313.pyc",
+    "00_System/__pycache__",
+    "12_Tasks/format_text_with_copilot/test_format_text_with_copilot.py",
+    "12_Tasks/generate_copilot_image/test_generate_copilot_image.py",
+    "12_Tasks/ask_copilot_agent/test_ask_copilot_agent.py",
+    "12_Tasks/ask_copilot/test_ask_copilot.py",
+    "12_Tasks/format_text_with_copilot/format_text_with_copilot.md",
+    "12_Tasks/generate_copilot_image/generate_copilot_image.md",
+    "12_Tasks/ask_copilot_agent/ask_copilot_agent.md",
+    "12_Tasks/ask_copilot/ask_copilot.md",
+    "11_Processes/list_copilot_agents/list_copilot_agents.md",
+    "12_Tasks/create_onedrive_sharing_link/create_onedrive_sharing_link.md",
+    "12_Tasks/create_onenote_page/create_onenote_page.md",
+    "12_Tasks/get_onenote_page_content/get_onenote_page_content.md",
+    "12_Tasks/list_onenote_pages/list_onenote_pages.md",
+    "12_Tasks/create_sharepoint_list_item/create_sharepoint_list_item.md",
+    "12_Tasks/list_sharepoint_list_items/list_sharepoint_list_items.md",
+    "12_Tasks/list_sharepoint_lists/list_sharepoint_lists.md",
+    "12_Tasks/get_sharepoint_site/get_sharepoint_site.md",
+    "11_Processes/list_recent_onedrive_files/list_recent_onedrive_files.md",
+    "11_Processes/list_onenote_notebooks/list_onenote_notebooks.md",
+    "11_Processes/list_sharepoint_sites/list_sharepoint_sites.md",
+    "00_System/node_modules/detect-libc/README.md",
+    "13_Functions/populate_word_template_from_json/populate_word_template_from_json.md",
+    "12_Tasks/generate_pptx_from_word_with_copilot/generate_pptx_from_word_with_copilot.md",
+    "12_Tasks/send_teams_chat_message/send_teams_chat_message.md",
+    "12_Tasks/list_teams_chat_messages/list_teams_chat_messages.md",
+    "12_Tasks/post_teams_channel_message/post_teams_channel_message.md",
+    "12_Tasks/list_teams_channels/list_teams_channels.md",
+    "12_Tasks/create_outlook_calendar_event/create_outlook_calendar_event.md",
+    "12_Tasks/list_outlook_calendar_events/list_outlook_calendar_events.md"
+  ]
+}

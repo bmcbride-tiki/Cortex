@@ -1,0 +1,281 @@
+<!-- In-App Markdown Reader/Editor: replaces the old PyQt6 mde:// protocol handler.
+     Loaded on demand by window.loadPopup('md_editor', 'openMdEditorModal', relativePath) --
+     see the global mde:// click interceptor and the loadPopup arg-forwarding in index.html. -->
+<div id="md-editor-modal" class="fixed inset-0 bg-canvas/80 backdrop-blur-sm hidden items-center justify-center z-modal p-4">
+    <div class="bg-surface border border-border w-[80vw] h-[80vh] rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in">
+        <div class="px-5 py-4 border-b border-border bg-canvas/50 flex justify-between items-start gap-3 shrink-0">
+            <div class="min-w-0">
+                <h4 class="text-sm font-semibold tracking-wide text-heading flex items-center gap-2">
+                    <i class="fa-solid fa-note-sticky text-primary-400"></i>
+                    <span id="md-file-name">Loading...</span>
+                </h4>
+                <p id="md-file-path" class="text-[11px] text-muted mt-1 font-mono truncate"></p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <span id="md-dirty-badge" class="text-[10px] font-mono text-muted"></span>
+                <button id="md-toggle-btn" onclick="window.toggleMdEditorMode()" class="px-2.5 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-[11px] font-mono rounded text-heading transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-code"></i> <span id="md-toggle-label">Code View</span>
+                </button>
+                <button onclick="window.closeMdEditorModal()" class="text-muted hover:text-heading transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-hidden flex flex-col min-h-0">
+            <div id="md-reading-view" class="flex-1 overflow-auto custom-scrollbar p-6">
+                <div id="md-frontmatter-card"></div>
+                <div id="md-reading-content" class="md-reading-content"></div>
+            </div>
+            <textarea id="md-code-view" spellcheck="false" class="hidden flex-1 w-full bg-canvas text-heading font-mono text-[13px] leading-relaxed p-5 resize-none focus:outline-none custom-scrollbar" placeholder="# Start writing your markdown here..."></textarea>
+        </div>
+
+        <div class="px-5 py-3 border-t border-border bg-canvas/50 flex justify-end gap-2 shrink-0">
+            <button onclick="window.closeMdEditorModal()" class="px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading transition-colors">Close</button>
+            <button id="md-save-btn" onclick="window.saveMdEditor()" class="px-4 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-floppy-disk"></i> Save
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Scoped typography for marked.js's plain, class-less HTML output. Uses the app's own
+       CSS custom properties (Tailwind v4 @theme tokens) so it stays correct in both themes. */
+    .md-reading-content h1, .md-reading-content h2, .md-reading-content h3,
+    .md-reading-content h4, .md-reading-content h5, .md-reading-content h6 {
+        color: var(--color-heading); font-weight: 600; margin-top: 1.3em; margin-bottom: 0.5em;
+    }
+    .md-reading-content h1 { font-size: 1.6em; border-bottom: 1px solid var(--color-border); padding-bottom: 0.3em; }
+    .md-reading-content h2 { font-size: 1.3em; border-bottom: 1px solid var(--color-border); padding-bottom: 0.25em; }
+    .md-reading-content h3 { font-size: 1.1em; }
+    .md-reading-content { overflow-wrap: break-word; }
+    .md-reading-content p { color: var(--color-body); line-height: 1.7; margin-bottom: 0.9em; }
+    .md-reading-content strong { color: var(--color-heading); font-weight: 700; }
+    .md-reading-content em { font-style: italic; }
+    .md-reading-content a { color: var(--color-primary-400); text-decoration: none; }
+    .md-reading-content a:hover { text-decoration: underline; }
+    .md-reading-content code { background: var(--color-canvas); color: var(--color-danger-400); padding: 2px 5px; border-radius: 4px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
+    .md-reading-content pre { background: var(--color-canvas); border: 1px solid var(--color-border); border-radius: 6px; padding: 12px 14px; overflow-x: auto; margin-bottom: 1em; }
+    .md-reading-content pre code { background: transparent; color: var(--color-body); padding: 0; }
+    .md-reading-content blockquote { margin: 0.9em 0; padding-left: 14px; border-left: 3px solid var(--color-primary-400); color: var(--color-muted); font-style: italic; }
+    .md-reading-content ul, .md-reading-content ol { padding-left: 1.5em; margin-bottom: 0.9em; }
+    .md-reading-content li { margin-bottom: 0.3em; color: var(--color-body); }
+    .md-reading-content hr { border: 0; border-top: 1px solid var(--color-border); margin: 1.5em 0; }
+    .md-reading-content table { display: block; overflow-x: auto; border-collapse: collapse; width: 100%; margin-bottom: 1em; font-size: 0.9em; }
+    .md-reading-content th, .md-reading-content td { border: 1px solid var(--color-border); padding: 6px 10px; text-align: left; }
+    .md-reading-content th { background: var(--color-surface-2); color: var(--color-heading); }
+    .md-reading-content input[type="checkbox"] { accent-color: var(--color-primary); margin-right: 0.4em; cursor: pointer; }
+</style>
+
+<script>
+    (function() {
+        const mdState = { path: "", rawText: "", lastSaved: "", mode: "reading" };
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+
+        function ensureMarkedLoaded() {
+            return new Promise((resolve, reject) => {
+                if (window.marked) { resolve(); return; }
+                const s = document.createElement("script");
+                s.src = "/static/vendor/marked/marked.min.js";
+                s.onload = resolve;
+                s.onerror = () => reject(new Error("Could not load the markdown renderer."));
+                document.head.appendChild(s);
+            });
+        }
+
+        // --- Simple line-scanning YAML frontmatter parser (no YAML library needed --
+        // this only needs to pull flat key: value pairs for the summary card). ---
+        function parseFrontmatter(raw) {
+            const lines = raw.split("\n");
+            if (lines[0] && lines[0].trim() === "---") {
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].trim() === "---") {
+                        return { yamlLines: lines.slice(1, i), body: lines.slice(i + 1).join("\n") };
+                    }
+                }
+            }
+            return { yamlLines: [], body: raw };
+        }
+
+        function renderFrontmatterCard(yamlLines) {
+            const container = document.getElementById("md-frontmatter-card");
+            if (!yamlLines.length) { container.innerHTML = ""; return; }
+
+            const rows = yamlLines.map(line => {
+                const idx = line.indexOf(":");
+                if (idx === -1) {
+                    return line.trim() ? `<div class="text-muted">${escapeHtml(line.trim())}</div>` : "";
+                }
+                const key = line.slice(0, idx).trim();
+                const value = line.slice(idx + 1).trim();
+
+                if (/^tags?$/i.test(key)) {
+                    const cleanVal = value.replace(/[\[\]{}]/g, "").replace(/,/g, " ");
+                    const pills = cleanVal.split(/\s+/).filter(Boolean).map(t =>
+                        `<span class="inline-block px-1.5 py-0.5 rounded bg-primary/10 text-primary-400 text-[10px] font-mono mr-1">#${escapeHtml(t)}</span>`
+                    ).join("");
+                    return `<div class="flex items-start gap-2"><span class="text-primary-400 font-mono uppercase tracking-wider text-[10px] w-20 shrink-0 pt-0.5">${escapeHtml(key)}</span><span>${pills || '<span class="text-muted">(none)</span>'}</span></div>`;
+                }
+                return `<div class="flex items-start gap-2"><span class="text-primary-400 font-mono uppercase tracking-wider text-[10px] w-20 shrink-0 pt-0.5">${escapeHtml(key)}</span><span class="text-body text-xs">${escapeHtml(value)}</span></div>`;
+            }).join("");
+
+            container.innerHTML = `<div class="bg-canvas/50 border border-border rounded-lg p-3 mb-5 space-y-1.5">${rows}</div>`;
+        }
+
+        function getCheckboxLineIndices(text) {
+            const lines = text.split("\n");
+            const indices = [];
+            lines.forEach((line, i) => { if (/^\s*[-*+]\s\[[ xX]\]\s/.test(line)) indices.push(i); });
+            return indices;
+        }
+
+        function toggleCheckboxAtOrdinal(ordinal) {
+            const lines = mdState.rawText.split("\n");
+            const indices = getCheckboxLineIndices(mdState.rawText);
+            const lineIdx = indices[ordinal];
+            if (lineIdx === undefined) return;
+
+            lines[lineIdx] = lines[lineIdx].replace(/\[([ xX])\]/, (m, c) => c === " " ? "[x]" : "[ ]");
+            mdState.rawText = lines.join("\n");
+            saveMdInternal(true).then(renderReadingView);
+        }
+
+        async function renderReadingView() {
+            await ensureMarkedLoaded();
+            const { yamlLines, body } = parseFrontmatter(mdState.rawText);
+            renderFrontmatterCard(yamlLines);
+
+            const html = window.marked.parse(body, { gfm: true, breaks: false });
+            const contentEl = document.getElementById("md-reading-content");
+            contentEl.innerHTML = html;
+
+            // Make links open in a new tab instead of navigating this app away.
+            contentEl.querySelectorAll("a[href]").forEach(a => { a.target = "_blank"; a.rel = "noopener"; });
+
+            // Pair rendered checkboxes with their source line ordinally (stable order between
+            // source and render), enable them, and wire toggle-to-save.
+            const checkboxes = contentEl.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach((cb, ordinal) => {
+                cb.disabled = false;
+                cb.addEventListener("change", () => toggleCheckboxAtOrdinal(ordinal));
+            });
+        }
+
+        function renderCodeView() {
+            document.getElementById("md-code-view").value = mdState.rawText;
+        }
+
+        function updateDirtyBadge() {
+            const badge = document.getElementById("md-dirty-badge");
+            const dirty = mdState.rawText !== mdState.lastSaved;
+            badge.innerText = dirty ? "Unsaved changes" : "";
+            badge.className = `text-[10px] font-mono ${dirty ? "text-warning-400" : "text-muted"}`;
+        }
+
+        window.toggleMdEditorMode = function() {
+            if (mdState.mode === "reading") {
+                mdState.mode = "code";
+                document.getElementById("md-reading-view").classList.add("hidden");
+                document.getElementById("md-code-view").classList.remove("hidden");
+                document.getElementById("md-toggle-label").innerText = "Reading View";
+                document.getElementById("md-toggle-btn").querySelector("i").className = "fa-solid fa-eye";
+                renderCodeView();
+            } else {
+                mdState.rawText = document.getElementById("md-code-view").value;
+                mdState.mode = "reading";
+                document.getElementById("md-code-view").classList.add("hidden");
+                document.getElementById("md-reading-view").classList.remove("hidden");
+                document.getElementById("md-toggle-label").innerText = "Code View";
+                document.getElementById("md-toggle-btn").querySelector("i").className = "fa-solid fa-code";
+                renderReadingView();
+            }
+            updateDirtyBadge();
+        };
+
+        async function saveMdInternal(silent) {
+            if (mdState.mode === "code") {
+                mdState.rawText = document.getElementById("md-code-view").value;
+            }
+            try {
+                const response = await fetch("/api/md-editor/save", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ path: mdState.path, content: mdState.rawText })
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                mdState.lastSaved = mdState.rawText;
+                updateDirtyBadge();
+                if (!silent) {
+                    const badge = document.getElementById("md-dirty-badge");
+                    badge.innerText = "Saved";
+                    badge.className = "text-[10px] font-mono text-success-400";
+                    setTimeout(updateDirtyBadge, 1500);
+                }
+            } catch (err) {
+                const badge = document.getElementById("md-dirty-badge");
+                badge.innerText = "Save failed";
+                badge.className = "text-[10px] font-mono text-danger-400";
+            }
+        }
+
+        window.saveMdEditor = function() { saveMdInternal(false); };
+
+        window.openMdEditorModal = async function(relPath) {
+            mdState.path = relPath;
+            mdState.rawText = "";
+            mdState.lastSaved = "";
+            mdState.mode = "reading";
+
+            document.getElementById("md-file-name").innerText = relPath.split("/").pop();
+            document.getElementById("md-file-path").innerText = relPath;
+            document.getElementById("md-dirty-badge").innerText = "";
+            document.getElementById("md-reading-content").innerHTML = `<div class="text-muted text-xs">Loading...</div>`;
+            document.getElementById("md-frontmatter-card").innerHTML = "";
+            document.getElementById("md-reading-view").classList.remove("hidden");
+            document.getElementById("md-code-view").classList.add("hidden");
+            document.getElementById("md-toggle-label").innerText = "Code View";
+            document.getElementById("md-toggle-btn").querySelector("i").className = "fa-solid fa-code";
+
+            document.getElementById("md-editor-modal").classList.remove("hidden");
+            document.getElementById("md-editor-modal").classList.add("flex");
+
+            try {
+                const response = await fetch(`/api/md-editor/read?path=${encodeURIComponent(relPath)}`);
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || `HTTP ${response.status}`);
+
+                mdState.rawText = data.content;
+                mdState.lastSaved = data.exists ? data.content : "";
+                await renderReadingView();
+            } catch (err) {
+                document.getElementById("md-reading-content").innerHTML = `<div class="text-danger-400 text-xs">Could not load file: ${escapeHtml(err.message)}</div>`;
+            }
+
+            document.getElementById("md-code-view").oninput = () => {
+                mdState.rawText = document.getElementById("md-code-view").value;
+                updateDirtyBadge();
+            };
+        };
+
+        window.closeMdEditorModal = function() {
+            if (mdState.mode === "code") {
+                mdState.rawText = document.getElementById("md-code-view").value;
+            }
+            const closeIt = () => {
+                document.getElementById("md-editor-modal").classList.add("hidden");
+                document.getElementById("md-editor-modal").classList.remove("flex");
+            };
+            if (mdState.rawText !== mdState.lastSaved) {
+                saveMdInternal(true).then(closeIt);
+            } else {
+                closeIt();
+            }
+        };
+    })();
+</script>

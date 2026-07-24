@@ -1,0 +1,129 @@
+<!-- Word to Excel Exam: dedicated control window (single .docx upload + format radios).
+     Loaded on demand by window.loadPopup('word_to_excel_exam', 'openWordToExcelExamModal'). -->
+<div id="word-to-excel-exam-modal" class="fixed inset-0 bg-canvas/80 backdrop-blur-sm hidden items-center justify-center z-modal p-4">
+    <div class="bg-surface border border-border w-full max-w-xl rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in max-h-[90vh]">
+        <div class="px-5 py-4 border-b border-border bg-canvas/50 flex justify-between items-start gap-3 shrink-0">
+            <div class="min-w-0">
+                <h4 class="text-sm font-semibold tracking-wide text-heading flex items-center gap-2">
+                    <i class="fa-solid fa-file-word text-primary-400"></i>
+                    Word to Excel Exam
+                </h4>
+                <p class="text-[11px] text-muted mt-1 leading-relaxed">Converts a Word exam question bank into the CE item-import Excel layout.</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <a href="mde://30_Automation_Scripts/06_Tasks/word_to_excel_exam/word_to_excel_exam.md" title="Open Word to Excel Exam notes in the markdown editor" class="w-6 h-6 rounded-md bg-canvas border border-border flex items-center justify-center text-[8px] font-mono font-bold tracking-tight text-muted hover:text-primary-400 hover:border-primary/40 transition-colors">MD</a>
+                <button onclick="window.closeWordToExcelExamModal()" class="text-muted hover:text-heading transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-5 space-y-4 text-xs overflow-y-auto custom-scrollbar">
+            <div id="wte-fields-mount"></div>
+
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Console Log</label>
+                    <span id="wte-status" class="text-[10px] font-mono text-muted">Ready</span>
+                </div>
+                <div id="wte-console" class="w-full h-32 bg-canvas rounded-lg p-3 font-mono text-[11px] overflow-y-auto custom-scrollbar space-y-1 border border-border leading-relaxed">
+                    <div class="text-muted">// Attach a document, pick a format, and click Run.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-5 py-3 border-t border-border bg-canvas/50 flex justify-end gap-2 shrink-0">
+            <button onclick="window.closeWordToExcelExamModal()" class="px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading transition-colors">Close</button>
+            <button id="wte-run-btn" onclick="window.runWordToExcelExam()" disabled class="px-4 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors flex items-center gap-2 opacity-50 cursor-not-allowed">
+                <i class="fa-solid fa-play"></i> Run
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let wteRunning = false;
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+
+        function wteLog(msg, colorClass) {
+            const box = document.getElementById("wte-console");
+            const timestamp = new Date().toISOString().split("T")[1].substring(0, 8);
+            const safeMsg = escapeHtml(msg).replace(/\n/g, "<br>&nbsp;&nbsp;");
+            box.innerHTML += `<div class="${colorClass || "text-muted"}">[${timestamp}] ${safeMsg}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function wteSetStatus(text, colorClass) {
+            const el = document.getElementById("wte-status");
+            el.innerText = text;
+            el.className = `text-[10px] font-mono ${colorClass || "text-muted"}`;
+        }
+
+        let wteFieldsValid = false;
+
+        function wteSetRunEnabled(valid) {
+            wteFieldsValid = valid;
+            const runBtn = document.getElementById("wte-run-btn");
+            const enabled = valid && !wteRunning;
+            runBtn.disabled = !enabled;
+            runBtn.classList.toggle("opacity-50", !enabled);
+            runBtn.classList.toggle("cursor-not-allowed", !enabled);
+        }
+
+        window.runWordToExcelExam = async function() {
+            if (wteRunning || !wteFieldsValid) return;
+            const mount = document.getElementById("wte-fields-mount");
+            const params = window.readWordToExcelExamFields(mount);
+
+            wteRunning = true;
+            wteSetRunEnabled(wteFieldsValid);
+            wteSetStatus("Running...", "text-warning-400");
+            wteLog(`Converting '${params.args[0]}' using format '${params.args[1].toUpperCase()}'...`, "text-info-400");
+
+            try {
+                const response = await fetch("/execute/06_Tasks/word_to_excel_exam", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ args: params.args })
+                });
+                const data = await response.json();
+                if (data.message) wteLog(data.message, data.success ? "text-body" : "text-danger-400");
+                if (data.success) {
+                    wteLog("Conversion complete.", "text-success-400");
+                    wteSetStatus("Complete", "text-success-400");
+                } else {
+                    wteLog("Conversion failed.", "text-danger-400");
+                    wteSetStatus("Failed", "text-danger-400");
+                }
+            } catch (err) {
+                wteLog(`System error: ${err.message}`, "text-danger-400");
+                wteSetStatus("Error", "text-danger-400");
+            } finally {
+                wteRunning = false;
+                wteSetRunEnabled(wteFieldsValid);
+            }
+        };
+
+        window.openWordToExcelExamModal = async function() {
+            wteSetStatus("Ready", "text-muted");
+            document.getElementById("wte-console").innerHTML = `<div class="text-muted">// Enter a document path, pick a format, and click Run.</div>`;
+            document.getElementById("word-to-excel-exam-modal").classList.remove("hidden");
+            document.getElementById("word-to-excel-exam-modal").classList.add("flex");
+
+            const mount = document.getElementById("wte-fields-mount");
+            await window.loadFieldPartial("word_to_excel_exam", mount);
+            window.initWordToExcelExamFields(mount, {}, wteSetRunEnabled);
+        };
+
+        window.closeWordToExcelExamModal = function() {
+            document.getElementById("word-to-excel-exam-modal").classList.add("hidden");
+            document.getElementById("word-to-excel-exam-modal").classList.remove("flex");
+        };
+    })();
+</script>

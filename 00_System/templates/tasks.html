@@ -1,0 +1,96 @@
+<div id="tasks-sections" class="space-y-16 animate-fade-in">
+    <div class="text-muted font-mono text-xs animate-pulse p-4">Loading operational tasks...</div>
+</div>
+
+<!-- Tag editor popup: assign/create tags for a single task. Same shared
+     markup/ids as processes.html/workflows.html -- only one page is ever
+     mounted in #content-viewport at a time, so the ids never collide. -->
+<div id="tag-editor-modal" class="fixed inset-0 bg-canvas/80 backdrop-blur-sm hidden items-center justify-center z-modal p-4">
+    <div class="bg-surface border border-border w-full max-w-sm rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in">
+        <div class="px-5 py-4 border-b border-border bg-canvas/50 flex justify-between items-start gap-3">
+            <h4 class="text-sm font-semibold text-heading">Tag <span id="tag-editor-process-name" class="text-primary-400"></span></h4>
+            <button onclick="closeTagEditor()" class="text-muted hover:text-heading transition-colors shrink-0">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        <div class="p-5 space-y-4 text-xs">
+            <div id="tag-editor-list" class="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar"></div>
+            <div class="pt-3 border-t border-surface-2 space-y-1.5">
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">New Tag</label>
+                <div class="flex gap-2">
+                    <input type="text" id="tag-editor-new-name" placeholder="Tag name" class="flex-1 bg-canvas border border-border rounded px-3 py-2 text-heading focus:outline-none focus:border-primary">
+                    <button onclick="createAndAssignTag()" class="px-3 py-2 bg-primary/10 hover:bg-primary text-primary-400 hover:text-heading rounded border border-primary/20 text-xs font-medium transition-colors">Add</button>
+                </div>
+            </div>
+        </div>
+        <div class="px-5 py-3 border-t border-border bg-canvas/50 flex justify-end gap-2">
+            <button onclick="closeTagEditor()" class="px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading transition-colors">Cancel</button>
+            <button onclick="saveTagAssignments()" class="px-4 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors">Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // --- Task cards: tools with a dedicated popup (templates/popup/<tool_id>.html,
+        // loaded on demand via the shared window.loadPopup) launch it directly; everything
+        // else falls back to the shared generic process-launch modal. ---
+        const CUSTOM_MODALS = {
+            "import_class_schedule": "openClassScheduleModal",
+            "import_marks_correlation": "openImportMarksCorrelationModal",
+            "word_to_excel_exam": "openWordToExcelExamModal",
+            "import_exam_pass_fail": "openImportExamPassFailModal",
+            "import_transcripts": "openImportTranscriptsModal",
+            "curriculum_guide_to_tos": "openCurriculumGuideToTosModal",
+            "abc_uploader": "openAbcUploaderModal",
+            "webscraper": "openWebscraperModal"
+        };
+
+        function renderCard(app, tagsById, assignments) {
+            const tagIds = assignments[app.tool_id] || [];
+            const tags = tagIds.map(id => tagsById[id]).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
+            const pillsHtml = tags.length
+                ? tags.map(t => window.renderTagPill(t, "task", true)).join("")
+                : `<span class="px-2 py-1 rounded text-[10px] font-medium border border-border text-muted leading-none">Uncategorized</span>`;
+
+            const openFnName = CUSTOM_MODALS[app.tool_id];
+            const launchAttr = openFnName
+                ? `window.loadPopup('${app.tool_id}', '${openFnName}')`
+                : `window.launchProcessModal('06_Tasks', '${app.tool_id}', '${app.title.replace(/'/g, "\\'")}', '${app.description.replace(/'/g, "\\'")}')`;
+
+            return `
+                <div class="relative bg-surface border border-border rounded-xl p-5 flex flex-col justify-between hover:border-border-strong transition-colors">
+                    <a href="mde://${app.md_path}" title="Open ${app.title} notes in the markdown editor" class="absolute top-3 right-3 w-6 h-6 rounded-md bg-canvas border border-border flex items-center justify-center text-[8px] font-mono font-bold tracking-tight text-muted hover:text-primary-400 hover:border-primary/40 transition-colors">MD</a>
+                    <div class="space-y-2 pr-8">
+                        <span class="text-[9px] font-mono tracking-wider text-muted uppercase">Ingestion Pipeline</span>
+                        <h3 class="font-semibold text-heading text-sm">${app.title}</h3>
+                        <p class="text-xs text-muted leading-relaxed">${app.description}</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-surface-2 flex items-center justify-between gap-2">
+                        <div class="flex items-center flex-wrap gap-1.5">
+                            ${pillsHtml}
+                            <button onclick="window.openTagEditor('${window.escapeAttrText(app.tool_id)}', '${window.escapeAttrText(app.title)}')" title="Edit tags" class="w-5 h-5 rounded flex items-center justify-center text-muted hover:text-primary-400 hover:bg-primary/10 border border-border transition-colors leading-none">
+                                <i class="fa-solid fa-plus text-[9px]"></i>
+                            </button>
+                        </div>
+                        <button onclick="${launchAttr}" class="px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary-400 hover:text-heading text-xs rounded border border-primary/20 font-medium transition-colors shrink-0">Execute Task Pipeline</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.initTaggedListPage({
+            category: "task",
+            manifestKey: "06_Tasks",
+            containerId: "tasks-sections",
+            emptyMessage: "No tasks registered yet.",
+            renderCard,
+            submenuId: "tasks-tag-submenu",
+            wrapId: "tasks-tag-submenu-wrap",
+            chevronId: "tasks-submenu-chevron",
+            submenuKey: "tasks",
+            pendingScrollKey: "pendingTaskTagScroll",
+            pageName: "tasks"
+        });
+    })();
+</script>

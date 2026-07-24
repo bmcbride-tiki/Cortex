@@ -1,0 +1,123 @@
+<!-- Import Marks Correlation: dedicated control window (pending-file list + optional
+     custom folder path). Loaded on demand by
+     window.loadPopup('import_marks_correlation', 'openImportMarksCorrelationModal'). -->
+<div id="import-marks-correlation-modal" class="fixed inset-0 bg-canvas/80 backdrop-blur-sm hidden items-center justify-center z-modal p-4">
+    <div class="bg-surface border border-border w-full max-w-xl rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in max-h-[90vh]">
+        <div class="px-5 py-4 border-b border-border bg-canvas/50 flex justify-between items-start gap-3 shrink-0">
+            <div class="min-w-0">
+                <h4 class="text-sm font-semibold tracking-wide text-heading flex items-center gap-2">
+                    <i class="fa-solid fa-table-columns text-primary-400"></i>
+                    Import Marks Correlation
+                </h4>
+                <p class="text-[11px] text-muted mt-1 leading-relaxed">Imports Marks Correlation Report workbooks into the training records database.</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <a href="mde://30_Automation_Scripts/06_Tasks/import_marks_correlation/import_marks_correlation.md" title="Open Import Marks Correlation notes in the markdown editor" class="w-6 h-6 rounded-md bg-canvas border border-border flex items-center justify-center text-[8px] font-mono font-bold tracking-tight text-muted hover:text-primary-400 hover:border-primary/40 transition-colors">MD</a>
+                <button onclick="window.closeImportMarksCorrelationModal()" class="text-muted hover:text-heading transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-5 space-y-4 text-xs overflow-y-auto custom-scrollbar">
+            <div id="imc-fields-mount"></div>
+
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Console Log</label>
+                    <span id="imc-status" class="text-[10px] font-mono text-muted">Ready</span>
+                </div>
+                <div id="imc-console" class="w-full h-32 bg-canvas rounded-lg p-3 font-mono text-[11px] overflow-y-auto custom-scrollbar space-y-1 border border-border leading-relaxed">
+                    <div class="text-muted">// Click Run to import.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-5 py-3 border-t border-border bg-canvas/50 flex justify-end gap-2 shrink-0">
+            <button onclick="window.closeImportMarksCorrelationModal()" class="px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading transition-colors">Close</button>
+            <button id="imc-run-btn" onclick="window.runImportMarksCorrelation()" class="px-4 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-play"></i> Run
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let imcRunning = false;
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+
+        function imcLog(msg, colorClass) {
+            const box = document.getElementById("imc-console");
+            const timestamp = new Date().toISOString().split("T")[1].substring(0, 8);
+            const safeMsg = escapeHtml(msg).replace(/\n/g, "<br>&nbsp;&nbsp;");
+            box.innerHTML += `<div class="${colorClass || "text-muted"}">[${timestamp}] ${safeMsg}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function imcSetStatus(text, colorClass) {
+            const el = document.getElementById("imc-status");
+            el.innerText = text;
+            el.className = `text-[10px] font-mono ${colorClass || "text-muted"}`;
+        }
+
+        window.runImportMarksCorrelation = async function() {
+            if (imcRunning) return;
+            const mount = document.getElementById("imc-fields-mount");
+            const params = window.readImportMarksCorrelationFields(mount);
+
+            imcRunning = true;
+            const runBtn = document.getElementById("imc-run-btn");
+            runBtn.disabled = true;
+            runBtn.classList.add("opacity-50", "cursor-not-allowed");
+            imcSetStatus("Running...", "text-warning-400");
+            imcLog(params.args.length ? `Dispatching import_marks_correlation against custom folder: ${params.args[0]}...` : "Dispatching import_marks_correlation against 01_inbox/reports...", "text-info-400");
+
+            try {
+                const response = await fetch("/execute/06_Tasks/import_marks_correlation", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ args: params.args })
+                });
+                const data = await response.json();
+                if (data.message) imcLog(data.message, data.success ? "text-body" : "text-danger-400");
+                if (data.success) {
+                    imcLog("Process complete.", "text-success-400");
+                    imcSetStatus("Complete", "text-success-400");
+                } else {
+                    imcLog("Process failed.", "text-danger-400");
+                    imcSetStatus("Failed", "text-danger-400");
+                }
+            } catch (err) {
+                imcLog(`System error: ${err.message}`, "text-danger-400");
+                imcSetStatus("Error", "text-danger-400");
+            } finally {
+                imcRunning = false;
+                runBtn.disabled = false;
+                runBtn.classList.remove("opacity-50", "cursor-not-allowed");
+                window.refreshImportMarksCorrelationFileList(mount);
+            }
+        };
+
+        window.openImportMarksCorrelationModal = async function() {
+            imcSetStatus("Ready", "text-muted");
+            document.getElementById("imc-console").innerHTML = `<div class="text-muted">// Click Run to import.</div>`;
+            document.getElementById("import-marks-correlation-modal").classList.remove("hidden");
+            document.getElementById("import-marks-correlation-modal").classList.add("flex");
+
+            const mount = document.getElementById("imc-fields-mount");
+            await window.loadFieldPartial("import_marks_correlation", mount);
+            window.initImportMarksCorrelationFields(mount, {}, null);
+        };
+
+        window.closeImportMarksCorrelationModal = function() {
+            document.getElementById("import-marks-correlation-modal").classList.add("hidden");
+            document.getElementById("import-marks-correlation-modal").classList.remove("flex");
+        };
+    })();
+</script>

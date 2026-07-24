@@ -1,0 +1,160 @@
+<!-- Curriculum Guide to TOS: dedicated control window (single .doc/.docx upload + optional
+     trade name/exam questions overrides + run). Loaded on demand by
+     window.loadPopup('curriculum_guide_to_tos', 'openCurriculumGuideToTosModal'). -->
+<div id="curriculum-guide-to-tos-modal" class="fixed inset-0 bg-canvas/80 backdrop-blur-sm hidden items-center justify-center z-modal p-4">
+    <div class="bg-surface border border-border w-full max-w-xl rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in max-h-[90vh]">
+        <div class="px-5 py-4 border-b border-border bg-canvas/50 flex justify-between items-start gap-3 shrink-0">
+            <div class="min-w-0">
+                <h4 class="text-sm font-semibold tracking-wide text-heading flex items-center gap-2">
+                    <i class="fa-solid fa-file-word text-primary-400"></i>
+                    Curriculum Guide to TOS
+                </h4>
+                <p class="text-[11px] text-muted mt-1 leading-relaxed">Converts a Curriculum Guide Word document into a populated TOS Excel workbook.</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <a href="mde://30_Automation_Scripts/06_Tasks/curriculum_guide_to_tos/curriculum_guide_to_tos.md" title="Open Curriculum Guide to TOS notes in the markdown editor" class="w-6 h-6 rounded-md bg-canvas border border-border flex items-center justify-center text-[8px] font-mono font-bold tracking-tight text-muted hover:text-primary-400 hover:border-primary/40 transition-colors">MD</a>
+                <button onclick="window.closeCurriculumGuideToTosModal()" class="text-muted hover:text-heading transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-5 space-y-4 text-xs overflow-y-auto custom-scrollbar">
+            <div class="space-y-1">
+                <label for="cgt-file" class="block text-muted font-mono uppercase tracking-wider text-[10px]">Curriculum Guide File (.doc / .docx)</label>
+                <input type="file" id="cgt-file" accept=".doc,.docx" class="w-full text-[11px] text-muted file:mr-2 file:py-1.5 file:px-3 file:rounded file:border file:border-border file:bg-canvas file:text-heading file:text-[11px] file:cursor-pointer">
+                <p class="text-[10px] text-muted leading-relaxed">Legacy .doc files can be selected but are rejected with an explanation -- save as .docx first.</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label for="cgt-trade-name" class="block text-muted font-mono uppercase tracking-wider text-[10px]">Trade Name (optional)</label>
+                    <input type="text" id="cgt-trade-name" placeholder="Leave blank to guess from document" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading font-mono focus:outline-none focus:border-primary">
+                </div>
+                <div class="space-y-1">
+                    <label for="cgt-exam-questions" class="block text-muted font-mono uppercase tracking-wider text-[10px]">Exam Questions</label>
+                    <input type="number" id="cgt-exam-questions" value="100" min="0" step="1" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading font-mono focus:outline-none focus:border-primary">
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Console Log</label>
+                    <span id="cgt-status" class="text-[10px] font-mono text-muted">Ready</span>
+                </div>
+                <div id="cgt-console" class="w-full h-32 bg-canvas rounded-lg p-3 font-mono text-[11px] overflow-y-auto custom-scrollbar space-y-1 border border-border leading-relaxed">
+                    <div class="text-muted">// Select a Curriculum Guide file and click Run.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-5 py-3 border-t border-border bg-canvas/50 flex justify-end gap-2 shrink-0">
+            <button onclick="window.closeCurriculumGuideToTosModal()" class="px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading transition-colors">Close</button>
+            <button id="cgt-run-btn" onclick="window.runCurriculumGuideToTos()" disabled class="px-4 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors flex items-center gap-2 opacity-50 cursor-not-allowed">
+                <i class="fa-solid fa-play"></i> Run
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let cgtRunning = false;
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+
+        function cgtLog(msg, colorClass) {
+            const box = document.getElementById("cgt-console");
+            const timestamp = new Date().toISOString().split("T")[1].substring(0, 8);
+            const safeMsg = escapeHtml(msg).replace(/\n/g, "<br>&nbsp;&nbsp;");
+            box.innerHTML += `<div class="${colorClass || "text-muted"}">[${timestamp}] ${safeMsg}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function cgtSetStatus(text, colorClass) {
+            const el = document.getElementById("cgt-status");
+            el.innerText = text;
+            el.className = `text-[10px] font-mono ${colorClass || "text-muted"}`;
+        }
+
+        function cgtSetRunEnabled(valid) {
+            const runBtn = document.getElementById("cgt-run-btn");
+            const enabled = valid && !cgtRunning;
+            runBtn.disabled = !enabled;
+            runBtn.classList.toggle("opacity-50", !enabled);
+            runBtn.classList.toggle("cursor-not-allowed", !enabled);
+        }
+
+        function cgtHasFile() {
+            const fileInput = document.getElementById("cgt-file");
+            return fileInput.files && fileInput.files.length > 0;
+        }
+
+        window.runCurriculumGuideToTos = async function() {
+            if (cgtRunning || !cgtHasFile()) return;
+
+            const fileInput = document.getElementById("cgt-file");
+            const file = fileInput.files[0];
+            const tradeName = document.getElementById("cgt-trade-name").value.trim();
+            const examQuestions = document.getElementById("cgt-exam-questions").value.trim() || "100";
+
+            cgtRunning = true;
+            cgtSetRunEnabled(true);
+            cgtSetStatus("Running...", "text-warning-400");
+            cgtLog(`Uploading '${file.name}' and running curriculum_guide_to_tos...`, "text-info-400");
+
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("trade_name", tradeName);
+            formData.append("exam_questions", examQuestions);
+
+            try {
+                const response = await fetch("/api/uploads/curriculum-guide-to-tos", { method: "POST", body: formData });
+                const data = await response.json();
+                if (!response.ok) {
+                    cgtLog(data.detail || "Upload rejected.", "text-danger-400");
+                    cgtSetStatus("Failed", "text-danger-400");
+                } else {
+                    if (data.message) cgtLog(data.message, data.success ? "text-body" : "text-danger-400");
+                    if (data.success) {
+                        cgtLog("Conversion complete.", "text-success-400");
+                        cgtSetStatus("Complete", "text-success-400");
+                    } else {
+                        cgtLog("Conversion failed.", "text-danger-400");
+                        cgtSetStatus("Failed", "text-danger-400");
+                    }
+                }
+            } catch (err) {
+                cgtLog(`System error: ${err.message}`, "text-danger-400");
+                cgtSetStatus("Error", "text-danger-400");
+            } finally {
+                cgtRunning = false;
+                cgtSetRunEnabled(cgtHasFile());
+            }
+        };
+
+        window.openCurriculumGuideToTosModal = function() {
+            document.getElementById("cgt-file").value = "";
+            document.getElementById("cgt-trade-name").value = "";
+            document.getElementById("cgt-exam-questions").value = "100";
+            cgtSetStatus("Ready", "text-muted");
+            document.getElementById("cgt-console").innerHTML = `<div class="text-muted">// Select a Curriculum Guide file and click Run.</div>`;
+            document.getElementById("curriculum-guide-to-tos-modal").classList.remove("hidden");
+            document.getElementById("curriculum-guide-to-tos-modal").classList.add("flex");
+            cgtSetRunEnabled(false);
+
+            document.getElementById("cgt-file").onchange = function() {
+                cgtSetRunEnabled(cgtHasFile());
+            };
+        };
+
+        window.closeCurriculumGuideToTosModal = function() {
+            document.getElementById("curriculum-guide-to-tos-modal").classList.add("hidden");
+            document.getElementById("curriculum-guide-to-tos-modal").classList.remove("flex");
+        };
+    })();
+</script>

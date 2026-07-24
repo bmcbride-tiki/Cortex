@@ -1,0 +1,29 @@
+<div class="bg-surface border border-border rounded-xl p-6 space-y-6 animate-fade-in">
+    <div>
+        <h2 class="text-md font-semibold text-heading flex items-center gap-2"><i class="fa-solid fa-bolt text-warning-400"></i> Skills Capability Matrix</h2>
+        <p class="text-xs text-muted mt-1">Foundational data science operations cataloged into your Workbrain structure.</p>
+    </div>
+    <div id="skills-container" class="divide-y divide-border border-t border-border">
+        <div class="text-muted font-mono text-xs animate-pulse py-4">Loading skills...</div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const SKILL_COLORS = ["text-primary-400", "text-info-400", "text-secondary-400", "text-success-400", "text-warning-400"];
+
+        fetch("/api/skills").then(r => r.json()).then(data => {
+            const container = document.getElementById("skills-container");
+            const skills = data.skills || [];
+            container.innerHTML = skills.map((skill, i) => `
+                <div class="flex items-start gap-4 py-4">
+                    <span class="font-mono text-[10px] ${SKILL_COLORS[i % SKILL_COLORS.length]} font-semibold shrink-0 pt-0.5 w-20">SKILL_${String(i + 1).padStart(2, "0")}</span>
+                    <div>
+                        <h4 class="font-medium text-heading text-sm">${skill.title}</h4>
+                        <p class="text-xs text-muted leading-relaxed mt-1">${skill.description}</p>
+                    </div>
+                </div>
+            `).join("");
+        });
+    })();
+</script>

@@ -1,0 +1,15 @@
+2026/07/16-16:44:05.904 6478 Reusing MANIFEST C:\workbrain\00_System_Core\adapters\copilot-bridge\copilot_browser_profile\Default\Local Storage\leveldb/MANIFEST-000001
+2026/07/16-16:44:05.910 6478 Recovering log #49
+2026/07/16-16:44:05.911 6478 Reusing old log C:\workbrain\00_System_Core\adapters\copilot-bridge\copilot_browser_profile\Default\Local Storage\leveldb/000049.log 
+2026/07/16-16:45:05.925 11fc Level-0 table #53: started
+2026/07/16-16:45:05.931 11fc Level-0 table #53: 86134 bytes OK
+2026/07/16-16:45:05.933 11fc Delete type=0 #49
+2026/07/16-16:45:05.933 6478 Compacting 4@0 + 1@1 files
+2026/07/16-16:45:05.945 6478 Generated table #54@0: 161 keys, 1200466 bytes
+2026/07/16-16:45:05.945 6478 Compacted 4@0 + 1@1 files => 1200466 bytes
+2026/07/16-16:45:05.945 6478 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/07/16-16:45:05.946 6478 Delete type=2 #42
+2026/07/16-16:45:05.946 6478 Delete type=2 #44
+2026/07/16-16:45:05.946 6478 Delete type=2 #47
+2026/07/16-16:45:05.946 6478 Delete type=2 #50
+2026/07/16-16:45:05.946 6478 Delete type=2 #53

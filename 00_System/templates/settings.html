@@ -1,0 +1,47 @@
+<div class="space-y-6 animate-fade-in">
+    <div class="bg-surface border border-border rounded-xl p-6 space-y-4">
+        <h3 class="font-semibold text-heading flex items-center gap-2 text-sm"><i class="fa-solid fa-palette text-muted"></i> Appearance</h3>
+        <p class="text-xs text-muted">Choose the interface theme. Your selection is saved locally and persists across sessions.</p>
+
+        <div class="flex items-center justify-between max-w-xl text-xs pt-2">
+            <div>
+                <h4 class="font-medium text-body text-xs">Interface Theme</h4>
+                <p class="text-[11px] text-muted">Switch between dark and light console modes.</p>
+            </div>
+            <div class="flex items-center gap-1 bg-canvas border border-border rounded-lg p-1">
+                <button type="button" data-theme-option="dark" onclick="setCortexTheme('dark')" class="theme-toggle-btn text-muted px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-moon"></i> Dark
+                </button>
+                <button type="button" data-theme-option="light" onclick="setCortexTheme('light')" class="theme-toggle-btn text-muted px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-sun"></i> Light
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-surface border border-border rounded-xl p-6 space-y-4">
+        <h3 class="font-semibold text-heading flex items-center gap-2 text-sm"><i class="fa-solid fa-gear text-muted"></i> Console Core Configurations</h3>
+        <p class="text-xs text-muted">Adjust active engine constants and data streaming targets.</p>
+
+        <div class="space-y-4 max-w-xl text-xs pt-2">
+            <div class="flex items-center justify-between border-b border-surface-2 pb-3">
+                <div>
+                    <h4 class="font-medium text-body text-xs">Directory File Watcher</h4>
+                    <p class="text-[11px] text-muted">Trigger automatic interface refreshes when directory additions hit folders.</p>
+                </div>
+                <span class="text-success-400 uppercase bg-success/10 px-2 py-0.5 rounded border border-success/20 font-bold font-sans text-[10px]">ENABLED</span>
+            </div>
+            <div class="flex items-center justify-between border-b border-surface-2 pb-3">
+                <div>
+                    <h4 class="font-medium text-body text-xs">Strict Database Transaction Enforcements</h4>
+                    <p class="text-[11px] text-muted">Validate unique upsert constraint parameters on regional data loads.</p>
+                </div>
+                <span class="text-success-400 uppercase bg-success/10 px-2 py-0.5 rounded border border-success/20 font-bold font-sans text-[10px]">ENABLED</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    setCortexTheme(localStorage.getItem("cortex-theme") || "dark");
+</script>

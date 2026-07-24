@@ -1,0 +1,45 @@
+<!-- Reusable field partial for webscraper -- same shared-mounting convention as
+     import_marks_correlation's field partial. -->
+<div class="space-y-1.5">
+    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Website URL</label>
+    <input type="text" data-field="url" placeholder="https://example.com" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading font-mono focus:outline-none focus:border-primary">
+</div>
+
+<div class="grid grid-cols-2 gap-3 mt-4">
+    <div class="space-y-1.5">
+        <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Max Folders</label>
+        <input type="number" min="1" data-field="max-folders" value="5" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading font-mono focus:outline-none focus:border-primary">
+    </div>
+    <div class="space-y-1.5">
+        <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Max Files</label>
+        <input type="number" min="1" data-field="max-files" value="50" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading font-mono focus:outline-none focus:border-primary">
+    </div>
+</div>
+<p class="text-[10px] text-muted leading-relaxed mt-1.5">Stays on the site's own domain, respects robots.txt, and stores each scanned page's title/text/link-count into cortex.db.</p>
+
+<script>
+    window.initWebscraperFields = function(container, savedParams, onValidityChange) {
+        const urlInput = container.querySelector('[data-field="url"]');
+        const foldersInput = container.querySelector('[data-field="max-folders"]');
+        const filesInput = container.querySelector('[data-field="max-files"]');
+
+        const args = (savedParams && savedParams.args) || [];
+        if (args[0]) urlInput.value = args[0];
+        if (args[1]) foldersInput.value = args[1];
+        if (args[2]) filesInput.value = args[2];
+
+        function checkValidity() {
+            const valid = urlInput.value.trim().length > 0 && Number(foldersInput.value) > 0 && Number(filesInput.value) > 0;
+            if (onValidityChange) onValidityChange(valid);
+        }
+        [urlInput, foldersInput, filesInput].forEach(el => el.addEventListener("input", checkValidity));
+        checkValidity();
+    };
+
+    window.readWebscraperFields = function(container) {
+        const urlInput = container.querySelector('[data-field="url"]');
+        const foldersInput = container.querySelector('[data-field="max-folders"]');
+        const filesInput = container.querySelector('[data-field="max-files"]');
+        return { args: [urlInput.value.trim(), foldersInput.value.trim(), filesInput.value.trim()] };
+    };
+</script>

@@ -1,0 +1,260 @@
+<!-- Agentic Workflow Uploader: dedicated control window (template list + add + run).
+     Loaded on demand by window.loadPopup('abc_uploader', 'openAbcUploaderModal') -- see
+     the shared loader in index.html. -->
+<div id="abc-uploader-modal" class="fixed inset-0 bg-canvas/80 backdrop-blur-sm hidden items-center justify-center z-modal p-4">
+    <div class="bg-surface border border-border w-full max-w-xl rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in max-h-[90vh]">
+        <div class="px-5 py-4 border-b border-border bg-canvas/50 flex justify-between items-start gap-3 shrink-0">
+            <div class="min-w-0">
+                <h4 class="text-sm font-semibold tracking-wide text-heading flex items-center gap-2">
+                    <i class="fa-solid fa-upload text-primary-400"></i>
+                    Agentic Workflow Uploader
+                </h4>
+                <p class="text-[11px] text-muted mt-1 leading-relaxed">Select a JSON template and upload it to <span id="abc-service-url" class="text-primary-400 font-mono"></span> via Playwright.</p>
+            </div>
+            <button onclick="window.closeAbcUploaderModal()" class="text-muted hover:text-heading transition-colors shrink-0">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div class="p-5 space-y-4 text-xs overflow-y-auto custom-scrollbar">
+            <div class="space-y-1.5">
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Templates</label>
+                <div id="abc-template-list" class="border border-border rounded-lg divide-y divide-border max-h-56 overflow-y-auto custom-scrollbar">
+                    <div class="p-3 text-muted">Loading templates...</div>
+                </div>
+            </div>
+
+            <div class="border border-dashed border-border-strong rounded-lg">
+                <button onclick="window.toggleAbcAddForm()" id="abc-add-toggle" class="w-full px-3 py-2 flex items-center gap-2 text-muted hover:text-primary-400 transition-colors">
+                    <i class="fa-solid fa-plus text-[10px]"></i>
+                    <span class="font-mono uppercase tracking-wider text-[10px]">Add Template</span>
+                </button>
+                <div id="abc-add-form" class="hidden px-3 pb-3 space-y-2">
+                    <div class="space-y-1">
+                        <label for="abc-add-file" class="block text-muted font-mono uppercase tracking-wider text-[10px]">JSON Template File(s)</label>
+                        <input type="file" id="abc-add-file" accept=".json,application/json" multiple class="w-full text-[11px] text-muted file:mr-2 file:py-1.5 file:px-3 file:rounded file:border file:border-border file:bg-canvas file:text-heading file:text-[11px] file:cursor-pointer">
+                    </div>
+                    <input type="text" id="abc-add-name" placeholder="Name (single file only)" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading focus:outline-none focus:border-primary">
+                    <input type="text" id="abc-add-description" placeholder="Description (applied to all selected files)" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading focus:outline-none focus:border-primary">
+                    <p class="text-[10px] text-muted leading-relaxed">Select one file to name it yourself, or select several at once -- each one is then named automatically from its filename.</p>
+                    <div class="flex justify-end gap-2 pt-1">
+                        <button onclick="window.toggleAbcAddForm()" class="px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading transition-colors">Cancel</button>
+                        <button onclick="window.submitAbcAddTemplate()" id="abc-add-submit-btn" class="px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors">Add</button>
+                    </div>
+                </div>
+            </div>
+
+            <label class="flex items-center gap-2 text-muted cursor-pointer">
+                <input type="checkbox" id="abc-headless" class="accent-primary">
+                Run headless (no visible browser / no manual review window)
+            </label>
+
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Console Log</label>
+                    <span id="abc-status" class="text-[10px] font-mono text-muted">Ready</span>
+                </div>
+                <div id="abc-console" class="w-full h-28 bg-canvas rounded-lg p-3 font-mono text-[11px] overflow-y-auto custom-scrollbar space-y-1 border border-border leading-relaxed">
+                    <div class="text-muted">// Select a template and click Run.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-5 py-3 border-t border-border bg-canvas/50 flex justify-end gap-2 shrink-0">
+            <button onclick="window.closeAbcUploaderModal()" class="px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading transition-colors">Close</button>
+            <button id="abc-run-btn" onclick="window.runAbcUpload()" disabled class="px-4 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors flex items-center gap-2 opacity-50 cursor-not-allowed">
+                <i class="fa-solid fa-play"></i> Run
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let abcTemplates = [];
+        let abcSelectedName = null;
+        let abcRunning = false;
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+
+        function abcLog(msg, colorClass) {
+            const box = document.getElementById("abc-console");
+            const timestamp = new Date().toISOString().split("T")[1].substring(0, 8);
+            box.innerHTML += `<div class="${colorClass || "text-muted"}">[${timestamp}] ${escapeHtml(msg)}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function abcSetStatus(text, colorClass) {
+            const el = document.getElementById("abc-status");
+            el.innerText = text;
+            el.className = `text-[10px] font-mono ${colorClass || "text-muted"}`;
+        }
+
+        function renderAbcTemplateList() {
+            const container = document.getElementById("abc-template-list");
+            if (abcTemplates.length === 0) {
+                container.innerHTML = `<div class="p-3 text-muted">No templates registered yet. Use "Add Template" below.</div>`;
+                document.getElementById("abc-run-btn").disabled = true;
+                document.getElementById("abc-run-btn").classList.add("opacity-50", "cursor-not-allowed");
+                return;
+            }
+
+            container.innerHTML = abcTemplates.map(t => `
+                <label class="flex items-start gap-2.5 p-3 hover:bg-canvas cursor-pointer transition-colors">
+                    <input type="radio" name="abc-template-radio" value="${escapeHtml(t.name)}" ${t.name === abcSelectedName ? "checked" : ""} onchange="window.selectAbcTemplate('${escapeHtml(t.name).replace(/'/g, "\\'")}')" class="mt-0.5 accent-primary shrink-0">
+                    <div class="min-w-0 flex-1">
+                        <div class="font-medium text-heading truncate">${escapeHtml(t.name)}</div>
+                        <div class="text-[11px] text-muted leading-relaxed">${escapeHtml(t.description || "(no description)")}</div>
+                    </div>
+                    <button type="button" onclick="event.preventDefault(); window.removeAbcTemplate('${escapeHtml(t.name).replace(/'/g, "\\'")}')" title="Remove template" class="text-muted hover:text-danger-400 transition-colors shrink-0 mt-0.5">
+                        <i class="fa-solid fa-trash text-[11px]"></i>
+                    </button>
+                </label>
+            `).join("");
+        }
+
+        function reloadAbcTemplates() {
+            return fetch("/api/abc-uploader/templates").then(r => r.json()).then(data => {
+                abcTemplates = data.templates || [];
+                document.getElementById("abc-service-url").innerText = data.service_url || "(no URL configured)";
+                if (!abcTemplates.some(t => t.name === abcSelectedName)) {
+                    abcSelectedName = null;
+                }
+                renderAbcTemplateList();
+                const runBtn = document.getElementById("abc-run-btn");
+                if (abcSelectedName) {
+                    runBtn.disabled = false;
+                    runBtn.classList.remove("opacity-50", "cursor-not-allowed");
+                } else {
+                    runBtn.disabled = true;
+                    runBtn.classList.add("opacity-50", "cursor-not-allowed");
+                }
+            });
+        }
+
+        window.selectAbcTemplate = function(name) {
+            abcSelectedName = name;
+            const runBtn = document.getElementById("abc-run-btn");
+            runBtn.disabled = false;
+            runBtn.classList.remove("opacity-50", "cursor-not-allowed");
+        };
+
+        window.removeAbcTemplate = function(name) {
+            if (!confirm(`Remove template "${name}"?`)) return;
+            fetch(`/api/abc-uploader/templates/${encodeURIComponent(name)}`, { method: "DELETE" })
+                .then(r => r.json())
+                .then(() => reloadAbcTemplates())
+                .catch(() => alert("Could not remove template."));
+        };
+
+        window.toggleAbcAddForm = function() {
+            document.getElementById("abc-add-form").classList.toggle("hidden");
+        };
+
+        function deriveTemplateName(filename) {
+            return filename.replace(/\.json$/i, "").replace(/[_-]+/g, " ").trim();
+        }
+
+        window.submitAbcAddTemplate = async function() {
+            const fileInput = document.getElementById("abc-add-file");
+            const files = Array.from(fileInput.files || []);
+            const name = document.getElementById("abc-add-name").value.trim();
+            const description = document.getElementById("abc-add-description").value.trim();
+
+            if (files.length === 0) { alert("Choose at least one .json template file first."); return; }
+            if (files.length === 1 && !name) { alert("A template name is required."); return; }
+
+            const btn = document.getElementById("abc-add-submit-btn");
+            btn.disabled = true;
+
+            let okCount = 0;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const templateName = files.length === 1 ? name : (deriveTemplateName(file.name) || `template-${i + 1}`);
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("name", templateName);
+                formData.append("description", description);
+
+                try {
+                    const r = await fetch("/api/abc-uploader/templates", { method: "POST", body: formData });
+                    const data = await r.json();
+                    if (r.ok) {
+                        okCount++;
+                        abcLog(`Added '${templateName}' (${file.name}).`, "text-success-400");
+                    } else {
+                        abcLog(`Failed '${templateName}' (${file.name}): ${data.detail || "unknown error"}`, "text-danger-400");
+                    }
+                } catch (err) {
+                    abcLog(`Failed '${templateName}' (${file.name}): ${err.message}`, "text-danger-400");
+                }
+            }
+
+            if (files.length > 1) {
+                abcLog(`Added ${okCount}/${files.length} template(s).`, okCount === files.length ? "text-success-400" : "text-warning-400");
+            }
+
+            fileInput.value = "";
+            document.getElementById("abc-add-name").value = "";
+            document.getElementById("abc-add-description").value = "";
+            document.getElementById("abc-add-form").classList.add("hidden");
+            btn.disabled = false;
+            await reloadAbcTemplates();
+        };
+
+        window.runAbcUpload = function() {
+            if (abcRunning || !abcSelectedName) return;
+            abcRunning = true;
+            const runBtn = document.getElementById("abc-run-btn");
+            runBtn.disabled = true;
+            runBtn.classList.add("opacity-50", "cursor-not-allowed");
+            abcSetStatus("Running...", "text-warning-400");
+
+            const headless = document.getElementById("abc-headless").checked;
+            abcLog(`Uploading '${abcSelectedName}'${headless ? " (headless)" : " -- browser will open for review"}...`, "text-info-400");
+
+            fetch("/api/abc-uploader/upload", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: abcSelectedName, headless })
+            }).then(async r => {
+                const data = await r.json();
+                if (data.message) abcLog(data.message, data.success ? "text-body" : "text-danger-400");
+                if (data.success) {
+                    abcLog("Upload run complete.", "text-success-400");
+                    abcSetStatus("Complete", "text-success-400");
+                } else {
+                    abcLog("Upload run failed.", "text-danger-400");
+                    abcSetStatus("Failed", "text-danger-400");
+                }
+            }).catch(err => {
+                abcLog(`System error: ${err.message}`, "text-danger-400");
+                abcSetStatus("Error", "text-danger-400");
+            }).finally(() => {
+                abcRunning = false;
+                runBtn.disabled = false;
+                runBtn.classList.remove("opacity-50", "cursor-not-allowed");
+            });
+        };
+
+        window.openAbcUploaderModal = function() {
+            abcSelectedName = null;
+            document.getElementById("abc-add-form").classList.add("hidden");
+            document.getElementById("abc-headless").checked = false;
+            abcSetStatus("Ready", "text-muted");
+            document.getElementById("abc-console").innerHTML = `<div class="text-muted">// Select a template and click Run.</div>`;
+            document.getElementById("abc-uploader-modal").classList.remove("hidden");
+            document.getElementById("abc-uploader-modal").classList.add("flex");
+            reloadAbcTemplates();
+        };
+
+        window.closeAbcUploaderModal = function() {
+            document.getElementById("abc-uploader-modal").classList.add("hidden");
+            document.getElementById("abc-uploader-modal").classList.remove("flex");
+        };
+    })();
+</script>

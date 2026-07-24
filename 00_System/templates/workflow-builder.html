@@ -1,0 +1,1229 @@
+<div class="flex gap-4 h-full animate-fade-in" id="wfb-root">
+    <!-- Left palette: search + alphabetical, scrollable list of every draggable building block -->
+    <div class="w-64 shrink-0 bg-surface border border-border rounded-xl flex flex-col overflow-hidden">
+        <div class="p-3 border-b border-border shrink-0 space-y-2">
+            <input type="text" id="wfb-palette-search" placeholder="Search building blocks..." class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading text-xs focus:outline-none focus:border-primary">
+            <div id="wfb-kind-filter" class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-mono text-muted">
+                <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="wfb-kind" value="all" checked class="accent-primary">All</label>
+                <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="wfb-kind" value="skill" class="accent-primary">Skill</label>
+                <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="wfb-kind" value="process" class="accent-primary">Process</label>
+                <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="wfb-kind" value="task" class="accent-primary">Task</label>
+                <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="wfb-kind" value="adapter" class="accent-primary">Adapter</label>
+                <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="wfb-kind" value="function" class="accent-primary">Function</label>
+            </div>
+        </div>
+        <div class="p-2 border-b border-border shrink-0">
+            <div draggable="true" id="wfb-container-palette-item" class="p-2.5 rounded-lg border border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 cursor-grab active:cursor-grabbing transition-colors">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-medium text-heading truncate"><i class="fa-solid fa-box-archive text-primary-400 mr-1"></i>Container</span>
+                    <span class="text-[9px] font-mono uppercase shrink-0 text-primary-400">Container</span>
+                </div>
+                <p class="text-[10px] text-muted leading-snug mt-1">Holds its own mini sub-flow. Double-click on the canvas to open it.</p>
+            </div>
+        </div>
+        <div id="wfb-palette-list" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+            <div class="text-muted font-mono text-[10px] p-2 animate-pulse">Loading building blocks...</div>
+        </div>
+    </div>
+
+    <!-- Center: toolbar + canvas -->
+    <div class="flex-1 flex flex-col min-w-0 gap-3">
+        <div class="bg-surface border border-border rounded-xl p-3 flex items-center gap-2 flex-wrap shrink-0">
+            <input type="text" id="wfb-workflow-name" placeholder="Untitled Workflow" class="bg-canvas border border-border rounded px-3 py-1.5 text-heading text-xs font-mono w-48 focus:outline-none focus:border-primary">
+            <select id="wfb-load-select" class="bg-canvas border border-border rounded px-2 py-1.5 text-body text-xs focus:outline-none focus:border-primary max-w-[10rem]">
+                <option value="">-- Load saved workflow --</option>
+            </select>
+            <div class="w-px h-5 bg-border mx-1"></div>
+            <button onclick="window.wfbNew()" class="px-2.5 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-[11px] font-mono rounded text-heading transition-colors">New</button>
+            <button onclick="window.wfbSave()" class="px-2.5 py-1.5 bg-primary/10 hover:bg-primary text-primary-400 hover:text-heading border border-primary/20 text-[11px] font-mono rounded transition-colors">Save</button>
+            <button onclick="window.wfbDelete()" class="px-2.5 py-1.5 bg-danger/10 hover:bg-danger text-danger-400 hover:text-heading border border-danger/20 text-[11px] font-mono rounded transition-colors">Delete</button>
+            <div class="w-px h-5 bg-border mx-1"></div>
+            <label class="flex items-center gap-1.5 text-[11px] text-muted font-mono">
+                <input type="checkbox" id="wfb-dry-run" checked class="accent-primary">
+                Dry Run
+            </label>
+            <button onclick="window.wfbRun()" id="wfb-run-btn" class="px-3 py-1.5 bg-success/10 hover:bg-success text-success-400 hover:text-heading border border-success/20 text-[11px] font-semibold rounded transition-colors flex items-center gap-1.5">
+                <i class="fa-solid fa-play"></i> Run
+            </button>
+            <div class="ml-auto flex items-center gap-1">
+                <button onclick="window.wfbZoomOut()" class="w-7 h-7 flex items-center justify-center bg-surface-2 hover:bg-border border border-border-strong rounded text-muted hover:text-heading transition-colors"><i class="fa-solid fa-magnifying-glass-minus text-[11px]"></i></button>
+                <button onclick="window.wfbZoomReset()" class="w-7 h-7 flex items-center justify-center bg-surface-2 hover:bg-border border border-border-strong rounded text-muted hover:text-heading transition-colors"><i class="fa-solid fa-compress text-[11px]"></i></button>
+                <button onclick="window.wfbZoomIn()" class="w-7 h-7 flex items-center justify-center bg-surface-2 hover:bg-border border border-border-strong rounded text-muted hover:text-heading transition-colors"><i class="fa-solid fa-magnifying-glass-plus text-[11px]"></i></button>
+            </div>
+        </div>
+
+        <div id="wfb-breadcrumb" class="hidden bg-surface border border-border rounded-lg px-3 py-1.5 text-[11px] font-mono text-muted flex items-center gap-1.5 shrink-0"></div>
+
+        <div class="flex-1 bg-surface border border-border rounded-xl overflow-hidden relative min-h-0">
+            <div id="wfb-canvas" class="w-full h-full"></div>
+        </div>
+
+        <!-- Model toggles (filter the palette by AI backend) + live classification ceiling
+             (computed from AI-model nodes actually placed on the canvas). Per the
+             information security classification guide, most-restrictive-model-wins. -->
+        <div class="bg-surface border border-border rounded-xl shrink-0 p-3 flex items-center gap-4 flex-wrap">
+            <div id="wfb-model-toggles" class="flex items-center gap-3 flex-wrap text-[11px] font-mono"></div>
+            <div class="ml-auto flex items-center gap-2">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-muted">Workflow Classification:</span>
+                <span id="wfb-classification-badge" class="px-2 py-0.5 rounded text-[10px] font-mono uppercase border text-muted border-border">No AI model in use</span>
+            </div>
+        </div>
+
+        <div class="bg-surface border border-border rounded-xl shrink-0 h-40 flex flex-col">
+            <div class="px-4 py-2 border-b border-border flex items-center justify-between shrink-0">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-muted">Run Log</span>
+                <span id="wfb-run-status" class="text-[10px] font-mono text-muted">Ready</span>
+            </div>
+            <div id="wfb-run-log" class="flex-1 overflow-y-auto custom-scrollbar p-3 font-mono text-[11px] space-y-1 leading-relaxed">
+                <div class="text-muted">// Configure nodes, connect them, and click Run.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right panel: selected node's config, identical fields to its popup where one exists -->
+    <div class="w-80 shrink-0 bg-surface border border-border rounded-xl flex flex-col overflow-hidden">
+        <div class="px-4 py-3 border-b border-border shrink-0">
+            <h4 class="text-xs font-semibold text-heading uppercase tracking-wider">Node Configuration</h4>
+        </div>
+        <div id="wfb-panel-body" class="flex-1 overflow-y-auto custom-scrollbar p-4 text-xs space-y-3">
+            <div class="text-muted">Select a node on the canvas to configure it.</div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Drawflow theme override -- match this app's own surface/border/primary tokens
+       instead of the library's default light theme. */
+    #wfb-canvas.drawflow { background-color: var(--color-canvas); background-image: radial-gradient(var(--color-border) 1px, transparent 1px); background-size: 18px 18px; }
+    #wfb-canvas .drawflow-node { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; color: var(--color-heading); padding: 0; min-width: 160px; box-shadow: none; }
+    #wfb-canvas .drawflow-node.selected { border-color: var(--color-primary); box-shadow: 0 0 0 2px color-mix(in oklch, var(--color-primary) 30%, transparent); }
+    #wfb-canvas .drawflow-node.kind-container { border-style: dashed; border-color: color-mix(in oklch, var(--color-primary) 50%, var(--color-border)); }
+    #wfb-canvas .drawflow-node.kind-human-checkpoint { border-width: 2px; border-color: var(--color-warning-400); }
+    #wfb-canvas .drawflow-node .input, #wfb-canvas .drawflow-node .output { background: var(--color-primary-400); height: 14px; width: 14px; border: 2px solid var(--color-surface); }
+    #wfb-canvas .connection .main-path { stroke: var(--color-primary-400); stroke-width: 3px; }
+    #wfb-canvas .connection .main-path:hover { stroke: var(--color-danger-400); cursor: pointer; }
+    .wfb-node-card { padding: 10px 14px; }
+    .wfb-node-card .wfb-node-title { font-size: 12px; font-weight: 600; color: var(--color-heading); }
+    .wfb-node-card .wfb-node-kind { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted); margin-top: 2px; font-family: var(--font-mono); }
+</style>
+
+<script>
+    (function() {
+        const FIELD_PARTIAL_TOOL_IDS = ["import_class_schedule", "import_marks_correlation", "word_to_excel_exam"];
+        const KIND_LABELS = { task: "Task", process: "Process", adapter: "Adapter", skill: "Skill", function: "Function" };
+        const KIND_COLORS = { task: "text-primary-400", process: "text-info-400", adapter: "text-danger-400", skill: "text-warning-400", function: "text-secondary-400" };
+        // Specific tool_ids that get a distinct canvas treatment beyond their normal kind
+        // styling -- keyed by tool_id rather than a whole new node kind, so any future
+        // human-in-the-loop function can opt in the same way without engine changes.
+        const HUMAN_CHECKPOINT_TOOL_IDS = ["human_review_checkpoint"];
+
+        let editor = null;
+        let registry = [];
+        let modelClassifications = { levels: [], labels: {}, models: {} };
+        let modelToggleOrder = [];
+        let modelToggles = {};
+        let currentWorkflowId = null;
+        let selectedNodeId = null;
+        let currentModuleName = "Home";
+        let moduleBreadcrumb = [{ name: "Home", title: "Home" }];
+        let containerCounter = 0;
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+
+        function ensureDrawflowLoaded() {
+            return new Promise((resolve, reject) => {
+                if (window.Drawflow) { resolve(); return; }
+                const link = document.createElement("link");
+                link.rel = "stylesheet";
+                link.href = "/static/vendor/drawflow/drawflow.min.css";
+                document.head.appendChild(link);
+
+                const script = document.createElement("script");
+                script.src = "/static/vendor/drawflow/drawflow.min.js";
+                script.onload = resolve;
+                script.onerror = () => reject(new Error("Could not load the canvas engine."));
+                document.head.appendChild(script);
+            });
+        }
+
+        // --- Palette -----------------------------------------------------------------
+
+        function selectedKindFilter() {
+            const checked = document.querySelector('input[name="wfb-kind"]:checked');
+            return checked ? checked.value : "all";
+        }
+
+        function renderPalette(filterText) {
+            const container = document.getElementById("wfb-palette-list");
+            const term = (filterText || "").trim().toLowerCase();
+            const kindFilter = selectedKindFilter();
+
+            // Search always scans every kind; the radio filter only shapes what shows
+            // when the search box is empty.
+            const filtered = registry.filter(n => {
+                // A node tied to a toggled-off AI model is hidden regardless of the
+                // search term -- the toggles are a hard security-relevant filter, not
+                // just a convenience one.
+                if (n.model && modelToggles[n.model] === false) return false;
+                const matchesSearch = !term || n.title.toLowerCase().includes(term) || (n.description || "").toLowerCase().includes(term);
+                if (!matchesSearch) return false;
+                if (term) return true;
+                return kindFilter === "all" || n.kind === kindFilter;
+            });
+
+            if (!filtered.length) {
+                container.innerHTML = `<div class="text-muted font-mono text-[10px] p-2">No matches.</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(n => `
+                <div draggable="true" data-node-id="${escapeHtml(n.tool_id)}" class="wfb-palette-item p-2.5 rounded-lg border border-border bg-canvas/50 hover:border-primary/40 hover:bg-canvas cursor-grab active:cursor-grabbing transition-colors">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-medium text-heading truncate">${escapeHtml(n.title)}</span>
+                        <span class="text-[9px] font-mono uppercase shrink-0 ${KIND_COLORS[n.kind] || "text-muted"}">${KIND_LABELS[n.kind] || n.kind}</span>
+                    </div>
+                    <p class="text-[10px] text-muted leading-snug mt-1 line-clamp-2">${escapeHtml(n.description || "")}</p>
+                </div>
+            `).join("");
+
+            container.querySelectorAll(".wfb-palette-item").forEach(el => {
+                el.addEventListener("dragstart", (e) => {
+                    const nodeMeta = registry.find(n => n.tool_id === el.dataset.nodeId);
+                    e.dataTransfer.setData("application/json", JSON.stringify(nodeMeta));
+                });
+            });
+        }
+
+        function loadPalette() {
+            return fetch("/api/workflow-builder/node-registry").then(r => r.json()).then(data => {
+                registry = data.nodes || [];
+                modelClassifications = data.model_classifications || { levels: [], labels: {}, models: {} };
+                modelToggleOrder = data.model_toggle_order || Object.keys(modelClassifications.models || {});
+                if (Object.keys(modelToggles).length === 0) {
+                    // Conservative default: comes from the server (model_toggle_defaults)
+                    // rather than being hardcoded here, so adding a new default-on model
+                    // later doesn't require a frontend change.
+                    const defaults = data.model_toggle_defaults || {};
+                    modelToggleOrder.forEach(m => { modelToggles[m] = !!defaults[m]; });
+                }
+                renderModelToggles();
+                renderPalette(document.getElementById("wfb-palette-search").value);
+            });
+        }
+
+        // --- Model toggles + live classification ceiling -----------------------------
+        // Toggles filter what's draggable from the palette; the classification badge
+        // reflects what's actually PLACED on the canvas (a toggle being off doesn't
+        // remove an already-placed node) -- see model_classifications.py for the
+        // "most restrictive model wins" ceiling logic this mirrors client-side.
+        // modelToggleOrder can include models absent from modelClassifications.models
+        // (e.g. "m365" is deliberately not classification-affecting, see
+        // model_classifications.py's module docstring) -- it's a superset used purely
+        // for what toggles/filters exist, not for the ceiling computation below.
+
+        function renderModelToggles() {
+            const container = document.getElementById("wfb-model-toggles");
+            const models = modelToggleOrder;
+            if (!models.length) { container.innerHTML = ""; return; }
+
+            container.innerHTML = models.map(m => {
+                const on = !!modelToggles[m];
+                const label = m.charAt(0).toUpperCase() + m.slice(1);
+                return `
+                    <label class="flex items-center gap-1.5 cursor-pointer select-none ${on ? "text-heading" : "text-muted"}">
+                        <input type="checkbox" data-model-toggle="${m}" ${on ? "checked" : ""} class="accent-primary">
+                        ${label}
+                    </label>
+                `;
+            }).join("");
+
+            container.querySelectorAll("[data-model-toggle]").forEach(el => {
+                el.addEventListener("change", () => {
+                    modelToggles[el.dataset.modelToggle] = el.checked;
+                    renderModelToggles();
+                    renderPalette(document.getElementById("wfb-palette-search").value);
+                });
+            });
+        }
+
+        function classificationCeilingOf(modelKeys) {
+            const levels = modelClassifications.levels || [];
+            const used = modelKeys
+                .map(m => modelClassifications.models[m])
+                .filter(Boolean);
+            if (!used.length) return null;
+            return used.reduce((worst, level) => levels.indexOf(level) < levels.indexOf(worst) ? level : worst, used[0]);
+        }
+
+        function recomputeClassificationBadge() {
+            const badge = document.getElementById("wfb-classification-badge");
+            if (!editor) return;
+
+            const exported = editor.export().drawflow;
+            const modelsUsed = new Set();
+            Object.values(exported).forEach(moduleData => {
+                Object.values(moduleData.data || {}).forEach(node => {
+                    const model = node.data && node.data.model;
+                    if (model) modelsUsed.add(model);
+                });
+            });
+
+            const ceiling = classificationCeilingOf(Array.from(modelsUsed));
+            badge.className = "px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase border";
+            if (!ceiling) {
+                badge.textContent = "No AI model in use";
+                badge.style.cssText = "background: transparent; color: var(--color-muted); border-color: var(--color-border);";
+                return;
+            }
+
+            const label = (modelClassifications.labels || {})[ceiling] || ceiling;
+            // Solid, unambiguous background color per classification level (set via
+            // inline style, not Tailwind utility classes -- this project's compiled
+            // output.css is a static pre-built bundle and doesn't include every
+            // possible color/utility combination, only ones already used elsewhere).
+            // Dark text throughout for contrast against these bright backgrounds.
+            const badgeColors = {
+                public: "#22c55e",       // green
+                protected_a: "#eab308",  // yellow
+                protected_b: "#f97316",  // orange
+                protected_c: "#ef4444",  // red
+            };
+            const bg = badgeColors[ceiling] || "#9ca3af";
+            badge.textContent = label;
+            badge.style.cssText = `background: ${bg}; color: #1a1a1a; border-color: ${bg};`;
+        }
+
+        // --- Canvas / node lifecycle ----------------------------------------------------
+
+        function nodeHtml(meta) {
+            const isCheckpoint = HUMAN_CHECKPOINT_TOOL_IDS.includes(meta.tool_id);
+            const icon = isCheckpoint ? `<i class="fa-solid fa-user-check text-warning-400 mr-1"></i>` : "";
+            return `
+                <div class="wfb-node-card">
+                    <div class="wfb-node-title">${icon}${escapeHtml(meta.title)}</div>
+                    <div class="wfb-node-kind">${KIND_LABELS[meta.kind] || meta.kind}</div>
+                </div>
+            `;
+        }
+
+        function containerNodeHtml(title) {
+            return `
+                <div class="wfb-node-card">
+                    <div class="wfb-node-title"><i class="fa-solid fa-box-archive text-primary-400 mr-1"></i>${escapeHtml(title)}</div>
+                    <div class="wfb-node-kind">Container</div>
+                    <button type="button" class="wfb-container-open-btn mt-1.5 w-full text-[10px] font-mono px-2 py-1 rounded bg-primary/15 hover:bg-primary/25 text-primary-400 transition-colors" onmousedown="event.stopPropagation()">
+                        Open <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        function addNodeToCanvas(meta, posX, posY) {
+            if (meta.tool_id === "container") {
+                containerCounter += 1;
+                const moduleName = `container_${Date.now()}_${containerCounter}`;
+                const title = `Container ${containerCounter}`;
+                editor.addModule(moduleName);
+                const data = { kind: "container", tool_id: "container", category: null, title, description: "", params: {}, module_name: moduleName };
+                editor.addNode("container", 1, 1, posX, posY, "kind-container", data, containerNodeHtml(title), false);
+                return;
+            }
+
+            const data = {
+                kind: meta.kind,
+                tool_id: meta.tool_id,
+                category: meta.category || null,
+                title: meta.title,
+                description: meta.description || "",
+                model: meta.model || null,
+                params: {},
+            };
+            const cssClass = HUMAN_CHECKPOINT_TOOL_IDS.includes(meta.tool_id) ? "kind-human-checkpoint" : `kind-${meta.kind}`;
+            editor.addNode(meta.tool_id, 1, 1, posX, posY, cssClass, data, nodeHtml(meta), false);
+            recomputeClassificationBadge();
+        }
+
+        function renderBreadcrumb() {
+            const bar = document.getElementById("wfb-breadcrumb");
+            if (moduleBreadcrumb.length <= 1) {
+                bar.classList.add("hidden");
+                bar.innerHTML = "";
+                return;
+            }
+            bar.classList.remove("hidden");
+            bar.innerHTML = moduleBreadcrumb.map((m, i) => {
+                const isLast = i === moduleBreadcrumb.length - 1;
+                const label = isLast
+                    ? `<span class="text-heading">${escapeHtml(m.title)}</span>`
+                    : `<span class="text-primary-400 hover:underline cursor-pointer" onclick="window.wfbGoToBreadcrumb(${i})">${escapeHtml(m.title)}</span>`;
+                return i === 0 ? label : `<i class="fa-solid fa-chevron-right text-[9px] text-muted mx-1"></i>${label}`;
+            }).join("");
+        }
+
+        function enterContainer(nodeId) {
+            const data = editor.getNodeFromId(nodeId).data;
+            if (!data || !data.module_name) return;
+            editor.changeModule(data.module_name);
+            currentModuleName = data.module_name;
+            moduleBreadcrumb.push({ name: data.module_name, title: data.title || "Container" });
+            renderBreadcrumb();
+            clearPanel();
+        }
+
+        window.wfbGoToBreadcrumb = function(index) {
+            moduleBreadcrumb = moduleBreadcrumb.slice(0, index + 1);
+            const target = moduleBreadcrumb[moduleBreadcrumb.length - 1];
+            editor.changeModule(target.name);
+            currentModuleName = target.name;
+            renderBreadcrumb();
+            clearPanel();
+        };
+
+        window.wfbEnterContainerFromPanel = function(nodeId) {
+            enterContainer(nodeId);
+        };
+
+        function initCanvasDrop() {
+            const canvasEl = document.getElementById("wfb-canvas");
+            canvasEl.addEventListener("dragover", (e) => e.preventDefault());
+            canvasEl.addEventListener("drop", (e) => {
+                e.preventDefault();
+                const raw = e.dataTransfer.getData("application/json");
+                if (!raw) return;
+                const meta = JSON.parse(raw);
+                const rect = editor.precanvas.getBoundingClientRect();
+                const posX = (e.clientX * (1 / editor.zoom)) - (rect.x * (1 / editor.zoom));
+                const posY = (e.clientY * (1 / editor.zoom)) - (rect.y * (1 / editor.zoom));
+                addNodeToCanvas(meta, posX, posY);
+            });
+            canvasEl.addEventListener("click", (e) => {
+                const btn = e.target.closest(".wfb-container-open-btn");
+                if (!btn) return;
+                const nodeEl = e.target.closest(".drawflow-node");
+                if (!nodeEl) return;
+                enterContainer(nodeEl.id.replace("node-", ""));
+            });
+        }
+
+        // --- Right panel: node configuration ----------------------------------------
+
+        function currentNodeData(nodeId) {
+            return editor.getNodeFromId(nodeId).data;
+        }
+
+        function saveNodeParams(nodeId, params) {
+            const node = editor.getNodeFromId(nodeId);
+            editor.updateNodeDataFromId(nodeId, { ...node.data, params });
+        }
+
+        function renderGenericArgsPanel(nodeId, data) {
+            const body = document.getElementById("wfb-panel-body");
+            const argsText = (data.params.args || []).join("\n");
+            body.innerHTML = `
+                <div class="text-muted leading-relaxed">${escapeHtml(data.title)} has no dedicated config fields in the builder yet -- it runs with its script's own default (zero-argument) behavior.</div>
+                <div class="space-y-1.5">
+                    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Extra CLI Args (optional, one per line)</label>
+                    <textarea data-panel-args rows="4" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading font-mono text-[11px] focus:outline-none focus:border-primary custom-scrollbar resize-none">${escapeHtml(argsText)}</textarea>
+                </div>
+                <button onclick="window.wfbSaveNodePanel('${nodeId}')" class="w-full px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors">Save Node Config</button>
+            `;
+            body.dataset.readFn = "generic-args";
+        }
+
+        function renderFieldPartialPanel(nodeId, data) {
+            const body = document.getElementById("wfb-panel-body");
+            body.innerHTML = `<div id="wfb-panel-fields"></div>
+                <button onclick="window.wfbSaveNodePanel('${nodeId}')" class="w-full mt-3 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors">Save Node Config</button>`;
+            const mount = document.getElementById("wfb-panel-fields");
+            window.loadFieldPartial(data.tool_id, mount).then(() => {
+                window[`init${toPascalCase(data.tool_id)}Fields`](mount, data.params, null);
+            });
+            body.dataset.readFn = "field-partial";
+        }
+
+        function renderSkillPanel(data) {
+            const body = document.getElementById("wfb-panel-body");
+            body.innerHTML = `<div class="text-muted leading-relaxed">${escapeHtml(data.description)}</div>
+                <div class="text-[10px] text-muted mt-2">Skills have no configurable parameters -- their description is sent directly to the AI bridge as the instruction, along with whatever upstream text flows into this node.</div>`;
+            body.dataset.readFn = "";
+        }
+
+        // Declarative config schema for every Function node type that doesn't need
+        // bespoke UI (node-reference dropdowns etc -- those stay as dedicated renderers
+        // below: renderReviewGatePanel, renderLogicGatePanel).
+        const FUNCTION_FIELD_SCHEMAS = {
+            function_concatenate: [
+                { key: "separator", label: "Separator", type: "text", mono: true, placeholder: "\\n\\n (default)" },
+            ],
+            function_google_search: [
+                { key: "instructions", label: "Search Instructions", type: "textarea", placeholder: "e.g. What changed in the latest Red Seal standard?" },
+            ],
+            function_gemini_ask: [
+                { key: "instructions", label: "Instructions", type: "textarea", placeholder: "e.g. Summarize the key findings from: {{upstream_node_id}}" },
+            ],
+            function_claude_ask: [
+                { key: "instructions", label: "Instructions", type: "textarea", placeholder: "e.g. Summarize the key findings from: {{upstream_node_id}}" },
+            ],
+            function_chatgpt_ask: [
+                { key: "instructions", label: "Instructions", type: "textarea", placeholder: "e.g. Summarize the key findings from: {{upstream_node_id}}" },
+            ],
+            function_image_generate: [
+                { key: "prompt", label: "Image Prompt", type: "textarea", placeholder: "e.g. A friendly robot mascot, flat vector style" },
+                { key: "output_dir", label: "Output Folder", type: "text", mono: true, placeholder: "Defaults to 02_vault/generated_images" },
+            ],
+            function_notebooklm_create: [
+                { key: "title", label: "Notebook Title", type: "text", placeholder: "e.g. Electrician Curriculum Review" },
+            ],
+            function_notebooklm_upload_sources: [
+                { key: "notebook_id", label: "Notebook ID (optional if chained from Create)", type: "text", mono: true },
+                { key: "file_paths", label: "File Paths (one per line)", type: "textarea", mono: true, placeholder: "C:\\...\\source1.pdf\nC:\\...\\source2.docx" },
+            ],
+            function_notebooklm_prompt_loop: [
+                { key: "notebook_id", label: "Notebook ID (optional if chained from Create)", type: "text", mono: true },
+                { key: "prompts", label: "Prompts (one per line)", type: "textarea", placeholder: "What are the key topics in Period 1?" },
+            ],
+        };
+
+        function renderGenericFunctionFields(nodeId, data, schema) {
+            const body = document.getElementById("wfb-panel-body");
+            const p = data.params || {};
+            const fieldsHtml = schema.map(f => {
+                const raw = (p[f.key] !== undefined && p[f.key] !== null) ? p[f.key] : "";
+                const val = escapeHtml(raw);
+                const monoClass = f.mono ? "font-mono" : "";
+                if (f.type === "textarea") {
+                    return `
+                        <label class="block text-muted font-mono uppercase tracking-wider text-[10px] mt-3 first:mt-0">${f.label}</label>
+                        <textarea data-panel-field="${f.key}" rows="4" placeholder="${escapeHtml(f.placeholder || "")}" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading text-[11px] ${monoClass} focus:outline-none focus:border-primary custom-scrollbar resize-none">${val}</textarea>
+                    `;
+                }
+                return `
+                    <label class="block text-muted font-mono uppercase tracking-wider text-[10px] mt-3 first:mt-0">${f.label}</label>
+                    <input type="${f.type === "number" ? "number" : "text"}" data-panel-field="${f.key}" value="${val}" placeholder="${escapeHtml(f.placeholder || "")}" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading text-xs ${monoClass} focus:outline-none focus:border-primary">
+                `;
+            }).join("");
+
+            body.innerHTML = (fieldsHtml || `<div class="text-muted leading-relaxed">This function needs no configuration -- it just runs.</div>`) +
+                `<button onclick="window.wfbSaveNodePanel('${nodeId}')" class="w-full mt-3 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors">Save Node Config</button>`;
+            body.dataset.readFn = "generic-function:" + data.tool_id;
+        }
+
+        function readGenericFunctionFields(toolId) {
+            const body = document.getElementById("wfb-panel-body");
+            const schema = FUNCTION_FIELD_SCHEMAS[toolId] || [];
+            const params = {};
+            schema.forEach(f => {
+                const el = body.querySelector(`[data-panel-field="${f.key}"]`);
+                if (!el) return;
+                params[f.key] = f.type === "number" ? (parseInt(el.value, 10) || 0) : el.value;
+            });
+            return params;
+        }
+
+        // --- Declarative config schema for Task/Process/Adapter/09_Functions nodes whose
+        // real CLI inputs deserve labeled fields instead of the blind freeform "Args" box
+        // (renderGenericArgsPanel below). Two calling conventions, per tool.mode:
+        //   "positional" -- field values become params.args = [v1, v2, ...] in declared
+        //                    order (plain positional CLI args, e.g. curriculum_guide_to_tos.py).
+        //   "json"       -- field values become params.args = [JSON.stringify({...})], one
+        //                    payload arg (the convention every Adapter and every migrated
+        //                    13_Functions script uses).
+        // Empty `fields: []` means "this tool takes no input -- nothing to configure."
+        const ARG_FIELD_SCHEMAS = {
+            // --- Tasks ---
+            curriculum_guide_to_tos: { mode: "positional", fields: [
+                { key: "curriculum_guide_file", label: "Curriculum Guide File (.docx)", type: "text", mono: true, placeholder: "C:\\...\\Curriculum Guide.docx" },
+                { key: "trade_name_override", label: "Trade Name Override (optional)", type: "text", placeholder: "Leave blank to auto-detect" },
+                { key: "exam_questions", label: "Exam Questions", type: "number", placeholder: "100" },
+            ]},
+            webscraper: { mode: "positional", fields: [
+                { key: "seed_url", label: "Seed URL", type: "text", placeholder: "https://..." },
+                { key: "max_folders", label: "Max Folders", type: "number", placeholder: "10" },
+                { key: "max_files", label: "Max Files", type: "number", placeholder: "50" },
+            ]},
+            abc_uploader: { mode: "json", fields: [
+                { key: "action", label: "Action", type: "select", options: ["list", "add", "remove", "set_url", "upload"] },
+                { key: "name", label: "Template Name", type: "text", placeholder: "add / remove / upload" },
+                { key: "path", label: "Template File Path", type: "text", mono: true, placeholder: "add only" },
+                { key: "description", label: "Description", type: "text", placeholder: "add only" },
+                { key: "url", label: "Service URL", type: "text", mono: true, placeholder: "set_url only" },
+            ]},
+            import_documents: { mode: "positional", fields: [] },
+            import_exam_pass_fail: { mode: "positional", fields: [] },
+            import_transcripts: { mode: "positional", fields: [] },
+            // --- 12_Tasks (M365/Power BI/Outlook/Teams -- each a thin CoreRouter-dispatched
+            // wrapper around m365_graph_bridge's mock logic, see 12_Tasks/<tool_id>/) ---
+            list_m365_files: { mode: "json", fields: [
+                { key: "folder_path", label: "Folder Path", type: "text", mono: true, placeholder: "/Reports" },
+            ]},
+            download_m365_file: { mode: "json", fields: [
+                { key: "file_path", label: "M365 File Path", type: "text", mono: true, placeholder: "/Reports/Budget.xlsx" },
+                { key: "local_output_dir", label: "Local Output Folder", type: "text", mono: true },
+            ]},
+            upload_m365_file: { mode: "json", fields: [
+                { key: "local_path", label: "Local File Path", type: "text", mono: true },
+                { key: "destination_path", label: "M365 Destination Path", type: "text", mono: true, placeholder: "/Reports/Budget.xlsx" },
+            ]},
+            get_excel_range: { mode: "json", fields: [
+                { key: "file_path", label: "M365 File Path", type: "text", mono: true, placeholder: "/Reports/Budget.xlsx" },
+                { key: "worksheet", label: "Worksheet", type: "text", placeholder: "Sheet1" },
+                { key: "range_address", label: "Range Address", type: "text", mono: true, placeholder: "A1:B10" },
+            ]},
+            set_excel_range: { mode: "json", fields: [
+                { key: "file_path", label: "M365 File Path", type: "text", mono: true, placeholder: "/Reports/Budget.xlsx" },
+                { key: "worksheet", label: "Worksheet", type: "text", placeholder: "Sheet1" },
+                { key: "range_address", label: "Range Address", type: "text", mono: true, placeholder: "A1:B10" },
+                { key: "values", label: "Values (JSON 2D array)", type: "textarea", mono: true, placeholder: '[["a", "b"], ["c", "d"]]' },
+            ]},
+            refresh_powerbi_dataset: { mode: "json", fields: [
+                { key: "dataset_id", label: "Dataset ID", type: "text", mono: true },
+            ]},
+            send_outlook_mail: { mode: "json", fields: [
+                { key: "to", label: "To (comma-separated)", type: "text", placeholder: "a@example.com, b@example.com" },
+                { key: "subject", label: "Subject", type: "text" },
+                { key: "body", label: "Body", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+            ]},
+            search_outlook_email: { mode: "json", fields: [
+                { key: "query", label: "Query / Topic", type: "text", placeholder: "e.g. curriculum" },
+                { key: "sender", label: "Sender Filter (optional)", type: "text", placeholder: "e.g. registrar" },
+                { key: "folder", label: "Folder", type: "text", placeholder: "inbox (default)" },
+                { key: "top", label: "Max Count", type: "number", placeholder: "10" },
+            ]},
+            list_outlook_calendar_events: { mode: "json", fields: [
+                { key: "start_date", label: "Start Date (optional)", type: "text", mono: true, placeholder: "2026-08-01" },
+                { key: "end_date", label: "End Date (optional)", type: "text", mono: true, placeholder: "2026-08-07" },
+            ]},
+            create_outlook_calendar_event: { mode: "json", fields: [
+                { key: "subject", label: "Subject", type: "text" },
+                { key: "start", label: "Start", type: "text", mono: true, placeholder: "2026-08-01T10:00:00Z" },
+                { key: "end", label: "End", type: "text", mono: true, placeholder: "2026-08-01T11:00:00Z" },
+                { key: "attendees", label: "Attendees (comma-separated, optional)", type: "text" },
+            ]},
+            list_teams_channels: { mode: "json", fields: [
+                { key: "team_id", label: "Team ID", type: "text", mono: true },
+            ]},
+            post_teams_channel_message: { mode: "json", fields: [
+                { key: "team_id", label: "Team ID", type: "text", mono: true },
+                { key: "channel_id", label: "Channel ID", type: "text", mono: true },
+                { key: "message", label: "Message", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+            ]},
+            list_teams_chat_messages: { mode: "json", fields: [
+                { key: "chat_id", label: "Chat ID", type: "text", mono: true },
+            ]},
+            send_teams_chat_message: { mode: "json", fields: [
+                { key: "chat_id", label: "Chat ID", type: "text", mono: true },
+                { key: "message", label: "Message", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+            ]},
+            generate_pptx_from_word_with_copilot: { mode: "json", fields: [
+                { key: "word_file_path", label: "Word File Path", type: "text", mono: true },
+                { key: "output_dir", label: "Output Folder (optional)", type: "text", mono: true },
+                { key: "filename", label: "Filename (optional)", type: "text", mono: true },
+            ]},
+            get_sharepoint_site: { mode: "json", fields: [
+                { key: "site_path", label: "Site Path", type: "text", mono: true, placeholder: "example.sharepoint.com:/sites/apprenticeship" },
+            ]},
+            list_sharepoint_lists: { mode: "json", fields: [
+                { key: "site_id", label: "Site ID", type: "text", mono: true },
+            ]},
+            list_sharepoint_list_items: { mode: "json", fields: [
+                { key: "site_id", label: "Site ID", type: "text", mono: true },
+                { key: "list_id", label: "List ID", type: "text", mono: true },
+            ]},
+            create_sharepoint_list_item: { mode: "json", fields: [
+                { key: "site_id", label: "Site ID", type: "text", mono: true },
+                { key: "list_id", label: "List ID", type: "text", mono: true },
+                { key: "fields", label: "Fields (JSON object of column values)", type: "textarea", mono: true, placeholder: '{"Title": "...", "Status": "..."}' },
+            ]},
+            list_onenote_pages: { mode: "json", fields: [
+                { key: "notebook_id", label: "Notebook ID", type: "text", mono: true },
+            ]},
+            get_onenote_page_content: { mode: "json", fields: [
+                { key: "page_id", label: "Page ID", type: "text", mono: true },
+            ]},
+            create_onenote_page: { mode: "json", fields: [
+                { key: "section_id", label: "Section ID", type: "text", mono: true },
+                { key: "title", label: "Title", type: "text" },
+                { key: "content", label: "Content (HTML)", type: "textarea", mono: true, placeholder: "<p>...</p>" },
+            ]},
+            create_onedrive_sharing_link: { mode: "json", fields: [
+                { key: "file_path", label: "File Path", type: "text", mono: true },
+            ]},
+            // --- Copilot Agent connectors (real browser automation, not mocked --
+            // reuse copilot_bridge.py's functions directly, see 12_Tasks/ask_copilot/) ---
+            ask_copilot: { mode: "json", fields: [
+                { key: "prompt", label: "Prompt", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+            ]},
+            ask_copilot_agent: { mode: "json", fields: [
+                { key: "agent_name", label: "Agent Name (@-mention)", type: "text", mono: true, placeholder: "e.g. Hal-9000" },
+                { key: "prompt", label: "Prompt", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+            ]},
+            generate_copilot_image: { mode: "json", fields: [
+                { key: "prompt", label: "Image Prompt", type: "textarea", placeholder: "e.g. A friendly robot mascot, flat vector style" },
+                { key: "output_dir", label: "Output Folder", type: "text", mono: true },
+            ]},
+            format_text_with_copilot: { mode: "json", fields: [
+                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "style_notes", label: "Style Notes", type: "textarea", placeholder: "e.g. Format as a formal government briefing note with headers." },
+            ]},
+            // --- 09_Functions (migrated from built-in engine functions) ---
+            populate_word_template_from_json: { mode: "json", fields: [
+                { key: "data", label: "Data (JSON object of placeholder key/value pairs)", type: "textarea", mono: true, placeholder: '{"name": "Alex", "trade": "Electrician"}' },
+                { key: "template_path", label: "Template Path (.docx, with {{key}} placeholders)", type: "text", mono: true },
+                { key: "output_dir", label: "Output Folder (optional)", type: "text", mono: true },
+            ]},
+            human_review_checkpoint: { mode: "json", fields: [
+                { key: "content_text", label: "Content to Review", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "output_dir", label: "Output Folder", type: "text", mono: true },
+                { key: "filename", label: "Filename", type: "text", mono: true },
+                { key: "format", label: "Format", type: "select", options: ["docx", "json", "markdown"] },
+                { key: "instructions", label: "Reviewer Instructions", type: "textarea" },
+                { key: "workflow_label", label: "Workflow Label", type: "text", placeholder: "e.g. AI Exam Builder (Part 1)" },
+            ]},
+            export_to_json: { mode: "json", fields: [
+                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "output_dir", label: "Output Folder", type: "text", mono: true },
+                { key: "filename", label: "Filename (optional)", type: "text", mono: true },
+            ]},
+            export_to_markdown: { mode: "json", fields: [
+                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "output_dir", label: "Output Folder", type: "text", mono: true },
+                { key: "filename", label: "Filename (optional)", type: "text", mono: true },
+            ]},
+            export_to_word: { mode: "json", fields: [
+                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "output_dir", label: "Output Folder", type: "text", mono: true },
+                { key: "filename", label: "Filename (optional)", type: "text", mono: true },
+            ]},
+            export_to_pdf: { mode: "json", fields: [
+                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "output_dir", label: "Output Folder", type: "text", mono: true },
+                { key: "filename", label: "Filename (optional)", type: "text", mono: true },
+            ]},
+            import_from_json: { mode: "json", fields: [
+                { key: "file_path", label: "File Path", type: "text", mono: true, placeholder: "C:\\Data\\input.json" },
+            ]},
+            import_from_word: { mode: "json", fields: [
+                { key: "file_path", label: "File Path", type: "text", mono: true, placeholder: "C:\\Data\\input.docx" },
+            ]},
+            import_from_pdf: { mode: "json", fields: [
+                { key: "file_path", label: "File Path", type: "text", mono: true, placeholder: "C:\\Data\\input.pdf" },
+            ]},
+            split_text: { mode: "json", fields: [
+                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "delimiter", label: "Delimiter", type: "text", mono: true, placeholder: "\\n (default)" },
+                { key: "index", label: "Segment Index", type: "number", placeholder: "0" },
+            ]},
+            format_json: { mode: "json", fields: [
+                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+            ]},
+            web_scrape: { mode: "json", fields: [
+                { key: "url", label: "URL", type: "text", placeholder: "https://example.com" },
+            ]},
+            fill_docx_template: { mode: "json", fields: [
+                { key: "content_text", label: "Content Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "template_path", label: "Template Path (.docx, with {{ content }} placeholder)", type: "text", mono: true, placeholder: "C:\\Templates\\briefing_note_template.docx" },
+                { key: "output_dir", label: "Output Folder (optional)", type: "text", mono: true, placeholder: "Defaults to 02_vault/generated" },
+            ]},
+            // --- Adapters (raw form -- dedicated function_* nodes like Gemini Processor
+            // wrap the common case with a nicer panel; this is for dragging the adapter
+            // itself onto the canvas directly) ---
+            gemini_bridge: { mode: "json", fields: [
+                { key: "action", label: "Action", type: "select", options: ["ask", "search", "generate_image", "init"] },
+                { key: "prompt", label: "Prompt", type: "textarea", placeholder: "ask / search / generate_image" },
+                { key: "output_dir", label: "Output Folder", type: "text", mono: true, placeholder: "generate_image only" },
+            ]},
+            copilot_bridge: { mode: "json", fields: [
+                { key: "action", label: "Action", type: "select", options: ["ask", "ask_agent", "generate_image", "list_agents", "init"] },
+                { key: "prompt", label: "Prompt", type: "textarea", placeholder: "ask / ask_agent / generate_image" },
+                { key: "agent", label: "Agent Name (@-mention)", type: "text", mono: true, placeholder: "ask_agent only" },
+                { key: "output_dir", label: "Output Folder", type: "text", mono: true, placeholder: "generate_image only" },
+            ]},
+            claude_bridge: { mode: "json", fields: [
+                { key: "action", label: "Action", type: "select", options: ["ask"] },
+                { key: "prompt", label: "Prompt", type: "textarea" },
+            ]},
+            chatgpt_bridge: { mode: "json", fields: [
+                { key: "action", label: "Action", type: "select", options: ["ask"] },
+                { key: "prompt", label: "Prompt", type: "textarea" },
+            ]},
+            notebooklm_bridge: { mode: "json", fields: [
+                { key: "action", label: "Action", type: "select", options: ["create_notebook", "upload_sources", "ask", "prompt_loop"] },
+                { key: "notebook_id", label: "Notebook ID", type: "text", mono: true, placeholder: "upload_sources / ask / prompt_loop" },
+                { key: "title", label: "Title", type: "text", placeholder: "create_notebook only" },
+                { key: "prompt", label: "Prompt", type: "textarea", placeholder: "ask only" },
+                { key: "file_paths", label: "File Paths (one per line)", type: "textarea", mono: true, placeholder: "upload_sources only" },
+                { key: "prompts", label: "Prompts (one per line)", type: "textarea", placeholder: "prompt_loop only" },
+            ]},
+            m365_graph_bridge: { mode: "json", fields: [
+                { key: "action", label: "Action", type: "select", options: [
+                    "list_files", "download_file", "upload_file", "get_excel_range", "set_excel_range",
+                    "refresh_powerbi_dataset", "list_powerbi_reports",
+                    "send_mail", "list_messages", "search_messages", "list_calendar_events", "create_calendar_event",
+                    "list_teams", "list_channels", "post_channel_message", "list_chat_messages", "send_chat_message",
+                    "generate_pptx_from_word",
+                    "list_sharepoint_sites", "get_sharepoint_site", "list_sharepoint_lists", "list_sharepoint_list_items", "create_sharepoint_list_item",
+                    "list_onenote_notebooks", "list_onenote_pages", "get_onenote_page_content", "create_onenote_page",
+                    "list_recent_onedrive_files", "create_onedrive_sharing_link",
+                ] },
+                { key: "folder_path", label: "Folder Path", type: "text", mono: true, placeholder: "list_files only" },
+                { key: "file_path", label: "M365 File Path", type: "text", mono: true, placeholder: "download_file / get_excel_range / set_excel_range" },
+                { key: "local_output_dir", label: "Local Output Folder", type: "text", mono: true, placeholder: "download_file only" },
+                { key: "local_path", label: "Local File Path", type: "text", mono: true, placeholder: "upload_file only" },
+                { key: "destination_path", label: "M365 Destination Path", type: "text", mono: true, placeholder: "upload_file only" },
+                { key: "worksheet", label: "Worksheet", type: "text", placeholder: "get_excel_range / set_excel_range" },
+                { key: "range_address", label: "Range Address", type: "text", mono: true, placeholder: "get_excel_range / set_excel_range" },
+                { key: "values", label: "Values (JSON 2D array)", type: "textarea", mono: true, placeholder: "set_excel_range only" },
+                { key: "dataset_id", label: "Dataset ID", type: "text", mono: true, placeholder: "refresh_powerbi_dataset only" },
+                { key: "workspace_id", label: "Workspace ID", type: "text", mono: true, placeholder: "list_powerbi_reports only" },
+                { key: "to", label: "To (comma-separated)", type: "text", placeholder: "send_mail only" },
+                { key: "subject", label: "Subject", type: "text", placeholder: "send_mail / create_calendar_event" },
+                { key: "body", label: "Body", type: "textarea", placeholder: "send_mail only" },
+                { key: "folder", label: "Folder", type: "text", placeholder: "list_messages only (default inbox)" },
+                { key: "top", label: "Max Count", type: "number", placeholder: "list_messages only" },
+                { key: "start_date", label: "Start Date", type: "text", mono: true, placeholder: "list_calendar_events only" },
+                { key: "end_date", label: "End Date", type: "text", mono: true, placeholder: "list_calendar_events only" },
+                { key: "start", label: "Start", type: "text", mono: true, placeholder: "create_calendar_event only" },
+                { key: "end", label: "End", type: "text", mono: true, placeholder: "create_calendar_event only" },
+                { key: "attendees", label: "Attendees (comma-separated)", type: "text", placeholder: "create_calendar_event only" },
+                { key: "team_id", label: "Team ID", type: "text", mono: true, placeholder: "list_channels / post_channel_message" },
+                { key: "channel_id", label: "Channel ID", type: "text", mono: true, placeholder: "post_channel_message only" },
+                { key: "chat_id", label: "Chat ID", type: "text", mono: true, placeholder: "list_chat_messages / send_chat_message" },
+                { key: "message", label: "Message", type: "textarea", placeholder: "post_channel_message / send_chat_message" },
+                { key: "query", label: "Query / Topic", type: "text", placeholder: "search_messages only" },
+                { key: "sender", label: "Sender Filter", type: "text", placeholder: "search_messages only" },
+                { key: "word_file_path", label: "Word File Path", type: "text", mono: true, placeholder: "generate_pptx_from_word only" },
+                { key: "output_dir", label: "Output Folder", type: "text", mono: true, placeholder: "generate_pptx_from_word only" },
+                { key: "filename", label: "Filename", type: "text", mono: true, placeholder: "generate_pptx_from_word only" },
+                { key: "query", label: "Site Query", type: "text", placeholder: "list_sharepoint_sites only (optional)" },
+                { key: "site_path", label: "Site Path", type: "text", mono: true, placeholder: "get_sharepoint_site only" },
+                { key: "site_id", label: "Site ID", type: "text", mono: true, placeholder: "list_sharepoint_lists / list_sharepoint_list_items / create_sharepoint_list_item" },
+                { key: "list_id", label: "List ID", type: "text", mono: true, placeholder: "list_sharepoint_list_items / create_sharepoint_list_item" },
+                { key: "fields", label: "Fields (JSON object)", type: "textarea", mono: true, placeholder: "create_sharepoint_list_item only" },
+                { key: "notebook_id", label: "Notebook ID", type: "text", mono: true, placeholder: "list_onenote_pages only" },
+                { key: "page_id", label: "Page ID", type: "text", mono: true, placeholder: "get_onenote_page_content only" },
+                { key: "section_id", label: "Section ID", type: "text", mono: true, placeholder: "create_onenote_page only" },
+                { key: "title", label: "Title", type: "text", placeholder: "create_onenote_page only" },
+                { key: "content", label: "Content (HTML)", type: "textarea", mono: true, placeholder: "create_onenote_page only" },
+            ]},
+            // --- Processes ---
+            generate_vault_map: { mode: "positional", fields: [] },
+            list_m365_teams: { mode: "positional", fields: [] },
+            list_powerbi_reports: { mode: "positional", fields: [] },
+            list_sharepoint_sites: { mode: "positional", fields: [] },
+            list_onenote_notebooks: { mode: "positional", fields: [] },
+            list_recent_onedrive_files: { mode: "positional", fields: [] },
+            list_copilot_agents: { mode: "positional", fields: [] },
+            // --- 09_Functions (new PowerPoint support) ---
+            read_powerpoint: { mode: "json", fields: [
+                { key: "file_path", label: "File Path", type: "text", mono: true, placeholder: "C:\\Data\\input.pptx" },
+            ]},
+            write_powerpoint: { mode: "json", fields: [
+                { key: "text", label: "Text (blank line = new slide, first line = title)", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "output_dir", label: "Output Folder", type: "text", mono: true },
+                { key: "filename", label: "Filename (optional)", type: "text", mono: true },
+            ]},
+        };
+
+        function argFieldInputHtml(field, rawValue) {
+            const val = escapeHtml(rawValue !== undefined && rawValue !== null ? rawValue : "");
+            const monoClass = field.mono ? "font-mono" : "";
+            if (field.type === "textarea") {
+                return `<textarea data-arg-field="${field.key}" rows="3" placeholder="${escapeHtml(field.placeholder || "")}" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading text-[11px] ${monoClass} focus:outline-none focus:border-primary custom-scrollbar resize-none">${val}</textarea>`;
+            }
+            if (field.type === "select") {
+                const opts = (field.options || []).map(o => `<option value="${escapeHtml(o)}" ${o === rawValue ? "selected" : ""}>${escapeHtml(o)}</option>`).join("");
+                return `<select data-arg-field="${field.key}" class="w-full bg-canvas border border-border rounded px-3 py-2 text-body text-xs focus:outline-none focus:border-primary">${opts}</select>`;
+            }
+            return `<input type="${field.type === "number" ? "number" : "text"}" data-arg-field="${field.key}" value="${val}" placeholder="${escapeHtml(field.placeholder || "")}" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading text-xs ${monoClass} focus:outline-none focus:border-primary">`;
+        }
+
+        // Reconstructs each field's current value from the node's existing params.args
+        // (positional: by index; json: by parsing the single JSON arg) so re-opening a
+        // configured node shows what was saved, not a blank form.
+        function currentArgFieldValues(schema, existingArgs) {
+            if (schema.mode === "json") {
+                try {
+                    return JSON.parse((existingArgs || [])[0] || "{}");
+                } catch (e) {
+                    return {};
+                }
+            }
+            const values = {};
+            schema.fields.forEach((f, i) => { values[f.key] = (existingArgs || [])[i] || ""; });
+            return values;
+        }
+
+        function renderArgFieldsPanel(nodeId, data, schema) {
+            const body = document.getElementById("wfb-panel-body");
+            const currentValues = currentArgFieldValues(schema, data.params.args);
+
+            if (!schema.fields.length) {
+                body.innerHTML = `<div class="text-muted leading-relaxed">${escapeHtml(data.title)} takes no configurable input -- it runs with its script's own fixed behavior.</div>`;
+                body.dataset.readFn = "";
+                return;
+            }
+
+            const fieldsHtml = schema.fields.map(f => `
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px] mt-3 first:mt-0">${f.label}</label>
+                ${argFieldInputHtml(f, currentValues[f.key])}
+            `).join("");
+
+            body.innerHTML = fieldsHtml +
+                `<button onclick="window.wfbSaveNodePanel('${nodeId}')" class="w-full mt-3 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors">Save Node Config</button>`;
+            body.dataset.readFn = "arg-fields:" + data.tool_id;
+        }
+
+        function readArgFields(toolId) {
+            const body = document.getElementById("wfb-panel-body");
+            const schema = ARG_FIELD_SCHEMAS[toolId];
+            if (!schema) return {};
+
+            const values = {};
+            schema.fields.forEach(f => {
+                const el = body.querySelector(`[data-arg-field="${f.key}"]`);
+                values[f.key] = el ? el.value : "";
+            });
+
+            if (schema.mode === "json") {
+                return { args: [JSON.stringify(values)] };
+            }
+            return { args: schema.fields.map(f => values[f.key]) };
+        }
+
+        function otherCanvasNodes(nodeId) {
+            return Object.keys(editor.export().drawflow[currentModuleName].data)
+                .filter(id => id !== nodeId)
+                .map(id => ({ id, title: editor.getNodeFromId(id).data.title }));
+        }
+
+        function renderContainerPanel(nodeId, data) {
+            const body = document.getElementById("wfb-panel-body");
+            body.innerHTML = `
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Container Name</label>
+                <input type="text" data-panel-container-name value="${escapeHtml(data.title)}" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading text-xs focus:outline-none focus:border-primary">
+                <button onclick="window.wfbSaveNodePanel('${nodeId}')" class="w-full mt-3 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors">Save Name</button>
+                <button onclick="window.wfbEnterContainerFromPanel('${nodeId}')" class="w-full mt-2 px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading transition-colors">Open Container <i class="fa-solid fa-up-right-and-down-left-from-center ml-1"></i></button>
+                <p class="text-[10px] text-muted mt-3 leading-relaxed">Contains its own mini sub-flow. From the outside it connects like any other block; open it to build or edit what's inside.</p>
+            `;
+            body.dataset.readFn = "container-name";
+        }
+
+        function renderReviewGatePanel(nodeId, data) {
+            const body = document.getElementById("wfb-panel-body");
+            const p = data.params || {};
+            const otherNodes = otherCanvasNodes(nodeId);
+            body.innerHTML = `
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Pass/Fail Criteria</label>
+                <textarea data-panel-criteria rows="4" placeholder="e.g. Is this briefing note factually complete and formatted correctly?" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading text-[11px] focus:outline-none focus:border-primary custom-scrollbar resize-none">${escapeHtml(p.criteria || "")}</textarea>
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px] mt-3">Loop Back To (on fail)</label>
+                <select data-panel-loopback class="w-full bg-canvas border border-border rounded px-3 py-2 text-body text-xs focus:outline-none focus:border-primary">
+                    <option value="">-- None (fail = stop) --</option>
+                    ${otherNodes.map(n => `<option value="${n.id}" ${p.loop_back_node_id === n.id ? "selected" : ""}>${escapeHtml(n.title)}</option>`).join("")}
+                </select>
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px] mt-3">Max Attempts</label>
+                <input type="number" data-panel-max-attempts min="1" max="20" value="${p.max_attempts || 3}" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading text-xs focus:outline-none focus:border-primary">
+                <button onclick="window.wfbSaveNodePanel('${nodeId}')" class="w-full mt-3 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors">Save Node Config</button>
+            `;
+            body.dataset.readFn = "review-gate";
+        }
+
+        function renderLogicGatePanel(nodeId, data) {
+            const body = document.getElementById("wfb-panel-body");
+            const p = data.params || {};
+            const otherNodes = otherCanvasNodes(nodeId);
+            const nodeOptions = (selectedId) => `<option value="">-- None --</option>` +
+                otherNodes.map(n => `<option value="${n.id}" ${selectedId === n.id ? "selected" : ""}>${escapeHtml(n.title)}</option>`).join("");
+
+            body.innerHTML = `
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Condition Type</label>
+                <select data-panel-condition-type class="w-full bg-canvas border border-border rounded px-3 py-2 text-body text-xs focus:outline-none focus:border-primary">
+                    <option value="contains" ${p.condition_type === "contains" || !p.condition_type ? "selected" : ""}>Contains</option>
+                    <option value="equals" ${p.condition_type === "equals" ? "selected" : ""}>Equals</option>
+                    <option value="regex" ${p.condition_type === "regex" ? "selected" : ""}>Regex</option>
+                </select>
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px] mt-3">Condition Value</label>
+                <input type="text" data-panel-condition-value value="${escapeHtml(p.condition_value || "")}" placeholder="e.g. PASS" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading font-mono text-[11px] focus:outline-none focus:border-primary">
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px] mt-3">If True, Go To</label>
+                <select data-panel-true-node class="w-full bg-canvas border border-border rounded px-3 py-2 text-body text-xs focus:outline-none focus:border-primary">${nodeOptions(p.true_node_id)}</select>
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px] mt-3">If False, Go To</label>
+                <select data-panel-false-node class="w-full bg-canvas border border-border rounded px-3 py-2 text-body text-xs focus:outline-none focus:border-primary">${nodeOptions(p.false_node_id)}</select>
+                <button onclick="window.wfbSaveNodePanel('${nodeId}')" class="w-full mt-3 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors">Save Node Config</button>
+            `;
+            body.dataset.readFn = "logic-gate";
+        }
+
+        function renderFunctionPanel(nodeId, data) {
+            if (data.tool_id === "builtin_review_gate") { renderReviewGatePanel(nodeId, data); return; }
+            if (data.tool_id === "function_logic_gate") { renderLogicGatePanel(nodeId, data); return; }
+
+            // A real script from 13_Functions (category "09_Functions") is dispatched via
+            // CLI args, not named params -- it needs ARG_FIELD_SCHEMAS' positional/json
+            // field mapping, not the named-params mechanism built-in functions use below.
+            if (data.category === "09_Functions") {
+                const argSchema = ARG_FIELD_SCHEMAS[data.tool_id];
+                if (argSchema) { renderArgFieldsPanel(nodeId, data, argSchema); return; }
+                renderGenericArgsPanel(nodeId, data);
+                return;
+            }
+
+            const schema = FUNCTION_FIELD_SCHEMAS[data.tool_id];
+            if (!schema) {
+                document.getElementById("wfb-panel-body").innerHTML = `<div class="text-danger-400">No config UI defined for "${escapeHtml(data.tool_id)}" yet.</div>`;
+                return;
+            }
+            renderGenericFunctionFields(nodeId, data, schema);
+        }
+
+        function toPascalCase(toolId) {
+            return toolId.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join("");
+        }
+
+        function selectNode(nodeId) {
+            selectedNodeId = nodeId;
+            const data = currentNodeData(nodeId);
+            if (data.kind === "task" || data.kind === "process" || data.kind === "adapter") {
+                const argSchema = ARG_FIELD_SCHEMAS[data.tool_id];
+                if (FIELD_PARTIAL_TOOL_IDS.includes(data.tool_id)) {
+                    renderFieldPartialPanel(nodeId, data);
+                } else if (argSchema) {
+                    renderArgFieldsPanel(nodeId, data, argSchema);
+                } else {
+                    renderGenericArgsPanel(nodeId, data);
+                }
+            } else if (data.kind === "skill") {
+                renderSkillPanel(data);
+            } else if (data.kind === "function") {
+                renderFunctionPanel(nodeId, data);
+            } else if (data.kind === "container") {
+                renderContainerPanel(nodeId, data);
+            }
+        }
+
+        function clearPanel() {
+            selectedNodeId = null;
+            document.getElementById("wfb-panel-body").innerHTML = `<div class="text-muted">Select a node on the canvas to configure it.</div>`;
+        }
+
+        window.wfbSaveNodePanel = function(nodeId) {
+            const body = document.getElementById("wfb-panel-body");
+            const readFn = body.dataset.readFn;
+
+            if (readFn === "container-name") {
+                const newTitle = body.querySelector("[data-panel-container-name]").value.trim() || "Container";
+                const node = editor.getNodeFromId(nodeId);
+                editor.updateNodeDataFromId(nodeId, { ...node.data, title: newTitle });
+                const titleEl = document.querySelector(`#node-${nodeId} .wfb-node-title`);
+                if (titleEl) titleEl.innerHTML = `<i class="fa-solid fa-box-archive text-primary-400 mr-1"></i>${escapeHtml(newTitle)}`;
+                wfbLog(`Renamed container to "${newTitle}".`, "text-success-400");
+                return;
+            }
+
+            let params = {};
+
+            if (readFn === "field-partial") {
+                const data = currentNodeData(nodeId);
+                const mount = document.getElementById("wfb-panel-fields");
+                params = window[`read${toPascalCase(data.tool_id)}Fields`](mount);
+            } else if (readFn === "generic-args") {
+                const raw = body.querySelector("[data-panel-args]").value;
+                params = { args: raw.split("\n").map(s => s.trim()).filter(Boolean) };
+            } else if (readFn && readFn.startsWith("generic-function:")) {
+                params = readGenericFunctionFields(readFn.slice("generic-function:".length));
+            } else if (readFn && readFn.startsWith("arg-fields:")) {
+                params = readArgFields(readFn.slice("arg-fields:".length));
+            } else if (readFn === "review-gate") {
+                params = {
+                    criteria: body.querySelector("[data-panel-criteria]").value,
+                    loop_back_node_id: body.querySelector("[data-panel-loopback]").value || null,
+                    max_attempts: parseInt(body.querySelector("[data-panel-max-attempts]").value, 10) || 3,
+                };
+            } else if (readFn === "logic-gate") {
+                params = {
+                    condition_type: body.querySelector("[data-panel-condition-type]").value,
+                    condition_value: body.querySelector("[data-panel-condition-value]").value,
+                    true_node_id: body.querySelector("[data-panel-true-node]").value || null,
+                    false_node_id: body.querySelector("[data-panel-false-node]").value || null,
+                };
+            }
+
+            saveNodeParams(nodeId, params);
+            wfbLog(`Saved config for node "${currentNodeData(nodeId).title}".`, "text-success-400");
+        };
+
+        // --- Toolbar: New / Save / Delete / Load -----------------------------------
+
+        function wfbLog(msg, colorClass) {
+            const box = document.getElementById("wfb-run-log");
+            const timestamp = new Date().toISOString().split("T")[1].substring(0, 8);
+            box.innerHTML += `<div class="${colorClass || "text-muted"}">[${timestamp}] ${escapeHtml(msg)}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function wfbSetRunStatus(text, colorClass) {
+            const el = document.getElementById("wfb-run-status");
+            el.innerText = text;
+            el.className = `text-[10px] font-mono ${colorClass || "text-muted"}`;
+        }
+
+        function loadWorkflowDropdown() {
+            return fetch("/api/workflow-builder/workflows").then(r => r.json()).then(data => {
+                const select = document.getElementById("wfb-load-select");
+                select.innerHTML = `<option value="">-- Load saved workflow --</option>` +
+                    (data.workflows || []).map(w => `<option value="${w.id}">${escapeHtml(w.name)}</option>`).join("");
+            });
+        }
+
+        window.wfbNew = function() {
+            initEditor();
+            currentWorkflowId = null;
+            document.getElementById("wfb-workflow-name").value = "";
+            document.getElementById("wfb-load-select").value = "";
+            clearPanel();
+            document.getElementById("wfb-run-log").innerHTML = `<div class="text-muted">// Configure nodes, connect them, and click Run.</div>`;
+            wfbSetRunStatus("Ready", "text-muted");
+            recomputeClassificationBadge();
+        };
+
+        window.wfbSave = async function() {
+            const name = document.getElementById("wfb-workflow-name").value.trim();
+            if (!name) { alert("Enter a workflow name first."); return; }
+
+            const graphJson = editor.export();
+            const body = JSON.stringify({ name, description: "", graph_json: graphJson });
+
+            try {
+                const response = currentWorkflowId
+                    ? await fetch(`/api/workflow-builder/workflows/${currentWorkflowId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body })
+                    : await fetch("/api/workflow-builder/workflows", { method: "POST", headers: { "Content-Type": "application/json" }, body });
+                const data = await response.json();
+                if (!response.ok) { alert(data.detail || "Could not save workflow."); return; }
+                if (data.id) currentWorkflowId = data.id;
+                wfbLog(`Workflow "${name}" saved.`, "text-success-400");
+                await loadWorkflowDropdown();
+                document.getElementById("wfb-load-select").value = currentWorkflowId;
+            } catch (err) {
+                alert(`Save failed: ${err.message}`);
+            }
+        };
+
+        window.wfbDelete = async function() {
+            if (!currentWorkflowId) { alert("No saved workflow selected."); return; }
+            if (!confirm("Delete this saved workflow? This cannot be undone.")) return;
+
+            try {
+                const response = await fetch(`/api/workflow-builder/workflows/${currentWorkflowId}`, { method: "DELETE" });
+                if (!response.ok) { const data = await response.json(); alert(data.detail || "Could not delete."); return; }
+                wfbLog("Workflow deleted.", "text-warning-400");
+                window.wfbNew();
+                await loadWorkflowDropdown();
+            } catch (err) {
+                alert(`Delete failed: ${err.message}`);
+            }
+        };
+
+        document.getElementById("wfb-load-select") && document.getElementById("wfb-load-select").addEventListener("change", async function() {
+            const id = this.value;
+            if (!id) return;
+            try {
+                const response = await fetch(`/api/workflow-builder/workflows/${id}`);
+                const data = await response.json();
+                if (!response.ok) { alert(data.detail || "Could not load workflow."); return; }
+                initEditor();
+                editor.import(data.graph_json);
+                currentWorkflowId = data.id;
+                document.getElementById("wfb-workflow-name").value = data.name;
+                clearPanel();
+                wfbLog(`Loaded workflow "${data.name}".`, "text-info-400");
+            } catch (err) {
+                alert(`Load failed: ${err.message}`);
+            }
+        });
+
+        // --- Run ------------------------------------------------------------------------
+
+        window.wfbRun = async function() {
+            const dryRun = document.getElementById("wfb-dry-run").checked;
+            const graphJson = editor.export();
+
+            wfbSetRunStatus("Running...", "text-warning-400");
+            wfbLog(`Starting ${dryRun ? "dry" : "live"} run...`, "text-info-400");
+
+            try {
+                const response = await fetch("/api/workflow-builder/run", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ graph_json: graphJson, dry_run: dryRun }),
+                });
+                const data = await response.json();
+                if (!response.ok) { wfbLog(data.detail || "Run failed to start.", "text-danger-400"); wfbSetRunStatus("Failed", "text-danger-400"); return; }
+
+                (data.steps || []).forEach(step => {
+                    const color = step.status === "success" ? "text-body" : "text-danger-400";
+                    wfbLog(`[${step.kind || "?"}] ${step.title || step.node_id}: ${step.status}${step.output ? " -- " + step.output : ""}`, color);
+                });
+
+                if (data.success) {
+                    wfbLog("Workflow run complete.", "text-success-400");
+                    wfbSetRunStatus("Complete", "text-success-400");
+                } else {
+                    wfbLog("Workflow run finished with failures.", "text-danger-400");
+                    wfbSetRunStatus("Failed", "text-danger-400");
+                }
+            } catch (err) {
+                wfbLog(`System error: ${err.message}`, "text-danger-400");
+                wfbSetRunStatus("Error", "text-danger-400");
+            }
+        };
+
+        // --- Zoom -------------------------------------------------------------------
+
+        window.wfbZoomIn = function() { editor.zoom_in(); };
+        window.wfbZoomOut = function() { editor.zoom_out(); };
+        window.wfbZoomReset = function() { editor.zoom_reset(); };
+
+        // --- Boot -----------------------------------------------------------------------
+
+        function initEditor() {
+            const canvasEl = document.getElementById("wfb-canvas");
+            canvasEl.innerHTML = "";
+            editor = new window.Drawflow(canvasEl);
+            editor.reroute = true;
+            editor.start();
+
+            editor.on("nodeSelected", (id) => selectNode(String(id)));
+            editor.on("nodeUnselected", () => clearPanel());
+            editor.on("nodeRemoved", (id) => {
+                if (String(id) === selectedNodeId) clearPanel();
+                recomputeClassificationBadge();
+            });
+            editor.on("import", () => recomputeClassificationBadge());
+
+            currentModuleName = "Home";
+            moduleBreadcrumb = [{ name: "Home", title: "Home" }];
+            renderBreadcrumb();
+        }
+
+        ensureDrawflowLoaded().then(() => {
+            initEditor();
+            initCanvasDrop(); // bound once -- the #wfb-canvas element persists across initEditor() calls (New/Load only clear its innerHTML)
+            loadPalette();
+            loadWorkflowDropdown();
+        }).catch(err => {
+            document.getElementById("wfb-canvas").innerHTML = `<div class="p-6 text-danger-400 text-xs font-mono">Failed to load canvas engine: ${err.message}</div>`;
+        });
+
+        document.querySelectorAll('input[name="wfb-kind"]').forEach(radio => {
+            radio.addEventListener("change", () => renderPalette(document.getElementById("wfb-palette-search").value));
+        });
+
+        document.getElementById("wfb-container-palette-item").addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("application/json", JSON.stringify({ tool_id: "container", kind: "container", title: "Container", description: "" }));
+        });
+
+        document.getElementById("wfb-palette-search").addEventListener("input", function() {
+            renderPalette(this.value);
+        });
+    })();
+</script>

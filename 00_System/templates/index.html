@@ -1,0 +1,720 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        (function() {
+            var theme = localStorage.getItem("cortex-theme") || "dark";
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cortex — Workbrain Operations Console</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Locally built/vendored assets (no CDN dependency) -->
+    <link rel="stylesheet" href="/static/dist/output.css">
+    <link rel="stylesheet" href="/static/vendor/fontawesome/css/all.min.css">
+    <script src="/static/vendor/chartjs/chart.umd.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+<body class="h-full bg-canvas text-body flex overflow-hidden font-sans text-sm">
+
+    <!-- SIDEBAR -->
+    <aside id="cortex-sidebar" class="sidebar bg-sidebar border-r border-border flex flex-col shrink-0 z-sticky">
+        <!-- Brand -->
+        <div class="h-14 flex items-center gap-3 px-4 border-b border-border shrink-0">
+            <button onclick="showPage('workflow-builder')" class="flex items-center gap-3 min-w-0">
+                <span class="w-8 h-8 rounded-lg bg-primary/15 text-primary-400 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-brain text-sm"></i>
+                </span>
+                <span class="brand-label font-semibold tracking-wide text-heading whitespace-nowrap">Cortex</span>
+            </button>
+        </div>
+
+        <!-- Nav -->
+        <nav class="flex-1 overflow-y-auto custom-scrollbar py-3 px-2 space-y-0.5">
+            <button onclick="showPage('workflow-builder')" id="btn-workflow-builder" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:bg-surface-2 hover:text-heading transition-colors">
+                <i class="fa-solid fa-code-branch w-4 text-center shrink-0"></i>
+                <span class="nav-label whitespace-nowrap">Workflow Builder</span>
+            </button>
+            <button onclick="showPage('review-queue')" id="btn-review-queue" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:bg-surface-2 hover:text-heading transition-colors">
+                <i class="fa-solid fa-user-check w-4 text-center shrink-0"></i>
+                <span class="nav-label whitespace-nowrap">Review Queue</span>
+            </button>
+            <button onclick="showPage('skills')" id="btn-skills" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:bg-surface-2 hover:text-heading transition-colors">
+                <i class="fa-solid fa-bolt w-4 text-center shrink-0"></i>
+                <span class="nav-label whitespace-nowrap">Skills</span>
+            </button>
+            <div class="flex items-center">
+                <button onclick="showPage('processes')" id="btn-processes" class="nav-btn flex-1 flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:bg-surface-2 hover:text-heading transition-colors">
+                    <i class="fa-solid fa-microchip w-4 text-center shrink-0"></i>
+                    <span class="nav-label whitespace-nowrap">Processes</span>
+                </button>
+                <button onclick="toggleSubmenuCollapse('processes-tag-submenu-wrap', 'processes-submenu-chevron', 'processes')" title="Expand/collapse tags" class="nav-label shrink-0 self-stretch w-7 flex items-center justify-center rounded-lg text-muted hover:bg-surface-2 hover:text-heading transition-colors">
+                    <i id="processes-submenu-chevron" class="fa-solid fa-chevron-down text-[10px]" style="transition: transform 0.2s ease;"></i>
+                </button>
+            </div>
+            <div id="processes-tag-submenu-wrap" class="nav-label" style="overflow: hidden; transition: max-height 0.2s ease;">
+                <div id="processes-tag-submenu" class="pl-8 pr-1 pt-0.5 space-y-0.5"></div>
+            </div>
+            <div class="flex items-center">
+                <button onclick="showPage('tasks')" id="btn-tasks" class="nav-btn flex-1 flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:bg-surface-2 hover:text-heading transition-colors">
+                    <i class="fa-solid fa-square-check w-4 text-center shrink-0"></i>
+                    <span class="nav-label whitespace-nowrap">Tasks</span>
+                </button>
+                <button onclick="toggleSubmenuCollapse('tasks-tag-submenu-wrap', 'tasks-submenu-chevron', 'tasks')" title="Expand/collapse tags" class="nav-label shrink-0 self-stretch w-7 flex items-center justify-center rounded-lg text-muted hover:bg-surface-2 hover:text-heading transition-colors">
+                    <i id="tasks-submenu-chevron" class="fa-solid fa-chevron-down text-[10px]" style="transition: transform 0.2s ease;"></i>
+                </button>
+            </div>
+            <div id="tasks-tag-submenu-wrap" class="nav-label" style="overflow: hidden; transition: max-height 0.2s ease;">
+                <div id="tasks-tag-submenu" class="pl-8 pr-1 pt-0.5 space-y-0.5"></div>
+            </div>
+            <div class="flex items-center">
+                <button onclick="showPage('functions')" id="btn-functions" class="nav-btn flex-1 flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:bg-surface-2 hover:text-heading transition-colors">
+                    <i class="fa-solid fa-code w-4 text-center shrink-0"></i>
+                    <span class="nav-label whitespace-nowrap">Functions</span>
+                </button>
+                <button onclick="toggleSubmenuCollapse('functions-tag-submenu-wrap', 'functions-submenu-chevron', 'functions')" title="Expand/collapse tags" class="nav-label shrink-0 self-stretch w-7 flex items-center justify-center rounded-lg text-muted hover:bg-surface-2 hover:text-heading transition-colors">
+                    <i id="functions-submenu-chevron" class="fa-solid fa-chevron-down text-[10px]" style="transition: transform 0.2s ease;"></i>
+                </button>
+            </div>
+            <div id="functions-tag-submenu-wrap" class="nav-label" style="overflow: hidden; transition: max-height 0.2s ease;">
+                <div id="functions-tag-submenu" class="pl-8 pr-1 pt-0.5 space-y-0.5"></div>
+            </div>
+            <div class="flex items-center">
+                <button onclick="showPage('adapters')" id="btn-adapters" class="nav-btn flex-1 flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:bg-surface-2 hover:text-heading transition-colors">
+                    <i class="fa-solid fa-plug w-4 text-center shrink-0"></i>
+                    <span class="nav-label whitespace-nowrap">Adapters</span>
+                </button>
+                <button onclick="toggleSubmenuCollapse('adapters-tag-submenu-wrap', 'adapters-submenu-chevron', 'adapters')" title="Expand/collapse tags" class="nav-label shrink-0 self-stretch w-7 flex items-center justify-center rounded-lg text-muted hover:bg-surface-2 hover:text-heading transition-colors">
+                    <i id="adapters-submenu-chevron" class="fa-solid fa-chevron-down text-[10px]" style="transition: transform 0.2s ease;"></i>
+                </button>
+            </div>
+            <div id="adapters-tag-submenu-wrap" class="nav-label" style="overflow: hidden; transition: max-height 0.2s ease;">
+                <div id="adapters-tag-submenu" class="pl-8 pr-1 pt-0.5 space-y-0.5"></div>
+            </div>
+        </nav>
+
+        <!-- Settings + collapse toggle -->
+        <div class="border-t border-border p-2 space-y-0.5 shrink-0">
+            <button onclick="showPage('settings')" id="btn-settings" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:bg-surface-2 hover:text-heading transition-colors">
+                <i class="fa-solid fa-gear w-4 text-center shrink-0"></i>
+                <span class="nav-label whitespace-nowrap">Settings</span>
+            </button>
+            <button onclick="toggleSidebar()" id="btn-collapse-sidebar" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:bg-surface-2 hover:text-heading transition-colors">
+                <i class="fa-solid fa-bars w-4 text-center shrink-0"></i>
+                <span class="nav-label whitespace-nowrap">Collapse</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        <header class="h-14 border-b border-border bg-surface/70 backdrop-blur flex items-center px-6 justify-between shrink-0 z-sticky">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="text-muted hover:text-heading transition-colors">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <h1 id="page-title" class="text-base font-semibold tracking-wide text-heading">System Operations</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="showPage('system')" title="View System Status" class="flex items-center gap-2 px-2.5 py-1 rounded-full bg-success/10 text-success-400 border border-success/20 text-xs hover:bg-success/20 transition-colors">
+                    <span class="w-2 h-2 rounded-full bg-success-400 animate-pulse"></span>
+                    Cortex Operational
+                </button>
+            </div>
+        </header>
+
+        <div id="content-viewport" class="flex-1 overflow-y-auto p-6 custom-scrollbar"></div>
+    </main>
+
+    <!-- Unified Process Launch Modal: standardized control window shared by every page that
+         runs an automation script (Processes, Tasks, and anywhere else that needs it). -->
+    <div id="process-launch-modal" class="fixed inset-0 bg-canvas/80 backdrop-blur-sm hidden flex items-center justify-center z-modal p-4">
+        <div class="bg-surface border border-border w-full max-w-lg rounded-xl shadow-2xl overflow-hidden flex flex-col animate-fade-in">
+            <div class="px-5 py-4 border-b border-border bg-canvas/50 flex justify-between items-start gap-3">
+                <div class="min-w-0">
+                    <h4 class="text-sm font-semibold tracking-wide text-heading flex items-center gap-2">
+                        <i class="fa-solid fa-microchip text-primary-400"></i>
+                        <span id="process-modal-title-text">Process</span>
+                    </h4>
+                    <p id="process-modal-description" class="text-[11px] text-muted mt-1 leading-relaxed"></p>
+                </div>
+                <button onclick="closeProcessModal()" class="text-muted hover:text-heading transition-colors shrink-0">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4 text-xs">
+                <div class="space-y-1.5">
+                    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Arguments (optional)</label>
+                    <input type="text" id="process-modal-args" placeholder="e.g. 2026-2027" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading focus:outline-none focus:border-primary">
+                    <p class="text-[10px] text-muted">Space-separated arguments passed to the script, if it accepts any (check its notes if unsure). Leave blank otherwise.</p>
+                </div>
+
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Console Log</label>
+                        <span id="process-modal-status" class="text-[10px] font-mono text-muted">Ready</span>
+                    </div>
+                    <div id="process-modal-console" class="w-full h-40 bg-canvas rounded-lg p-3 font-mono text-[11px] overflow-y-auto custom-scrollbar space-y-1 border border-border leading-relaxed">
+                        <div class="text-muted">// Awaiting execution...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-5 py-3 border-t border-border bg-canvas/50 flex justify-end gap-2">
+                <button onclick="closeProcessModal()" class="px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading transition-colors">Close</button>
+                <button id="process-modal-run-btn" onclick="runProcessModal()" class="px-4 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-play"></i> Run
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View router: fetches and mounts page fragments, then executes their inline script -->
+    <script>
+        let brainMesh = null;
+        let allNodes = [];
+        let allEdges = [];
+        let nodeColorsMap = {};
+        let communitiesMap = {};
+
+        // --- Unified Process Launch Modal: shared control window for running any automation
+        // script (05_Processes or 06_Tasks) from anywhere in the app. mode "app" dispatches by
+        // category/tool_id via /execute; mode "path" dispatches a run:// link's vault-relative
+        // path directly via /api/protocol/run. ---
+        let processModalState = { mode: null, category: null, toolId: null, path: null, running: false };
+
+        function appendProcessLog(msg, colorClass = "text-muted") {
+            const box = document.getElementById("process-modal-console");
+            const timestamp = new Date().toISOString().split("T")[1].substring(0, 8);
+            const safeMsg = String(msg)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/\n/g, "<br>&nbsp;&nbsp;");
+            box.innerHTML += `<div class="${colorClass}">[${timestamp}] ${safeMsg}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function setProcessModalStatus(text, colorClass) {
+            const el = document.getElementById("process-modal-status");
+            el.innerText = text;
+            el.className = `text-[10px] font-mono ${colorClass}`;
+        }
+
+        window.launchProcessModal = function(category, toolId, title, description) {
+            processModalState = { mode: "app", category, toolId, path: null, running: false };
+            document.getElementById("process-modal-title-text").innerText = title || toolId;
+            document.getElementById("process-modal-description").innerText = description || "";
+            document.getElementById("process-modal-args").value = "";
+            setProcessModalStatus("Ready", "text-muted");
+            document.getElementById("process-modal-console").innerHTML =
+                `<div class="text-muted">// Ready to launch ${toolId}. Click Run to begin.</div>`;
+            document.getElementById("process-launch-modal").classList.remove("hidden");
+        };
+
+        // --- run:// protocol: same modal, but dispatches a vault-relative script path
+        // directly instead of a category/tool_id lookup. See the document click listener
+        // below for how a[href^="run://"] links reach this. ---
+        window.launchRunProtocol = function(path, title, description) {
+            processModalState = { mode: "path", category: null, toolId: null, path, running: false };
+            document.getElementById("process-modal-title-text").innerText = title || path;
+            document.getElementById("process-modal-description").innerText = description || "";
+            document.getElementById("process-modal-args").value = "";
+            setProcessModalStatus("Ready", "text-muted");
+            document.getElementById("process-modal-console").innerHTML =
+                `<div class="text-muted">// Ready to launch run://${path}. Click Run to begin.</div>`;
+            document.getElementById("process-launch-modal").classList.remove("hidden");
+        };
+
+        window.closeProcessModal = function() {
+            document.getElementById("process-launch-modal").classList.add("hidden");
+        };
+
+        window.runProcessModal = async function() {
+            if (processModalState.running) return;
+            const { mode, category, toolId, path } = processModalState;
+            if (mode === "app" && (!category || !toolId)) return;
+            if (mode === "path" && !path) return;
+
+            processModalState.running = true;
+            const runBtn = document.getElementById("process-modal-run-btn");
+            runBtn.disabled = true;
+            runBtn.classList.add("opacity-50", "cursor-not-allowed");
+            setProcessModalStatus("Running...", "text-warning-400");
+
+            const rawArgs = document.getElementById("process-modal-args").value.trim();
+            const args = rawArgs ? rawArgs.split(/\s+/) : [];
+
+            const label = mode === "path" ? `run://${path}` : `${category}/${toolId}`;
+            appendProcessLog(`Dispatching ${label}${args.length ? " with args: " + args.join(" ") : ""}...`, "text-info-400");
+
+            try {
+                const endpoint = mode === "path" ? "/api/protocol/run" : `/execute/${category}/${toolId}`;
+                const body = mode === "path" ? { path, args } : { args };
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body)
+                });
+                if (!response.ok) throw new Error(`HTTP status ${response.status}`);
+                const data = await response.json();
+
+                if (data.message) appendProcessLog(data.message, data.success ? "text-body" : "text-danger-400");
+
+                if (data.success) {
+                    appendProcessLog("Process complete.", "text-success-400");
+                    setProcessModalStatus("Complete", "text-success-400");
+                } else {
+                    appendProcessLog("Process failed.", "text-danger-400");
+                    setProcessModalStatus("Failed", "text-danger-400");
+                }
+            } catch (err) {
+                appendProcessLog(`System error: ${err.message}`, "text-danger-400");
+                setProcessModalStatus("Error", "text-danger-400");
+            } finally {
+                processModalState.running = false;
+                runBtn.disabled = false;
+                runBtn.classList.remove("opacity-50", "cursor-not-allowed");
+            }
+        };
+
+        // --- Popup loader: dedicated per-tool control windows live as standalone fragments
+        // in templates/popup/<tool_id>.html (markup + their own <script>), fetched once and
+        // cached here, then mounted into the DOM. Injected <script> tags don't auto-execute,
+        // so this mirrors showPage()'s fetch-then-eval pattern for the one it finds. ---
+        const loadedPopups = new Set();
+
+        window.loadPopup = async function(popupId, openFnName, ...args) {
+            if (loadedPopups.has(popupId)) {
+                window[openFnName](...args);
+                return;
+            }
+            try {
+                const response = await fetch(`/page/popup/${popupId}`);
+                if (!response.ok) throw new Error(`HTTP Status ${response.status}`);
+                const html = await response.text();
+
+                const mount = document.createElement("div");
+                mount.innerHTML = html;
+                document.body.appendChild(mount);
+
+                const script = mount.querySelector("script");
+                if (script) eval(script.innerHTML);
+
+                loadedPopups.add(popupId);
+                window[openFnName](...args);
+            } catch (err) {
+                alert(`Failed to load popup '${popupId}': ${err.message}`);
+            }
+        };
+
+        // --- Reusable field partials: templates/popup/fields/<tool_id>.html holds just a
+        // tool's input fields (+ a tiny init/read script), shared between its modal popup
+        // and the Workflow Builder's right-side config panel -- one field source, two hosts.
+        window.loadFieldPartial = async function(toolId, mountEl) {
+            const response = await fetch(`/page/popup/fields/${toolId}`);
+            if (!response.ok) throw new Error(`HTTP Status ${response.status}`);
+            const html = await response.text();
+
+            const temp = document.createElement("div");
+            temp.innerHTML = html;
+            const script = temp.querySelector("script");
+            if (script) script.remove();
+
+            mountEl.innerHTML = temp.innerHTML;
+            if (script) eval(script.innerHTML);
+        };
+
+        // --- In-app Markdown editor: every "MD" button in the app links to mde://<vault-relative-path>.
+        // Rather than relying on an OS-level custom URI protocol (fragile, mangles Windows drive-letter
+        // paths), intercept the click here and open the dedicated md_editor popup instead. Delegated on
+        // document so it transparently covers every current and future mde:// link, including ones inside
+        // popups mounted after this listener is registered. ---
+        document.addEventListener("click", function(e) {
+            const link = e.target.closest('a[href^="mde://"]');
+            if (!link) return;
+            e.preventDefault();
+            const relPath = link.getAttribute("href").slice("mde://".length);
+            window.loadPopup("md_editor", "openMdEditorModal", relPath);
+        });
+
+        // --- run:// protocol: same non-OS-registered pattern as mde:// above. A run:// link
+        // points at a vault-relative .py file; intercept the click and dispatch it through the
+        // shared process-launch-modal (title/description come off data attributes since the
+        // click handler has no scope access to the page's render-time app object). ---
+        document.addEventListener("click", function(e) {
+            const link = e.target.closest('a[href^="run://"]');
+            if (!link) return;
+            e.preventDefault();
+            const relPath = link.getAttribute("href").slice("run://".length);
+            const title = link.dataset.runTitle || relPath;
+            const description = link.dataset.runDescription || "";
+            window.launchRunProtocol(relPath, title, description);
+        });
+
+        window.onerror = function(message, source, lineno) {
+            console.error(`Runtime Intercept: ${message} on line ${lineno}`);
+            return false;
+        };
+
+        window.setCortexTheme = function(theme) {
+            document.documentElement.setAttribute("data-theme", theme);
+            localStorage.setItem("cortex-theme", theme);
+            document.querySelectorAll("[data-theme-option]").forEach(function(btn) {
+                var active = btn.dataset.themeOption === theme;
+                btn.classList.toggle("bg-primary/15", active);
+                btn.classList.toggle("text-primary-400", active);
+                btn.classList.toggle("text-muted", !active);
+            });
+        };
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById("cortex-sidebar");
+            const collapsed = !sidebar.classList.contains("is-collapsed");
+            sidebar.classList.toggle("is-collapsed", collapsed);
+            localStorage.setItem("cortex-sidebar-collapsed", collapsed ? "1" : "0");
+        }
+
+        // --- Generic collapsible nav submenu: vertical accordion driven by inline
+        // max-height, reusable for any future tag submenu (Skills, Tasks, Workflows, ...). ---
+        function isSubmenuCollapsed(key) {
+            return localStorage.getItem(`cortex-submenu-${key}-collapsed`) === "1";
+        }
+
+        function applySubmenuCollapse(wrapId, chevronId, collapsed, animate) {
+            const wrap = document.getElementById(wrapId);
+            const chevron = document.getElementById(chevronId);
+            if (!wrap) return;
+            if (chevron) chevron.style.transform = collapsed ? "rotate(-90deg)" : "rotate(0deg)";
+
+            if (!animate) {
+                wrap.style.transition = "none";
+                wrap.style.maxHeight = collapsed ? "0px" : "none";
+                requestAnimationFrame(() => { wrap.style.transition = "max-height 0.2s ease"; });
+                return;
+            }
+
+            if (collapsed) {
+                wrap.style.maxHeight = wrap.scrollHeight + "px";
+                requestAnimationFrame(() => { wrap.style.maxHeight = "0px"; });
+            } else {
+                wrap.style.maxHeight = wrap.scrollHeight + "px";
+                wrap.addEventListener("transitionend", function handler(e) {
+                    if (e.propertyName !== "max-height") return;
+                    wrap.style.maxHeight = "none";
+                    wrap.removeEventListener("transitionend", handler);
+                });
+            }
+        }
+
+        window.toggleSubmenuCollapse = function(wrapId, chevronId, key) {
+            const collapsed = !isSubmenuCollapsed(key);
+            localStorage.setItem(`cortex-submenu-${key}-collapsed`, collapsed ? "1" : "0");
+            applySubmenuCollapse(wrapId, chevronId, collapsed, true);
+        };
+
+        // ====================================================================
+        // Shared tag-grouped list engine: powers the Processes, Tasks, and
+        // Workflows pages, which all group their tool cards into tag-labeled
+        // sections and share a sidebar submenu + tag-editor popup pattern.
+        // All three draw from the one shared tag registry (`process_tags`),
+        // but each is tracked as its own `category` ('process' | 'task' |
+        // 'workflow') so assignments never leak between them, and a tag only
+        // shows up in a page's submenu once something in THAT category
+        // actually carries it.
+        // ====================================================================
+        function slugifyTagName(name) {
+            return String(name).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+        }
+
+        window.escapeAttrText = function(str) {
+            return String(str).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+        };
+
+        function tagPillStyle(color) {
+            return `background-color: color-mix(in oklch, ${color} 16%, transparent); color: ${color}; border-color: color-mix(in oklch, ${color} 40%, transparent);`;
+        }
+
+        window.renderTagPill = function(tag, category, clickable) {
+            const clickAttr = clickable ? `onclick="window.scrollToTagSection('${category}', '${slugifyTagName(tag.name)}')" role="button"` : "";
+            return `<span ${clickAttr} class="px-2 py-1 rounded text-[10px] font-medium border leading-none ${clickable ? "cursor-pointer hover:brightness-125" : ""}" style="${tagPillStyle(tag.color)}">${tag.name}</span>`;
+        };
+
+        window.buildTagSubmenuEntries = function(items, tagsList, assignments) {
+            const counts = {};
+            (items || []).forEach(app => {
+                const tagIds = (assignments && assignments[app.tool_id]) || [];
+                if (tagIds.length === 0) {
+                    counts.__uncategorized__ = (counts.__uncategorized__ || 0) + 1;
+                } else {
+                    tagIds.forEach(id => { counts[id] = (counts[id] || 0) + 1; });
+                }
+            });
+            const entries = (tagsList || [])
+                .filter(t => (counts[t.id] || 0) > 0)
+                .map(t => ({ name: t.name, color: t.color }));
+            if ((counts.__uncategorized__ || 0) > 0) entries.push({ name: "Uncategorized", color: null });
+            return entries;
+        };
+
+        window.refreshTagSubmenu = function(opts) {
+            const submenu = document.getElementById(opts.submenuId);
+            if (!submenu) return;
+            submenu.innerHTML = (opts.entries || []).map(t => `
+                <button onclick="window.${opts.pendingKey}='${slugifyTagName(t.name)}'; showPage('${opts.pageName}');" class="w-full flex items-center gap-2 px-2 py-1 rounded-md text-muted hover:bg-surface-2 hover:text-heading transition-colors text-left">
+                    <span class="w-2 h-2 rounded-sm shrink-0 ${t.color ? "" : "border border-border-strong"}" ${t.color ? `style="background-color: ${t.color};"` : ""}></span>
+                    <span class="whitespace-nowrap text-xs truncate">${t.name}</span>
+                </button>
+            `).join("");
+
+            // If the wrap is currently expanded, let it grow/shrink to fit the new entry count.
+            const wrap = document.getElementById(opts.wrapId);
+            if (wrap && wrap.style.maxHeight === "none") {
+                wrap.style.maxHeight = wrap.scrollHeight + "px";
+                requestAnimationFrame(() => { wrap.style.maxHeight = "none"; });
+            }
+        };
+
+        function loadTagSubmenu(manifestKey, category, submenuId, wrapId, chevronId, submenuKey, pendingKey, pageName) {
+            Promise.all([
+                fetch("/apps").then(r => r.json()),
+                fetch(`/api/process-tags?category=${category}`).then(r => r.json())
+            ]).then(([manifest, tagData]) => {
+                const items = manifest[manifestKey] || [];
+                const entries = window.buildTagSubmenuEntries(items, tagData.tags || [], tagData.assignments || {});
+                window.refreshTagSubmenu({ submenuId, wrapId, entries, pendingKey, pageName });
+                applySubmenuCollapse(wrapId, chevronId, isSubmenuCollapsed(submenuKey), false);
+            }).catch(() => {});
+        }
+
+        // --- Page-side half: each of Processes/Tasks/Workflows' own fragment script
+        // calls this once after fetching its manifest slice + tags, to render its
+        // tag-grouped sections and wire up the shared tag-editor popup markup that
+        // fragment includes inline. Kept here (rather than tripled per page) since
+        // the grouping/editor logic is identical across all three -- only the
+        // per-card markup (renderCard) and labels differ. ---
+        window.initTaggedListPage = function(config) {
+            const { category, manifestKey, containerId, emptyMessage, renderCard,
+                    submenuId, wrapId, chevronId, submenuKey, pendingScrollKey, pageName } = config;
+
+            function renderSections(items, tagsList, assignments) {
+                const tagsById = {};
+                tagsList.forEach(t => { tagsById[t.id] = t; });
+
+                const groups = tagsList.map(t => ({ tag: t, items: [] }));
+                const groupByTagId = {};
+                groups.forEach(g => { groupByTagId[g.tag.id] = g; });
+                const uncategorized = [];
+
+                items.forEach(app => {
+                    const tagIds = assignments[app.tool_id] || [];
+                    if (tagIds.length === 0) {
+                        uncategorized.push(app);
+                    } else {
+                        tagIds.forEach(id => { if (groupByTagId[id]) groupByTagId[id].items.push(app); });
+                    }
+                });
+
+                const container = document.getElementById(containerId);
+                const sectionBlocks = [];
+
+                groups.forEach(g => {
+                    if (g.items.length === 0) return;
+                    sectionBlocks.push(`
+                        <section id="tagsec-${category}-${slugifyTagName(g.tag.name)}" class="scroll-mt-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="w-2.5 h-2.5 rounded-sm" style="background-color: ${g.tag.color};"></span>
+                                <h2 class="text-xs font-mono uppercase tracking-widest text-muted">${g.tag.name}</h2>
+                                <span class="text-[10px] text-muted">(${g.items.length})</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                ${g.items.map(app => renderCard(app, tagsById, assignments)).join("")}
+                            </div>
+                        </section>
+                    `);
+                });
+
+                if (uncategorized.length > 0) {
+                    sectionBlocks.push(`
+                        <section id="tagsec-${category}-uncategorized" class="scroll-mt-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="w-2.5 h-2.5 rounded-sm border border-border-strong"></span>
+                                <h2 class="text-xs font-mono uppercase tracking-widest text-muted">Uncategorized</h2>
+                                <span class="text-[10px] text-muted">(${uncategorized.length})</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                ${uncategorized.map(app => renderCard(app, tagsById, assignments)).join("")}
+                            </div>
+                        </section>
+                    `);
+                }
+
+                const separator = `<hr class="border-t border-border">`;
+                container.innerHTML = sectionBlocks.length
+                    ? sectionBlocks.join(separator)
+                    : `<div class="text-muted font-mono text-xs p-4">${emptyMessage}</div>`;
+
+                // Consume a pending scroll request left by the sidebar tag submenu.
+                const pendingSlug = window[pendingScrollKey];
+                if (pendingSlug) {
+                    window[pendingScrollKey] = null;
+                    const el = document.getElementById(`tagsec-${category}-${pendingSlug}`);
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+            }
+
+            let currentItems = [];
+            let currentTagsList = [];
+            let currentAssignments = {};
+            let editingToolId = null;
+
+            function reload() {
+                Promise.all([
+                    fetch("/apps").then(r => r.json()),
+                    fetch(`/api/process-tags?category=${category}`).then(r => r.json())
+                ]).then(([manifest, tagData]) => {
+                    currentItems = manifest[manifestKey] || [];
+                    currentTagsList = tagData.tags || [];
+                    currentAssignments = tagData.assignments || {};
+                    renderSections(currentItems, currentTagsList, currentAssignments);
+                    const entries = window.buildTagSubmenuEntries(currentItems, currentTagsList, currentAssignments);
+                    window.refreshTagSubmenu({ submenuId, wrapId, entries, pendingKey: pendingScrollKey, pageName });
+                });
+            }
+
+            window.scrollToTagSection = function(cat, slug) {
+                const el = document.getElementById(`tagsec-${cat}-${slug}`);
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+            };
+
+            window.openTagEditor = function(toolId, title) {
+                editingToolId = toolId;
+                document.getElementById("tag-editor-process-name").innerText = title;
+                document.getElementById("tag-editor-new-name").value = "";
+                renderTagEditorList();
+                document.getElementById("tag-editor-modal").classList.remove("hidden");
+                document.getElementById("tag-editor-modal").classList.add("flex");
+            };
+
+            window.closeTagEditor = function() {
+                document.getElementById("tag-editor-modal").classList.add("hidden");
+                document.getElementById("tag-editor-modal").classList.remove("flex");
+                editingToolId = null;
+            };
+
+            function renderTagEditorList() {
+                const assigned = new Set(currentAssignments[editingToolId] || []);
+                const list = document.getElementById("tag-editor-list");
+                if (currentTagsList.length === 0) {
+                    list.innerHTML = `<div class="text-muted text-[11px]">No tags yet — create one below.</div>`;
+                    return;
+                }
+                list.innerHTML = currentTagsList.map(tag => `
+                    <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-2 cursor-pointer">
+                        <input type="checkbox" value="${tag.id}" ${assigned.has(tag.id) ? "checked" : ""} class="tag-editor-checkbox accent-primary">
+                        <span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background-color: ${tag.color};"></span>
+                        <span class="text-heading">${tag.name}</span>
+                    </label>
+                `).join("");
+            }
+
+            window.createAndAssignTag = function() {
+                const input = document.getElementById("tag-editor-new-name");
+                const name = input.value.trim();
+                if (!name) return;
+                fetch("/api/process-tags", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name })
+                }).then(r => r.json()).then(data => {
+                    if (!data.success) { alert(data.detail || "Could not create tag."); return; }
+                    currentTagsList.push({ id: data.id, name: data.name, color: data.color });
+                    const assigned = new Set(currentAssignments[editingToolId] || []);
+                    assigned.add(data.id);
+                    currentAssignments[editingToolId] = Array.from(assigned);
+                    input.value = "";
+                    renderTagEditorList();
+                }).catch(() => alert("Could not create tag."));
+            };
+
+            window.saveTagAssignments = function() {
+                const checked = Array.from(document.querySelectorAll(".tag-editor-checkbox:checked")).map(cb => parseInt(cb.value, 10));
+                fetch("/api/process-tags/assign", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ category, tool_id: editingToolId, tag_ids: checked })
+                }).then(r => r.json()).then(() => {
+                    currentAssignments[editingToolId] = checked;
+                    closeTagEditor();
+                    renderSections(currentItems, currentTagsList, currentAssignments);
+                    const entries = window.buildTagSubmenuEntries(currentItems, currentTagsList, currentAssignments);
+                    window.refreshTagSubmenu({ submenuId, wrapId, entries, pendingKey: pendingScrollKey, pageName });
+                }).catch(() => alert("Could not save tags."));
+            };
+
+            reload();
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            if (localStorage.getItem("cortex-sidebar-collapsed") === "1") {
+                document.getElementById("cortex-sidebar").classList.add("is-collapsed");
+            }
+            applySubmenuCollapse("processes-tag-submenu-wrap", "processes-submenu-chevron", isSubmenuCollapsed("processes"), false);
+            applySubmenuCollapse("tasks-tag-submenu-wrap", "tasks-submenu-chevron", isSubmenuCollapsed("tasks"), false);
+            applySubmenuCollapse("functions-tag-submenu-wrap", "functions-submenu-chevron", isSubmenuCollapsed("functions"), false);
+            applySubmenuCollapse("adapters-tag-submenu-wrap", "adapters-submenu-chevron", isSubmenuCollapsed("adapters"), false);
+            loadTagSubmenu("05_Processes", "process", "processes-tag-submenu", "processes-tag-submenu-wrap", "processes-submenu-chevron", "processes", "pendingProcessTagScroll", "processes");
+            loadTagSubmenu("06_Tasks", "task", "tasks-tag-submenu", "tasks-tag-submenu-wrap", "tasks-submenu-chevron", "tasks", "pendingTaskTagScroll", "tasks");
+            loadTagSubmenu("09_Functions", "function", "functions-tag-submenu", "functions-tag-submenu-wrap", "functions-submenu-chevron", "functions", "pendingFunctionTagScroll", "functions");
+            loadTagSubmenu("08_Adapters", "adapter", "adapters-tag-submenu", "adapters-tag-submenu-wrap", "adapters-submenu-chevron", "adapters", "pendingAdapterTagScroll", "adapters");
+            showPage('workflow-builder');
+        });
+
+        async function showPage(pageName) {
+            const viewport = document.getElementById("content-viewport");
+
+            document.querySelectorAll(".nav-btn").forEach(btn => {
+                btn.classList.remove("bg-primary/15", "text-primary-400");
+                btn.classList.add("text-muted");
+            });
+
+            const activeBtn = document.getElementById(`btn-${pageName}`);
+            if (activeBtn) {
+                activeBtn.classList.remove("text-muted");
+                activeBtn.classList.add("bg-primary/15", "text-primary-400");
+            }
+
+            const titleElement = document.getElementById("page-title");
+            const titleWords = pageName.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+            titleElement.innerText = titleWords + " Operations";
+
+            viewport.innerHTML = `<div class="text-muted font-mono text-xs animate-pulse p-6">Assembling system frame views for ${pageName}.html...</div>`;
+
+            try {
+                const response = await fetch(`/page/${pageName}`);
+                if (!response.ok) throw new Error(`HTTP Status ${response.status}`);
+                const html = await response.text();
+
+                viewport.innerHTML = html;
+
+                const executionScript = viewport.querySelector("script");
+                if (executionScript) {
+                    eval(executionScript.innerHTML);
+                }
+            } catch (err) {
+                viewport.innerHTML = `
+                    <div class="p-6 bg-danger/10 border border-danger/20 rounded-xl text-danger-400 font-mono text-xs">
+                        Failed to build template target: ${err.message}
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
