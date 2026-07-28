@@ -178,6 +178,10 @@
   },
   "active": "323d3a119b647123",
   "lastOpenFiles": [
+    "_map_script_check.js",
+    "00_System/templates/architecture-map.html",
+    "00_System/templates/architecture-map.html.tmp.44848.70dd1b70c604",
+    "00_System/cortex.db-journal",
     "13_Functions/write_powerpoint/test_write_powerpoint.md",
     "13_Functions/write_powerpoint/test_write_powerpoint.md.tmp.7996.1b5533789903",
     "13_Functions/web_scrape/test_web_scrape.md",
@@ -197,11 +201,8 @@
     "13_Functions/fill_docx_template/test_fill_docx_template.md",
     "13_Functions/fill_docx_template/test_fill_docx_template.md.tmp.7996.3d8a56a9c4d8",
     "13_Functions/export_to_word/test_export_to_word.md",
-    "13_Functions/export_to_word/test_export_to_word.md.tmp.7996.ebbd5c40e307",
     "13_Functions/export_to_pdf/test_export_to_pdf.md",
-    "13_Functions/export_to_pdf/test_export_to_pdf.md.tmp.7996.54f9d045e7e8",
     "13_Functions/export_to_markdown/test_export_to_markdown.md",
-    "13_Functions/export_to_markdown/test_export_to_markdown.md.tmp.7996.69c552276ad3",
     "13_Functions/export_to_json/test_export_to_json.md",
     "12_Tasks/upload_m365_file/test_upload_m365_file.md",
     "12_Tasks/set_excel_range/test_set_excel_range.md",
@@ -212,7 +213,6 @@
     "12_Tasks/post_teams_channel_message/test_post_teams_channel_message.md",
     "12_Tasks/list_teams_chat_messages/test_list_teams_chat_messages.md",
     "12_Tasks/list_teams_channels/test_list_teams_channels.md",
-    "12_Tasks/list_sharepoint_lists/test_list_sharepoint_lists.md",
-    "12_Tasks/list_sharepoint_list_items/test_list_sharepoint_list_items.md"
+    "12_Tasks/list_sharepoint_lists/test_list_sharepoint_lists.md"
   ]
 }

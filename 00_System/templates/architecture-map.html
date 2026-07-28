@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cortex — Architecture Map</title>
+<style>
+:root {
+  --bg: oklch(0.16 0.02 250);
+  --panel: oklch(0.19 0.02 250);
+  --panel-2: oklch(0.235 0.02 250);
+  --border: oklch(0.28 0.02 250);
+  --border-strong: oklch(0.35 0.02 250);
+  --text: oklch(0.95 0.005 250);
+  --text-body: oklch(0.78 0.01 250);
+  --muted: oklch(0.58 0.015 250);
+  --client: oklch(0.74 0.12 220);
+  --route: oklch(0.72 0.17 150);
+  --service: oklch(0.62 0.19 264);
+  --db: oklch(0.80 0.15 85);
+  --external: oklch(0.68 0.18 340);
+  --critical: oklch(0.66 0.20 25);
+  --accent: oklch(0.80 0.15 85);
+  --accent-2: oklch(0.66 0.20 25);
+}
+:root[data-theme="light"], :root:not([data-theme="dark"]) {
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --bg: oklch(0.97 0.01 250);
+    --panel: oklch(0.995 0.003 250);
+    --panel-2: oklch(0.96 0.008 250);
+    --border: oklch(0.88 0.012 250);
+    --border-strong: oklch(0.78 0.015 250);
+    --text: oklch(0.22 0.02 250);
+    --text-body: oklch(0.38 0.015 250);
+    --muted: oklch(0.55 0.014 250);
+  }
+}
+:root[data-theme="light"] {
+  --bg: oklch(0.97 0.01 250);
+  --panel: oklch(0.995 0.003 250);
+  --panel-2: oklch(0.96 0.008 250);
+  --border: oklch(0.88 0.012 250);
+  --border-strong: oklch(0.78 0.015 250);
+  --text: oklch(0.22 0.02 250);
+  --text-body: oklch(0.38 0.015 250);
+  --muted: oklch(0.55 0.014 250);
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+  background: var(--bg); color: var(--text-body);
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+#app { display: flex; flex-direction: column; height: 100vh; width: 100vw; }
+
+/* Top bar */
+#topbar {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--border);
+  z-index: 20;
+}
+#topbar h1 {
+  font-size: 14px; font-weight: 600; color: var(--text); margin: 0; white-space: nowrap;
+}
+#topbar h1 span { color: var(--muted); font-weight: 400; font-size: 11px; margin-left: 6px; }
+#chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  font-size: 11px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--panel-2); color: var(--text-body); cursor: pointer; user-select: none;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  transition: background .12s, border-color .12s, color .12s;
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--border-strong); }
+.chip.active { background: var(--service); border-color: var(--service); color: white; }
+#zoom-controls { display: flex; gap: 4px; margin-left: auto; }
+#zoom-controls button {
+  width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--panel-2); color: var(--text-body); cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+}
+#zoom-controls button:hover { border-color: var(--border-strong); color: var(--text); }
+
+/* Body */
+#body { flex: 1; display: flex; min-height: 0; }
+#canvas-wrap { flex: 1; position: relative; overflow: hidden; cursor: grab; background: var(--bg); }
+#canvas-wrap.dragging { cursor: grabbing; }
+#canvas-wrap svg { width: 100%; height: 100%; display: block; }
+
+.cluster-bg { fill: var(--panel); stroke: var(--border); stroke-width: 1; }
+.cluster-label {
+  fill: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+.node rect.card {
+  fill: var(--panel-2); stroke-width: 1.4; rx: 9; cursor: pointer;
+  transition: opacity .15s;
+}
+.node.critical rect.card { stroke-width: 2.2; }
+.node text.title { fill: var(--text); font-size: 12px; font-weight: 600; pointer-events: none; }
+.node text.sub { fill: var(--muted); font-size: 10px; pointer-events: none; }
+.node text.deadmark { fill: var(--critical); font-size: 9px; font-weight: 700; pointer-events: none; font-family: "JetBrains Mono", monospace; }
+.node.dimmed { opacity: 0.14; }
+.node.selected rect.card { stroke-width: 3; }
+
+.badge-circle { pointer-events: none; }
+.badge-text { fill: white; font-size: 9px; font-weight: 700; text-anchor: middle; pointer-events: none; font-family: "JetBrains Mono", monospace; }
+
+.edge-path { fill: none; transition: opacity .15s; }
+.edge-path.dimmed { opacity: 0.06; }
+.edge-label { font-size: 9px; fill: var(--muted); font-family: "JetBrains Mono", ui-monospace, monospace; pointer-events: none; transition: opacity .15s; }
+.edge-label.dimmed { opacity: 0.06; }
+
+/* Sidebar */
+#sidebar {
+  width: 380px; min-width: 380px; background: var(--panel); border-left: 1px solid var(--border);
+  overflow-y: auto; padding: 18px 18px 40px;
+}
+#sidebar h2 { font-size: 15px; color: var(--text); margin: 0 0 4px; }
+#sidebar .path {
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; color: var(--muted);
+  background: var(--panel-2); padding: 4px 8px; border-radius: 5px; display: inline-block; margin: 6px 0 14px;
+  word-break: break-all;
+}
+#sidebar .plain { font-size: 12.5px; line-height: 1.55; color: var(--text-body); margin-bottom: 14px; }
+#sidebar .section-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+  font-family: "JetBrains Mono", monospace; font-weight: 700; margin: 16px 0 8px;
+}
+#sidebar ul.notes { margin: 0; padding-left: 16px; }
+#sidebar ul.notes li { font-size: 11.5px; color: var(--text-body); margin-bottom: 6px; line-height: 1.5; }
+#sidebar .taglist { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+#sidebar .tagpill {
+  font-size: 9.5px; padding: 2px 7px; border-radius: 999px; background: var(--panel-2);
+  border: 1px solid var(--border); color: var(--muted); font-family: "JetBrains Mono", monospace;
+}
+#sidebar .edgelist { list-style: none; padding: 0; margin: 0; }
+#sidebar .edgelist li {
+  font-size: 11px; padding: 6px 8px; margin-bottom: 4px; border-radius: 6px; background: var(--panel-2);
+  color: var(--text-body); display: flex; justify-content: space-between; gap: 8px;
+}
+#sidebar .edgelist .arrow { color: var(--muted); font-family: "JetBrains Mono", monospace; }
+#sidebar .fixitem, #sidebar .bugitem {
+  font-size: 11.5px; padding: 8px 10px; border-radius: 7px; margin-bottom: 6px; line-height: 1.45;
+}
+#sidebar .fixitem { background: color-mix(in oklch, var(--route) 12%, var(--panel-2)); border: 1px solid color-mix(in oklch, var(--route) 30%, var(--border)); color: var(--text-body); }
+#sidebar .bugitem { background: color-mix(in oklch, var(--critical) 12%, var(--panel-2)); border: 1px solid color-mix(in oklch, var(--critical) 30%, var(--border)); color: var(--text-body); }
+#sidebar .sev { font-weight: 700; font-family: "JetBrains Mono", monospace; font-size: 9.5px; text-transform: uppercase; margin-right: 6px; }
+#sidebar .sev.high { color: var(--critical); }
+#sidebar .sev.med { color: var(--accent); }
+#sidebar .sev.low { color: var(--muted); }
+#sidebar .empty-hint { font-size: 12px; color: var(--muted); font-style: italic; }
+
+#sidebar .legend { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+#sidebar .legend-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-body); }
+#sidebar .legend-swatch { width: 14px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+#sidebar .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid; }
+
+#sidebar .stat-row { display: flex; gap: 10px; margin: 10px 0 4px; }
+#sidebar .stat { flex: 1; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
+#sidebar .stat .n { font-size: 20px; font-weight: 700; color: var(--text); font-family: "JetBrains Mono", monospace; }
+#sidebar .stat .l { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <h1>Cortex Architecture Map <span id="node-count-label"></span></h1>
+    <div id="chips"></div>
+    <div id="zoom-controls">
+      <button id="zoom-out" title="Zoom out">−</button>
+      <button id="zoom-fit" title="Fit to screen">Fit</button>
+      <button id="zoom-in" title="Zoom in">+</button>
+    </div>
+  </div>
+  <div id="body">
+    <div id="canvas-wrap">
+      <svg id="svg" viewBox="0 0 2220 1780" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="arrow-critical" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--critical)"></path>
+          </marker>
+          <marker id="arrow-api" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"></path>
+          </marker>
+          <marker id="arrow-db" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--db)"></path>
+          </marker>
+          <marker id="arrow-mount" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--client)"></path>
+          </marker>
+          <marker id="arrow-normal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--border-strong)"></path>
+          </marker>
+        </defs>
+        <g id="viewport">
+          <g id="cluster-layer"></g>
+          <g id="edge-layer"></g>
+          <g id="node-layer"></g>
+        </g>
+      </svg>
+    </div>
+    <div id="sidebar"></div>
+  </div>
+</div>
+
+<script>
+// =============================================================================
+// DATA — clusters / nodes / edges / FIXES / KNOWN_BUGS
+// Every path below is real and was confirmed by reading the file at that
+// location during this map's generation. See sidebar default view for the
+// "notable findings" writeup.
+// =============================================================================
+
+const clusters = [
+  { id: 'client',   label: 'Client (Browser Pages)',        x: 40,   y: 20, w: 300, h: 1720 },
+  { id: 'server',   label: 'Server Entry (server.py routes)', x: 400,  y: 20, w: 300, h: 1720 },
+  { id: 'core',     label: 'Core Engine',                    x: 760,  y: 20, w: 300, h: 1720 },
+  { id: 'data',     label: 'Data & Schema Layer',             x: 1120, y: 20, w: 300, h: 1720 },
+  { id: 'tools',    label: 'Tools (Tasks / Functions / Adapters)', x: 1480, y: 20, w: 300, h: 1720 },
+  { id: 'external', label: 'External Services',               x: 1840, y: 20, w: 340, h: 1720 },
+];
+
+const N = (id, cluster, label, sub, x, y, w, h, color, opts = {}) => ({
+  id, cluster, label, sub, x, y, w, h, color, ...opts
+});
+
+const nodes = [
+  // --- CLIENT ------------------------------------------------------------
+  N('idx-html', 'client', 'index.html', 'App shell: sidebar nav, popup host', 60, 60, 260, 64, 'client', {
+    role: 'Serves as the outer page frame — loads once, then swaps subpages into #content-viewport.',
+    plain: 'This is the page that never goes away: the sidebar menu and top bar. Every other screen loads inside it.',
+    path: '00_System/templates/index.html:1',
+    notes: ['Fetches GET /apps and GET /api/process-tags on load (line ~490).', 'Served by server.py serve_home() at GET /.'],
+    tag: ['overview', 'all'],
+  }),
+  N('wb-html', 'client', 'workflow-builder.html', 'Drawflow canvas — build + run a pipeline', 60, 164, 260, 64, 'client', {
+    role: 'Drag-and-drop node editor (Drawflow.js) for composing a multi-step AI/document workflow.',
+    plain: 'The visual flowchart builder — drag boxes onto a canvas, wire them together, hit Run.',
+    path: '00_System/templates/workflow-builder.html:242',
+    notes: ['Loads the node palette from GET /api/workflow-builder/node-registry (line 242).', 'Run button posts to POST /api/workflow-builder/run (line 1211).', 'This is the entry point of the critical path traced on this map.'],
+    tag: ['overview', 'all', 'workflow-builder', 'ai-bridges'],
+    critical: true,
+  }),
+  N('wm-html', 'client', 'workflow-map.html', 'Read-only staged view of a saved workflow', 60, 268, 260, 64, 'client', {
+    role: 'Renders a saved workflow as BFS-depth stage columns with live dry-run status overlay.',
+    plain: 'A read-only diagram of a workflow you already built, showing which step feeds which.',
+    path: '00_System/templates/workflow-map.html:215',
+    notes: ['Fetches GET /api/workflow-builder/workflows/{id}/map for structure.', 'Fetches POST /api/workflow-builder/run (dry_run) separately for status overlay.'],
+    tag: ['all', 'workflow-builder'],
+  }),
+  N('copilot-html', 'client', 'copilot.html', 'Standalone M365 Copilot chat page', 60, 372, 260, 64, 'client', {
+    role: 'Dedicated single-purpose page for asking Copilot, generating Designer images, and @-agent chat.',
+    plain: 'A simple one-screen chat page for talking to Microsoft Copilot directly, outside the workflow builder.',
+    path: '00_System/templates/copilot.html:236',
+    notes: ['3 call sites (lines 236, 299, 409) all POST to /execute/05_Processes/copilot_bridge.', '⚠ That route 404s — see the bug badge on this node.'],
+    tag: ['all', 'm365', 'ai-bridges'],
+  }),
+  N('gemini-html', 'client', 'gemini.html', 'Standalone Gemini ask/search/image page', 60, 476, 260, 64, 'client', {
+    role: 'Dedicated single-purpose page for asking Gemini, running Deep Research, and generating images.',
+    plain: 'A simple one-screen page for talking to Google Gemini directly, outside the workflow builder.',
+    path: '00_System/templates/gemini.html:147',
+    notes: ['2 call sites (lines 147, 174) POST to /execute/05_Processes/gemini_bridge.', '⚠ That route 404s — see the bug badge on this node.'],
+    tag: ['all', 'ai-bridges'],
+  }),
+  N('review-html', 'client', 'review-queue.html', '"Awaiting Review" checkpoint queue', 60, 580, 260, 64, 'client', {
+    role: 'Lists pending human_review_checkpoint rows and lets a user mark one reviewed.',
+    plain: 'The inbox for workflows that paused and are waiting on a person to check something.',
+    path: '00_System/templates/review-queue.html:50',
+    notes: ['GET /api/workflow-checkpoints?status=pending (line 50).', 'POST /api/workflow-checkpoints/{id}/resolve (line 64).'],
+    tag: ['all', 'workflow-builder'],
+  }),
+  N('skills-html', 'client', 'skills.html', 'Skills capability matrix', 60, 684, 260, 64, 'client', {
+    role: 'Static catalog page listing the 3 hand-written Skill entries.',
+    plain: 'A page that just lists the built-in "AI skills" the system claims to offer.',
+    path: '00_System/templates/skills.html:15',
+    notes: ['GET /api/skills → SKILLS_REGISTRY (server.py:166).', 'These 3 skills have no backing code — description text only.'],
+    tag: ['all'],
+  }),
+  N('settings-html', 'client', 'settings.html', 'Theme + console config', 60, 788, 260, 64, 'client', {
+    role: 'Dark/light theme toggle and two always-on "configuration" display rows.',
+    plain: 'The settings screen — mostly just a light/dark switch. Now also links to this architecture map.',
+    path: '00_System/templates/settings.html:1',
+    notes: ['Purely client-side: setCortexTheme() writes localStorage, no API calls.', 'This map is now linked from a new card added here.'],
+    tag: ['all'],
+  }),
+  N('catalog-html', 'client', 'Catalog pages (5)', 'tasks / processes / adapters / functions / system .html', 60, 892, 260, 64, 'client', {
+    role: 'Five near-identical listing pages, each rendering one CoreRouter-discovered category as cards.',
+    plain: 'The browsing pages — "show me every Task", "show me every Adapter", etc.',
+    path: '00_System/templates/{tasks,processes,adapters,functions,system}.html',
+    notes: ['All fetch GET /apps (tasks.html:39 area) and render whichever category matches.', 'system.html additionally shows health/DB stats.'],
+    tag: ['all'],
+  }),
+  N('popup-html', 'client', 'Popup fragments (9)', 'Per-tool upload/config modals', 60, 996, 260, 64, 'client', {
+    role: 'Lazy-loaded modal fragments (templates/popup/*.html) for Tasks needing file upload or extra config.',
+    plain: 'The little pop-up windows that appear when a Task needs you to upload a file first.',
+    path: '00_System/templates/popup/',
+    notes: ['abc_uploader.html, curriculum_guide_to_tos.html, import_exam_pass_fail.html, import_transcripts.html, import_marks_correlation.html, import_class_schedule.html, webscraper.html, word_to_excel_exam.html, md_editor.html.'],
+    tag: ['all', 'documents'],
+  }),
+
+  // --- SERVER (server.py, grouped by @app.* banner section) --------------
+  N('srv-boot', 'server', 'server.py — Boot & Lifespan', 'FastAPI init, request-log middleware', 420, 60, 260, 64, 'route', {
+    role: 'lifespan() runs initialize_database() once at startup; log_requests middleware prints a numbered line per request.',
+    plain: 'The part that starts the whole app up and prints "REQ #0001 --> GET /..." for every click.',
+    path: '00_System/server.py:106',
+    notes: ['reload=True with reload_excludes at the bottom (server.py:1610) stops the dev auto-reloader from restarting on every DB write / Task subprocess run.'],
+    tag: ['all'],
+  }),
+  N('srv-stats', 'server', 'server.py — Stats & Network API', '/api/stats, /api/inbox, /api/network', 420, 164, 260, 64, 'route', {
+    role: 'Dashboard summary counts and the force-graph data behind the Network visualization page.',
+    plain: 'Feeds the little number tiles on the dashboard and the "how everything connects" diagram.',
+    path: '00_System/server.py:514',
+    notes: ['/api/network (line 566) hand-builds a node/edge graph from live SQLite rows — a smaller, older cousin of this very map.'],
+    tag: ['all'],
+  }),
+  N('srv-copilot-ctx', 'server', 'server.py — Copilot Context API', '/api/copilot/transcripts(-content)', 420, 268, 260, 64, 'route', {
+    role: 'Lets the Copilot page pick a previously indexed meeting transcript as prompt input.',
+    plain: 'Lets you pick an old meeting transcript to feed into a Copilot question instead of typing it out.',
+    path: '00_System/server.py:800',
+    notes: ['Auto-seeds one placeholder transcript row if the table is empty (line 809).'],
+    tag: ['all', 'm365', 'ai-bridges'],
+  }),
+  N('srv-tools-api', 'server', 'server.py — Tool Discovery API', '/apps, /api/skills, node-registry', 420, 372, 260, 64, 'route', {
+    role: 'Reports every Task/Process/Adapter/Function/Skill CoreRouter finds, plus static registries, for the palette pages.',
+    plain: 'Answers "what tools does this app have?" for every catalog page and the workflow builder\'s drag palette.',
+    path: '00_System/server.py:864',
+    notes: ['/api/workflow-builder/node-registry (line 875) also attaches license-gating + icon lookup per node.', 'Its icon lookup (TOOL_SVGL_MAP, line 376) is a separate, hand-written map — it does not call svgl_icon_manager.py, which was built for exactly this job.'],
+    tag: ['all', 'workflow-builder', 'ai-bridges'],
+  }),
+  N('srv-wb-crud', 'server', 'server.py — Workflow CRUD', '/api/workflow-builder/workflows*', 420, 476, 260, 64, 'route', {
+    role: 'List/get/create/update/delete saved Drawflow diagrams in workflow_definitions.',
+    plain: 'Save, rename, load, and delete your drawn workflow diagrams.',
+    path: '00_System/server.py:942',
+    notes: ['graph_json is stored as one JSON blob column (schema-agnostic — see database.py table #15).'],
+    tag: ['all', 'workflow-builder'],
+  }),
+  N('srv-wb-run', 'server', 'server.py — Workflow Run', 'POST /api/workflow-builder/run', 420, 580, 260, 64, 'route', {
+    role: 'Loads (or accepts inline) a graph_json and hands it to WorkflowEngine.run() on a worker thread.',
+    plain: 'The button that actually executes your drawn workflow, step by step.',
+    path: '00_System/server.py:1145',
+    notes: ['Uses run_in_threadpool (line 1175) — an AI bridge call can take minutes; this keeps the rest of the app responsive meanwhile.', 'dry_run defaults to true (safe simulation) unless the caller explicitly sets it false.'],
+    tag: ['overview', 'all', 'workflow-builder', 'ai-bridges'],
+    critical: true,
+  }),
+  N('srv-review', 'server', 'server.py — Review Queue API', '/api/workflow-checkpoints*', 420, 684, 260, 64, 'route', {
+    role: 'List pending/reviewed checkpoints; mark one resolved.',
+    plain: 'The backend for the "waiting on a human" inbox page.',
+    path: '00_System/server.py:1186',
+    notes: [],
+    tag: ['all', 'workflow-builder'],
+  }),
+  N('srv-tags', 'server', 'server.py — Tag Registry API', '/api/process-tags*', 420, 788, 260, 64, 'route', {
+    role: 'Shared colored-tag registry (process_tags) with per-category assignments for Tasks/Processes/Workflows.',
+    plain: 'Lets you color-code and filter your Tasks/Processes/Workflows with custom labels.',
+    path: '00_System/server.py:1224',
+    notes: ['One shared tag list, but assignments are scoped by category so a Task and Process sharing a tool_id never leak tags into each other.'],
+    tag: ['all'],
+  }),
+  N('srv-abc', 'server', 'server.py — ABC Uploader API', '/api/abc-uploader/*', 420, 892, 260, 64, 'route', {
+    role: 'CRUD over a JSON workflow-template registry, plus a Playwright-driven upload to an external "Agent Builder Console".',
+    plain: 'Manages a library of JSON template files and can push one up to an external tool via browser automation.',
+    path: '00_System/server.py:1310',
+    notes: ['Dynamically loads 12_Tasks/abc_uploader/abc_uploader.py via SourceFileLoader (line 1302) rather than a normal import.'],
+    tag: ['all'],
+  }),
+  N('srv-uploads', 'server', 'server.py — Upload + Dispatch', '/api/uploads/* (file → Task pipeline)', 420, 996, 260, 64, 'route', {
+    role: 'Saves an uploaded file collision-safely into 01_inbox/, then triggers the matching import Task.',
+    plain: 'The "drop a file here, then we automatically process it" endpoints behind several popups.',
+    path: '00_System/server.py:1393',
+    notes: ['_save_upload_collision_safe() (line 1377) timestamp-suffixes instead of overwriting on a name clash.'],
+    tag: ['all', 'documents'],
+  }),
+  N('srv-mdeditor', 'server', 'server.py — MD Editor + run://', 'vault-path containment guard', 420, 1100, 260, 64, 'route', {
+    role: 'Reads/writes vault-relative .md files and launches run:// protocol links, both behind _resolve_vault_path\'s path-escape check.',
+    plain: 'The in-app note editor, plus a security guard that stops a crafted link from reading files outside the project.',
+    path: '00_System/server.py:1470',
+    notes: ['_resolve_vault_path (line 1470) is the one shared containment check reused by 3 different endpoints — a good example of DRY security logic.'],
+    tag: ['all'],
+  }),
+  N('srv-execute', 'server', 'server.py — Generic Execute', 'POST /execute/{category}/{tool_id}', 420, 1204, 260, 64, 'route', {
+    role: 'Thin wrapper around CoreRouter.execute_app_logic, run off the event loop thread.',
+    plain: 'The universal "run this specific tool" button used by dozens of pages.',
+    path: '00_System/server.py:1527',
+    notes: ['category is a raw string from the client — copilot.html/gemini.html send the wrong one ("05_Processes"), see bug badge.'],
+    tag: ['all', 'ai-bridges', 'm365'],
+  }),
+  N('srv-pages', 'server', 'server.py — Page Serving', '/, /page/{page_name}', 420, 1308, 260, 64, 'route', {
+    role: 'Serves index.html at / and any templates/*.html fragment at /page/{name}, with the same containment guard as the vault paths.',
+    plain: 'The traffic cop that hands the browser whichever screen it asked for.',
+    path: '00_System/server.py:1556',
+    notes: [],
+    tag: ['all'],
+  }),
+
+  // --- CORE ENGINE ---------------------------------------------------------
+  N('core-router', 'core', 'core_router.py — CoreRouter', 'Auto-discovers tools, subprocess dispatch', 780, 60, 260, 64, 'service', {
+    role: 'Scans 11_Processes/12_Tasks/13_Functions/14_Adapters by folder convention and launches any script as an isolated subprocess.',
+    plain: 'The receptionist: knows where every tool lives and is the one who actually runs one when asked.',
+    path: '00_System/core_router.py:106',
+    notes: ['"Convention over configuration": a folder named some_tool/some_tool.py is auto-discovered, no registration needed.', 'Runs every tool in its own OS process (core_router.py:253) so a crash or hang can\'t take the web server down with it.'],
+    tag: ['overview', 'all', 'workflow-builder', 'ai-bridges', 'm365'],
+    critical: true,
+  }),
+  N('core-wf-router', 'core', 'core_router.py — CoreWorkflowRouter', 'Pydantic block executor', 780, 164, 260, 64, 'service', {
+    role: 'An alternate in-process step executor built around WorkflowPayload + license-gated blocks.',
+    plain: 'A second, different "run one workflow step" engine that the real app never actually calls.',
+    path: '00_System/core_router.py:289',
+    notes: ['Only ever instantiated by sandbox_smoke_test.py (3 call sites) — server.py and workflow_engine.py both use plain CoreRouter + WorkflowEngine instead.'],
+    tag: ['all', 'dead-code'],
+  }),
+  N('workflow-engine', 'core', 'workflow_engine.py — WorkflowEngine', 'Runs a saved Drawflow graph node-by-node', 780, 268, 260, 64, 'service', {
+    role: 'Parses a Drawflow export into nodes/edges, flattens containers, walks the graph running each node, threads {{node_id}} text between steps.',
+    plain: 'The thing that actually carries out your drawn flowchart, one box at a time, passing results along the arrows.',
+    path: '00_System/workflow_engine.py:108',
+    notes: ['MAX_TOTAL_STEPS=200 (line 96) hard-caps runaway loops even if a Review Gate\'s own max_attempts is misconfigured.', 'dry_run=True by default — every action returns a "[DRY RUN] ..." placeholder instead of a real call.'],
+    tag: ['overview', 'all', 'workflow-builder', 'ai-bridges'],
+    critical: true,
+  }),
+  N('db-brain', 'core', 'database.py — brain_state.db schema', '17 tables incl. workflow_checkpoints', 780, 372, 260, 64, 'db', {
+    role: 'initialize_database() creates every core table (idempotent CREATE TABLE IF NOT EXISTS) plus starter seed rows.',
+    plain: 'The blueprint for the app\'s main database — one file holding classes, exams, contacts, workflows, and more.',
+    path: '00_System/database.py:54',
+    notes: ['DB_PATH (line 54) is literally "cortex.db", not "brain_state.db" as every comment in the codebase calls it.', 'See bug badge: this is the exact same file cortex_database.py also writes to.'],
+    tag: ['all'],
+  }),
+  N('db-cortex', 'core', 'cortex_database.py — "second" DB schema', 'web_scrape_jobs / web_scrape_data tables', 780, 476, 260, 64, 'db', {
+    role: 'Meant to be a separate SQLite file for scraped web content, kept apart from the main app database.',
+    plain: 'Was supposed to be its own separate file for scraped web pages — turns out it isn\'t.',
+    path: '00_System/cortex_database.py:29',
+    notes: ['DB_PATH (line 29) resolves to the exact same "00_System/cortex.db" as database.py — they are one file, not two.'],
+    tag: ['all', 'documents'],
+  }),
+  N('health-py', 'core', 'health.py — Liveness probe', 'Container health-check entrypoint', 780, 580, 260, 64, 'service', {
+    role: 'Tries importing workflow_schema.py and enterprise_adapters.py; reports UP/DOWN as JSON.',
+    plain: 'A quick "is the app\'s data layer even loadable?" check for an external monitor.',
+    path: '00_System/health.py:36',
+    notes: ['One of its two health checks (enterprise_adapters) only verifies that a module used solely by dead code still imports cleanly.'],
+    tag: ['all'],
+  }),
+  N('logger-py', 'core', 'logger.py — CortexLogger', 'Structured JSON log lines', 780, 684, 260, 64, 'service', {
+    role: 'Formats every log record as one JSON object per stdout line, tagged with workflow_id/correlation_id.',
+    plain: 'A shared way to print log messages as machine-readable JSON instead of plain text.',
+    path: '00_System/logger.py:47',
+    notes: ['Its own docstring (line 12-14) says CoreWorkflowRouter is "the only current consumer" — and that class is itself dead in production.'],
+    tag: ['all', 'dead-code'],
+  }),
+  N('model-class', 'core', 'model_classifications.py', 'Per-model data-sensitivity ceiling', 780, 788, 260, 64, 'service', {
+    role: 'Maps each AI model to a classification level (public/protected A/B/C) and computes a workflow\'s most-restrictive-model ceiling.',
+    plain: 'Decides how sensitive the data flowing through a workflow is allowed to be, based on the weakest-cleared AI model it touches.',
+    path: '00_System/model_classifications.py:42',
+    notes: ['Claude has no official classification yet — defaults to the most conservative level, "public" (line 47).'],
+    tag: ['all', 'ai-bridges', 'm365'],
+  }),
+
+  // --- DATA & SCHEMA --------------------------------------------------------
+  N('wf-schema', 'data', 'workflow_schema.py — WorkflowPayload', 'The envelope every real step passes along', 1140, 60, 260, 64, 'db', {
+    role: 'Pydantic models (FileReference, WorkflowInputData, WorkflowContext, WorkflowPayload) defining the standard step-to-step data shape.',
+    plain: 'The shipping-container format every workflow step agrees to use, so any step can plug into the next one.',
+    path: '00_System/data_processing/workflow_schema.py:92',
+    notes: ['transition_to_next_step() (line 106) is what actually advances a run and records history — but only CoreWorkflowRouter (dead) calls it, not WorkflowEngine.'],
+    tag: ['overview', 'all'],
+  }),
+  N('user-identity', 'data', 'user_identity.py — UserIdentityManager', 'Mock license/entitlement resolution', 1140, 164, 260, 64, 'db', {
+    role: 'Simulates a signed-in user\'s M365/Google SKU entitlements from environment variables.',
+    plain: 'Pretends to know which paid features (Copilot Premium, Visio, etc.) the current user is licensed for, via env vars.',
+    path: '00_System/data_processing/user_identity.py:72',
+    notes: ['Real Microsoft Graph /me/licenseDetails lookup is a documented drop-in replacement, not yet wired.'],
+    tag: ['all', 'workflow-builder'],
+  }),
+  N('enterprise-adapters', 'data', 'enterprise_adapters.py', 'M365/Google file-metadata mappers', 1140, 268, 260, 64, 'db', {
+    role: 'Reshapes a raw Graph/Drive API JSON response into a standard FileReference.',
+    plain: 'Translates "a file from OneDrive" and "a file from Google Drive" into one common shape.',
+    path: '00_System/data_processing/enterprise_adapters.py:42',
+    notes: ['fetch_remote_metadata_with_retry() (line 64) is hardcoded fake data — no real httpx.get() call exists yet.'],
+    tag: ['all', 'dead-code'],
+  }),
+  N('auth-py', 'data', 'auth.py — EnterpriseAuthManager', 'Mock M365/Google token resolution', 1140, 372, 260, 64, 'db', {
+    role: 'Returns a clearly-labeled mock_sandbox_... token unless real MSAL/Google service-account credentials are configured.',
+    plain: 'Pretends to log into Microsoft/Google and hand back an access token — always a fake one today.',
+    path: '00_System/data_processing/auth.py:37',
+    notes: [],
+    tag: ['all', 'dead-code'],
+  }),
+  N('canvas-schema', 'data', 'canvas_schema.py — WorkflowCanvasGraph', 'Alternate n8n-style graph model', 1140, 476, 260, 64, 'db', {
+    role: 'A second, standalone visual-graph data model (CanvasNode/CanvasEdge) — NOT the Drawflow format the real page uses.',
+    plain: 'A different way of describing a workflow diagram than the one the actual Workflow Builder page uses.',
+    path: '00_System/data_processing/canvas_schema.py:1',
+    notes: ['Own file header says this explicitly: "built during an early visual-canvas exploration... is NOT the same graph format the real, running Workflow Builder page actually uses."'],
+    tag: ['all', 'dead-code'],
+  }),
+  N('canvas-parser', 'data', 'canvas_parser.py — VisualWorkflowExecutor', 'Runs a WorkflowCanvasGraph', 1140, 580, 260, 64, 'db', {
+    role: 'Walks a WorkflowCanvasGraph\'s nodes through CoreWorkflowRouter, updating each node\'s on-screen status.',
+    plain: 'Would run the alternate diagram format above, if anything actually built one of those diagrams.',
+    path: '00_System/data_processing/canvas_parser.py:40',
+    notes: ['Its own docstring calls itself "the missing bridge... nothing else in the codebase connected the two until this file was written" — and nothing outside sandbox_smoke_test.py ever calls it.'],
+    tag: ['all', 'dead-code'],
+  }),
+  N('observer-schema', 'data', 'observer_schema.py — PipelineObserverView', 'Fixed 6-stage dashboard model', 1140, 684, 260, 64, 'db', {
+    role: 'Data shape for a proposed Capture→Classify→Route→Process→Human Gate→Execute pipeline dashboard.',
+    plain: 'A design for a fancier "watch your workflow run live" dashboard that was never built.',
+    path: '00_System/data_processing/observer_schema.py:18',
+    notes: ['Author\'s own comment: "not what the actual, live Workflow Map tool uses... exercised only by the smoke test, not by any page a user can open."'],
+    tag: ['all', 'dead-code'],
+  }),
+  N('observer-transformer', 'data', 'observer_transformer.py', 'Builds a PipelineObserverView', 1140, 788, 260, 64, 'db', {
+    role: 'Converts a real WorkflowPayload\'s history into the fixed 6-stage shape above.',
+    plain: 'Would convert a real workflow run into that unbuilt fancy dashboard\'s data format.',
+    path: '00_System/data_processing/observer_transformer.py:24',
+    notes: ['Same author tech-debt note as observer_schema.py: "isn\'t wired into any real page yet."', 'Distributes history steps across stages via idx+1 — "a simple placeholder mapping, not a real analysis" (own comment, line 29).'],
+    tag: ['all', 'dead-code'],
+  }),
+  N('theme-exporter', 'data', 'theme_exporter.py — ShadCNThemePalette', 'Unused design-token palette', 1140, 892, 260, 64, 'db', {
+    role: 'Two hardcoded dark/light color-token dictionaries for a hypothetical future n8n-style canvas rebuild.',
+    plain: 'A spare color scheme, sitting unused, in case someone rebuilds the visual canvas later.',
+    path: '00_System/data_processing/theme_exporter.py:1',
+    notes: ['Own docstring: "Nothing in the codebase currently imports ShadCNThemePalette" outside the smoke test.', 'The real workflow-builder.html already has its own separate, actually-used CSS theme.'],
+    tag: ['all', 'dead-code'],
+  }),
+  N('svgl-icon-manager', 'data', 'svgl_icon_manager.py — SvglIconManager', 'Brand-logo resolver (unused by server.py)', 1140, 996, 260, 64, 'db', {
+    role: 'Resolves a brand key to an SVGL.app logo URL, with local on-disk caching via fetch_and_cache_svg().',
+    plain: 'A ready-made "get me this company\'s logo" tool that the real icon code duplicates instead of using.',
+    path: '00_System/data_processing/svgl_icon_manager.py:56',
+    notes: ['server.py comment (line 901) even points here, but server.py\'s TOOL_SVGL_MAP (line 376) is a completely separate hand-written dict doing the same job.'],
+    tag: ['all', 'dead-code'],
+  }),
+  N('runtime-state', 'data', 'runtime_state.py', 'save_state / load_state — zero callers', 1140, 1100, 260, 64, 'db', {
+    role: 'Persists a WorkflowPayload to runtime_state.json so a paused/crashed run could resume.',
+    plain: 'Would let a long workflow save its progress and pick back up later — nothing ever calls it.',
+    path: '00_System/data_processing/runtime_state.py:33',
+    notes: ['Confirmed: not even sandbox_smoke_test.py imports this file. The only other mention anywhere is a docstring comment in workflow_schema.py.'],
+    tag: ['all', 'dead-code'],
+  }),
+  N('sandbox-test', 'data', 'sandbox_smoke_test.py', 'Only consumer of the cluster above', 1140, 1204, 260, 64, 'db', {
+    role: 'A 4-part assert-based script exercising workflow_schema/enterprise_adapters/canvas/observer together, no pytest.',
+    plain: 'A manual test script that is the ONLY thing in the whole app that ever runs most of the boxes above it.',
+    path: '00_System/sandbox_smoke_test.py:67',
+    notes: ['Run directly: python 00_System/sandbox_smoke_test.py.', 'Its 4 checks: test_data_flow, test_licensing, test_visual_canvas, test_observer_pipeline.'],
+    tag: ['all', 'dead-code'],
+  }),
+
+  // --- TOOLS (Tasks / Functions / Adapters) --------------------------------
+  N('copilot-bridge', 'tools', 'copilot_bridge.py', 'Real Copilot browser automation (no mock)', 1500, 60, 260, 64, 'service', {
+    role: 'Playwright-drives a real, invisible Edge session against m365.cloud.microsoft to ask/generate/list-agents/ask-agent.',
+    plain: 'Types your question into the real Copilot website like a person would, then reads the answer back off the page.',
+    path: '14_Adapters/copilot_bridge/copilot_bridge.py:84',
+    notes: ['No MOCK_MODE — this one is genuinely live, using your signed-in M365 session, no API key.', 'Uses 00_System/database.py as an emergency fallback context source (synthesize_db_fallback_context).'],
+    tag: ['all', 'ai-bridges', 'm365'],
+  }),
+  N('gemini-bridge', 'tools', 'gemini_bridge.py', 'Gemini text/search/image — now mock-first', 1500, 164, 260, 64, 'service', {
+    role: 'Two-stage login (Playwright once for cookies) then gemini_webapi for fast HTTP calls; now short-circuits to a mock response by default.',
+    plain: 'Talks to Google Gemini using your signed-in browser session — as of this session, it fakes the answer unless you turn mock mode off.',
+    path: '14_Adapters/gemini_bridge/gemini_bridge.py:79',
+    notes: ['GEMINI_MOCK_MODE=1 by default (added this session) — matches the other 3 AI bridges.', 'Deep Research polling works around a documented gemini_webapi bug (see _run_deep_research comment).'],
+    tag: ['all', 'ai-bridges'],
+  }),
+  N('claude-bridge', 'tools', 'claude_bridge.py', 'Claude ask() — mock by default', 1500, 268, 260, 64, 'service', {
+    role: 'CLI adapter: one JSON payload in, one JSON line out. Returns "[MOCK Claude response] ..." while CLAUDE_MOCK_MODE is on.',
+    plain: 'Stands in for a real Anthropic API call — today it just echoes your prompt back with a "[MOCK]" label.',
+    path: '14_Adapters/claude_bridge/claude_bridge.py:39',
+    notes: ['No ANTHROPIC_API_KEY configured anywhere in this project yet.', 'This is the final node on the critical path traced across this map.'],
+    tag: ['overview', 'all', 'ai-bridges'],
+    critical: true,
+  }),
+  N('chatgpt-bridge', 'tools', 'chatgpt_bridge.py', 'ChatGPT ask() — mock by default', 1500, 372, 260, 64, 'service', {
+    role: 'Same CLI/mock contract as claude_bridge.py, for OpenAI.',
+    plain: 'Stands in for a real OpenAI ChatGPT call — today it just echoes your prompt back.',
+    path: '14_Adapters/chatgpt_bridge/chatgpt_bridge.py:34',
+    notes: ['Per model_classifications.py, ChatGPT is Public-only — "not used for protected information."'],
+    tag: ['all', 'ai-bridges'],
+  }),
+  N('notebooklm-bridge', 'tools', 'notebooklm_bridge.py', 'create/upload/ask/prompt_loop — mock', 1500, 476, 260, 64, 'service', {
+    role: 'create_notebook / upload_sources / ask / prompt_loop, all mock by default; upload_sources still validates real file paths even in mock mode.',
+    plain: 'Stands in for Google NotebookLM — fakes creating a notebook and answering questions about uploaded files.',
+    path: '14_Adapters/notebooklm_bridge/notebooklm_bridge.py:45',
+    notes: [],
+    tag: ['all', 'ai-bridges'],
+  }),
+  N('m365-graph-bridge', 'tools', 'm365_graph_bridge.py', 'Graph + Power BI — mock (no Azure AD app)', 1500, 580, 260, 64, 'service', {
+    role: 'One adapter covering OneDrive/SharePoint file access, Excel Workbook API, and Power BI dataset refresh/report listing.',
+    plain: 'Stands in for real Microsoft file/Excel/Power BI access — no company Azure app is registered yet, so everything is faked.',
+    path: '14_Adapters/m365_graph_bridge/m365_graph_bridge.py:46',
+    notes: ['download_file/upload_file still touch the real local filesystem even in mock mode (line 27-31), so a chained parsing step has something real to read.'],
+    tag: ['all', 'm365'],
+  }),
+  N('ai-ask-tasks', 'tools', 'AI Ask Tasks (4)', 'ask_claude, ask_chatgpt, ask_gemini, generate_gemini_image', 1500, 684, 260, 64, 'service', {
+    role: 'Standalone 12_Tasks wrappers, each importing its bridge\'s function directly (no subprocess) — added this session.',
+    plain: 'Real, independently-runnable versions of "ask Claude/ChatGPT/Gemini a question" — previously these only existed as Workflow-Builder-only metadata with no backing file.',
+    path: '12_Tasks/ask_claude/ask_claude.py',
+    notes: ['Mirrors the ask_copilot.py pattern exactly (see ask_copilot.md: "Supersedes the retired builtin_ai_processor... now a real, independently-runnable Task").', 'ask_gemini folds the old "Google Search" (Deep Research) toggle into one search: bool param.'],
+    tag: ['all', 'ai-bridges'],
+  }),
+  N('notebooklm-tasks', 'tools', 'NotebookLM Tasks (3)', 'create/upload/run_notebooklm_prompt_loop', 1500, 788, 260, 64, 'service', {
+    role: 'Standalone 12_Tasks siblings of the workflow-only NotebookLM function nodes — added this session.',
+    plain: 'Real, independently-runnable versions of "create a NotebookLM notebook / upload sources / ask it questions."',
+    path: '12_Tasks/create_notebooklm_notebook/',
+    notes: ['create_notebooklm_notebook, upload_notebooklm_sources, run_notebooklm_prompt_loop.'],
+    tag: ['all', 'ai-bridges'],
+  }),
+  N('copilot-tasks', 'tools', 'Copilot Tasks (5)', 'ask_copilot + 4 more', 1500, 892, 260, 64, 'service', {
+    role: 'ask_copilot, ask_copilot_agent, generate_copilot_image, format_text_with_copilot, list_copilot_agents — all thin in-process wrappers around copilot_bridge.py.',
+    plain: 'The five real, standalone ways to use M365 Copilot outside a workflow.',
+    path: '12_Tasks/ask_copilot/ask_copilot.py:19',
+    notes: ['This is the established pattern the 7 new AI-model Tasks (above) were built to match.'],
+    tag: ['all', 'm365', 'ai-bridges'],
+  }),
+  N('review-checkpoint', 'tools', 'human_review_checkpoint.py', 'The one real human-in-the-loop Function', 1500, 996, 260, 64, 'service', {
+    role: 'Writes upstream workflow text to a real .docx/.json/.md file and inserts a pending workflow_checkpoints row.',
+    plain: 'The only genuine "pause and let a person check this" step in the whole app.',
+    path: '13_Functions/human_review_checkpoint/human_review_checkpoint.py:82',
+    notes: ['Dispatched exactly like any other Function/Task — no special-casing in the engine.'],
+    tag: ['all', 'workflow-builder'],
+  }),
+  N('doc-functions', 'tools', 'Document I/O Functions (14)', 'export/import word, pdf, json, md, pptx…', 1500, 1100, 260, 64, 'service', {
+    role: 'Pure file-format converters: export/import_to/from word/pdf/json/markdown, fill_docx_template, populate_word_template_from_json, format_json, split_text, web_scrape, read/write_powerpoint.',
+    plain: 'The building blocks for turning one document format into another inside a workflow.',
+    path: '13_Functions/',
+    notes: ['export_to_json.py is the one read in full for this map — same "no adapter dependency, pure file I/O" shape as its siblings.'],
+    tag: ['all', 'documents'],
+  }),
+  N('import-documents', 'tools', 'import_documents.py', 'Ingest .docx/.pdf, FTS5-index, vault', 1500, 1204, 260, 64, 'service', {
+    role: 'Two-phase ingest: extract every pending 01_inbox/documents file to JSONL first, then load JSONL into documents_metadata + global_search_index.',
+    plain: 'Picks up dropped Word/PDF reports, pulls out title/date/trade, files the original away, and makes its text searchable.',
+    path: '12_Tasks/import_documents/import_documents.py:55',
+    notes: ['Two-phase design means a crash mid-load doesn\'t lose already-extracted text.'],
+    tag: ['all', 'documents'],
+  }),
+  N('doc-conversion-tasks', 'tools', 'Doc Conversion Tasks (3)', 'curriculum_guide_to_tos + 2 more', 1500, 1308, 260, 64, 'service', {
+    role: 'curriculum_guide_to_tos (Docx→TOS Excel), word_to_excel_exam, abc_uploader (JSON template → external console).',
+    plain: 'The specialised one-off document converters — curriculum guide to test spec, Word exam bank to Excel, etc.',
+    path: '12_Tasks/curriculum_guide_to_tos/',
+    notes: [],
+    tag: ['all', 'documents'],
+  }),
+  N('m365-tasks', 'tools', 'M365 Graph Tasks (~25)', 'SharePoint/Outlook/Teams/OneNote/PowerBI', 1500, 1412, 260, 64, 'service', {
+    role: 'Thin 12_Tasks/11_Processes wrappers (same import-the-bridge-function pattern as ask_copilot.py) around m365_graph_bridge.py\'s mock functions.',
+    plain: 'Two dozen small tools for listing/reading/writing SharePoint, Outlook, Teams, OneNote, and Power BI content — all currently faked.',
+    path: '12_Tasks/, 11_Processes/ (e.g. list_m365_teams.py:25)',
+    notes: ['Confirmed pattern via list_m365_teams.py: imports list_teams directly from m365_graph_bridge, no subprocess.'],
+    tag: ['all', 'm365'],
+  }),
+  N('misc-import-tasks', 'tools', 'Ingestion Tasks (4)', 'transcripts / exam / marks / schedule', 1500, 1516, 260, 64, 'service', {
+    role: 'import_transcripts, import_exam_pass_fail, import_marks_correlation, import_class_schedule — zero-input Tasks writing straight to brain_state tables.',
+    plain: 'The batch-import buttons: process pending transcripts, exam results, marks, and the training-class schedule scrape.',
+    path: '12_Tasks/import_transcripts/',
+    notes: ['import_class_schedule scrapes tradesecrets.alberta.ca\'s real public training catalogue (server.py:661 reads its JSON output).'],
+    tag: ['all', 'documents'],
+  }),
+  N('webscraper', 'tools', 'webscraper.py', 'Generic crawler → cortex_database.py', 1500, 1620, 260, 64, 'service', {
+    role: 'General-purpose seeded crawler writing one web_scrape_jobs row per run and one web_scrape_data row per page visited.',
+    plain: 'A generic "crawl this site and save what you find" tool, separate from the specific training-catalogue scraper.',
+    path: '12_Tasks/webscraper/webscraper.py',
+    notes: ['Writes into the same physical file as brain_state.db — see the DB-collision bug on database.py/cortex_database.py.'],
+    tag: ['all', 'documents'],
+  }),
+
+  // --- EXTERNAL --------------------------------------------------------------
+  N('ext-copilot', 'external', 'M365 Copilot Chat', 'm365.cloud.microsoft — real, live', 1860, 60, 300, 64, 'external', {
+    role: 'The actual Copilot chat web app, driven by a real (headless) Edge browser.',
+    plain: 'The real Microsoft Copilot website — the only AI integration in this whole app that is genuinely live today.',
+    notes: ['No API key: rides on your own signed-in M365 login, stored in copilot_browser_profile/.'],
+    tag: ['all', 'ai-bridges', 'm365'],
+  }),
+  N('ext-gemini', 'external', 'Google Gemini', 'gemini.google.com + gemini_webapi', 1860, 164, 300, 64, 'external', {
+    role: 'Real web app, reached via a saved browser login + the third-party gemini_webapi package — now mock-first by default.',
+    plain: 'The real Google Gemini website — technically live, but this session made mock mode the default so it\'s not hit unless you opt in.',
+    notes: [],
+    tag: ['all', 'ai-bridges'],
+  }),
+  N('ext-anthropic', 'external', 'Anthropic Claude API', 'NOT connected — mock only', 1860, 268, 300, 64, 'external', {
+    role: 'No ANTHROPIC_API_KEY or anthropic SDK call exists anywhere in this project.',
+    plain: 'The real Claude API that this whole app pretends to talk to — nothing actually calls it yet.',
+    notes: ['claude_bridge.py\'s own docstring names client.messages.create(...) as the real call to add later.'],
+    tag: ['overview', 'all', 'ai-bridges'],
+    critical: true,
+  }),
+  N('ext-openai', 'external', 'OpenAI ChatGPT API', 'NOT connected — mock only', 1860, 372, 300, 64, 'external', {
+    role: 'No OPENAI_API_KEY or openai SDK call exists anywhere in this project.',
+    plain: 'The real ChatGPT API — also entirely unconnected right now.',
+    notes: [],
+    tag: ['all', 'ai-bridges'],
+  }),
+  N('ext-notebooklm', 'external', 'NotebookLM / Gemini Enterprise API', 'NOT connected — mock only', 1860, 476, 300, 64, 'external', {
+    role: 'No live Gemini Enterprise/NotebookLM API or MCP access wired up.',
+    plain: 'The real NotebookLM service — also entirely unconnected right now.',
+    notes: [],
+    tag: ['all', 'ai-bridges'],
+  }),
+  N('ext-graph', 'external', 'Microsoft Graph + Power BI API', 'NOT connected — no Azure AD app', 1860, 580, 300, 64, 'external', {
+    role: 'No Azure AD app registration exists for this project; MSAL/msgraph-sdk calls are all stubbed out.',
+    plain: 'The real Microsoft file/Excel/Power BI system — also entirely unconnected right now.',
+    notes: [],
+    tag: ['all', 'm365'],
+  }),
+  N('ext-svgl', 'external', 'svgl.app / api.svgl.app', 'Real brand-logo library', 1860, 684, 300, 64, 'external', {
+    role: 'Public SVG logo host — server.py\'s TOOL_SVGL_MAP builds direct URLs into it; workflow-builder.html renders them as <img> tags.',
+    plain: 'A free public library of company logos, used to put a real Outlook/Copilot/Gemini icon next to each tool.',
+    notes: [],
+    tag: ['all'],
+  }),
+  N('ext-tradesecrets', 'external', 'tradesecrets.alberta.ca', 'Real site — training catalogue', 1860, 788, 300, 64, 'external', {
+    role: 'Alberta government apprenticeship training-catalogue site, scraped by import_class_schedule.',
+    plain: 'A real government website this app actually scrapes for class schedule data.',
+    notes: [],
+    tag: ['all', 'documents'],
+  }),
+];
+
+const edges = [
+  // Client -> Server
+  { from: 'idx-html', to: 'srv-tools-api', kind: 'mount', label: 'GET /apps', tag: ['all'] },
+  { from: 'idx-html', to: 'srv-tags', kind: 'mount', label: 'GET /api/process-tags', tag: ['all'] },
+  { from: 'wb-html', to: 'srv-tools-api', kind: 'mount', label: 'GET node-registry', tag: ['all', 'workflow-builder', 'ai-bridges'] },
+  { from: 'wb-html', to: 'srv-wb-crud', kind: 'mount', label: 'CRUD /workflows', tag: ['all', 'workflow-builder'] },
+  { from: 'wb-html', to: 'srv-wb-run', kind: 'critical', label: 'POST /run', tag: ['overview', 'all', 'workflow-builder', 'ai-bridges'] },
+  { from: 'wb-html', to: 'ext-svgl', kind: 'api', label: '<img> brand icons', tag: ['all'] },
+  { from: 'wm-html', to: 'srv-wb-crud', kind: 'mount', label: 'GET /workflows/{id}/map', tag: ['all', 'workflow-builder'] },
+  { from: 'wm-html', to: 'srv-wb-run', kind: 'mount', label: 'POST /run (dry_run)', tag: ['all', 'workflow-builder'] },
+  { from: 'copilot-html', to: 'srv-execute', kind: 'normal', label: 'POST /execute/05_Processes/copilot_bridge — 404', tag: ['all', 'm365', 'ai-bridges'], bug: true },
+  { from: 'gemini-html', to: 'srv-execute', kind: 'normal', label: 'POST /execute/05_Processes/gemini_bridge — 404', tag: ['all', 'ai-bridges'], bug: true },
+  { from: 'copilot-html', to: 'srv-copilot-ctx', kind: 'mount', label: 'GET transcripts', tag: ['all', 'm365', 'ai-bridges'] },
+  { from: 'review-html', to: 'srv-review', kind: 'mount', label: 'GET/POST checkpoints', tag: ['all', 'workflow-builder'] },
+  { from: 'skills-html', to: 'srv-tools-api', kind: 'mount', label: 'GET /api/skills', tag: ['all'] },
+  { from: 'catalog-html', to: 'srv-tools-api', kind: 'mount', label: 'GET /apps', tag: ['all'] },
+  { from: 'popup-html', to: 'srv-uploads', kind: 'mount', label: 'POST /api/uploads/*', tag: ['all', 'documents'] },
+  { from: 'popup-html', to: 'srv-abc', kind: 'mount', label: '/api/abc-uploader/*', tag: ['all'] },
+
+  // Server -> Core
+  { from: 'srv-stats', to: 'db-brain', kind: 'db', label: 'SELECT COUNT(*)', tag: ['all'] },
+  { from: 'srv-tools-api', to: 'core-router', kind: 'normal', label: 'get_visible_apps()', tag: ['all', 'workflow-builder', 'ai-bridges', 'm365'] },
+  { from: 'srv-tools-api', to: 'model-class', kind: 'normal', label: 'classification data', tag: ['all', 'ai-bridges'] },
+  { from: 'srv-tools-api', to: 'user-identity', kind: 'normal', label: 'resolve_current_user()', tag: ['all', 'workflow-builder'] },
+  { from: 'srv-wb-crud', to: 'db-brain', kind: 'db', label: 'workflow_definitions', tag: ['all', 'workflow-builder'] },
+  { from: 'srv-wb-run', to: 'db-brain', kind: 'db', label: 'load graph_json', tag: ['all', 'workflow-builder'] },
+  { from: 'srv-wb-run', to: 'workflow-engine', kind: 'critical', label: '.run(graph_json)', tag: ['overview', 'all', 'workflow-builder', 'ai-bridges'] },
+  { from: 'srv-review', to: 'db-brain', kind: 'db', label: 'workflow_checkpoints', tag: ['all', 'workflow-builder'] },
+  { from: 'srv-tags', to: 'db-brain', kind: 'db', label: 'process_tags', tag: ['all'] },
+  { from: 'srv-abc', to: 'db-brain', kind: 'db', label: 'abc_templates', tag: ['all'] },
+  { from: 'srv-uploads', to: 'core-router', kind: 'normal', label: 'execute_app_logic()', tag: ['all', 'documents'] },
+  { from: 'srv-execute', to: 'core-router', kind: 'api', label: 'execute_app_logic()', tag: ['all', 'ai-bridges', 'm365'] },
+
+  // Core internal
+  { from: 'core-wf-router', to: 'wf-schema', kind: 'normal', label: 'WorkflowPayload', tag: ['all', 'dead-code'] },
+  { from: 'core-wf-router', to: 'user-identity', kind: 'normal', label: 'capability check', tag: ['all', 'dead-code'] },
+  { from: 'core-wf-router', to: 'logger-py', kind: 'normal', label: 'get_logger()', tag: ['all', 'dead-code'] },
+  { from: 'health-py', to: 'wf-schema', kind: 'normal', label: 'import check', tag: ['all'] },
+  { from: 'health-py', to: 'enterprise-adapters', kind: 'normal', label: 'import check', tag: ['all', 'dead-code'] },
+  { from: 'workflow-engine', to: 'core-router', kind: 'critical', label: 'execute_app_logic()', tag: ['overview', 'all', 'workflow-builder', 'ai-bridges'] },
+  { from: 'core-router', to: 'wf-schema', kind: 'normal', label: 'import', tag: ['all'] },
+  { from: 'core-router', to: 'user-identity', kind: 'normal', label: 'import', tag: ['all'] },
+  { from: 'db-brain', to: 'db-cortex', kind: 'normal', label: 'BUG: identical DB_PATH', tag: ['all'], bug: true },
+
+  // Dead-cluster internal wiring
+  { from: 'canvas-parser', to: 'wf-schema', kind: 'normal', label: 'WorkflowPayload', tag: ['all', 'dead-code'] },
+  { from: 'canvas-parser', to: 'canvas-schema', kind: 'normal', label: 'WorkflowCanvasGraph', tag: ['all', 'dead-code'] },
+  { from: 'canvas-parser', to: 'core-wf-router', kind: 'normal', label: 'execute_block_async()', tag: ['all', 'dead-code'] },
+  { from: 'canvas-schema', to: 'svgl-icon-manager', kind: 'normal', label: 'auto-resolve icon', tag: ['all', 'dead-code'] },
+  { from: 'observer-transformer', to: 'observer-schema', kind: 'normal', label: 'build view', tag: ['all', 'dead-code'] },
+  { from: 'observer-transformer', to: 'wf-schema', kind: 'normal', label: 'read history', tag: ['all', 'dead-code'] },
+  { from: 'observer-transformer', to: 'svgl-icon-manager', kind: 'normal', label: 'brand icon', tag: ['all', 'dead-code'] },
+  { from: 'observer-transformer', to: 'user-identity', kind: 'normal', label: 'resolve approver', tag: ['all', 'dead-code'] },
+  { from: 'enterprise-adapters', to: 'auth-py', kind: 'normal', label: 'get_m365_access_token()', tag: ['all', 'dead-code'] },
+  { from: 'enterprise-adapters', to: 'wf-schema', kind: 'normal', label: 'FileReference', tag: ['all', 'dead-code'] },
+  { from: 'runtime-state', to: 'wf-schema', kind: 'normal', label: 'model_dump_json()', tag: ['all', 'dead-code'] },
+  { from: 'sandbox-test', to: 'enterprise-adapters', kind: 'normal', label: 'exercises', tag: ['all', 'dead-code'] },
+  { from: 'sandbox-test', to: 'canvas-parser', kind: 'normal', label: 'exercises', tag: ['all', 'dead-code'] },
+  { from: 'sandbox-test', to: 'observer-transformer', kind: 'normal', label: 'exercises', tag: ['all', 'dead-code'] },
+  { from: 'sandbox-test', to: 'theme-exporter', kind: 'normal', label: 'exercises', tag: ['all', 'dead-code'] },
+  { from: 'sandbox-test', to: 'core-wf-router', kind: 'normal', label: 'exercises', tag: ['all', 'dead-code'] },
+
+  // Core/Data -> Tools
+  { from: 'core-router', to: 'copilot-bridge', kind: 'normal', label: 'subprocess', tag: ['all', 'ai-bridges', 'm365'] },
+  { from: 'core-router', to: 'gemini-bridge', kind: 'normal', label: 'subprocess', tag: ['all', 'ai-bridges'] },
+  { from: 'core-router', to: 'claude-bridge', kind: 'critical', label: 'subprocess', tag: ['overview', 'all', 'ai-bridges'] },
+  { from: 'core-router', to: 'chatgpt-bridge', kind: 'normal', label: 'subprocess', tag: ['all', 'ai-bridges'] },
+  { from: 'core-router', to: 'notebooklm-bridge', kind: 'normal', label: 'subprocess', tag: ['all', 'ai-bridges'] },
+  { from: 'core-router', to: 'm365-graph-bridge', kind: 'normal', label: 'subprocess', tag: ['all', 'm365'] },
+  { from: 'core-router', to: 'ai-ask-tasks', kind: 'normal', label: 'subprocess', tag: ['all', 'ai-bridges'] },
+  { from: 'core-router', to: 'notebooklm-tasks', kind: 'normal', label: 'subprocess', tag: ['all', 'ai-bridges'] },
+  { from: 'core-router', to: 'copilot-tasks', kind: 'normal', label: 'subprocess', tag: ['all', 'm365', 'ai-bridges'] },
+  { from: 'core-router', to: 'review-checkpoint', kind: 'normal', label: 'subprocess', tag: ['all', 'workflow-builder'] },
+  { from: 'core-router', to: 'doc-functions', kind: 'normal', label: 'subprocess', tag: ['all', 'documents'] },
+  { from: 'core-router', to: 'import-documents', kind: 'normal', label: 'subprocess', tag: ['all', 'documents'] },
+  { from: 'core-router', to: 'doc-conversion-tasks', kind: 'normal', label: 'subprocess', tag: ['all', 'documents'] },
+  { from: 'core-router', to: 'm365-tasks', kind: 'normal', label: 'subprocess', tag: ['all', 'm365'] },
+  { from: 'core-router', to: 'misc-import-tasks', kind: 'normal', label: 'subprocess', tag: ['all', 'documents'] },
+  { from: 'core-router', to: 'webscraper', kind: 'normal', label: 'subprocess', tag: ['all', 'documents'] },
+  { from: 'workflow-engine', to: 'gemini-bridge', kind: 'api', label: '_ask_gemini()', tag: ['all', 'ai-bridges'] },
+  { from: 'workflow-engine', to: 'chatgpt-bridge', kind: 'api', label: '_ask_chatgpt()', tag: ['all', 'ai-bridges'] },
+  { from: 'workflow-engine', to: 'notebooklm-bridge', kind: 'api', label: '_create/_upload/_prompt_loop()', tag: ['all', 'ai-bridges'] },
+  { from: 'workflow-engine', to: 'copilot-bridge', kind: 'api', label: '_ask_copilot() / Review Gate', tag: ['all', 'ai-bridges', 'workflow-builder'] },
+
+  // Tools internal
+  { from: 'ai-ask-tasks', to: 'claude-bridge', kind: 'normal', label: 'import ask()', tag: ['all', 'ai-bridges'] },
+  { from: 'ai-ask-tasks', to: 'chatgpt-bridge', kind: 'normal', label: 'import ask()', tag: ['all', 'ai-bridges'] },
+  { from: 'ai-ask-tasks', to: 'gemini-bridge', kind: 'normal', label: 'import ask_gemini()', tag: ['all', 'ai-bridges'] },
+  { from: 'notebooklm-tasks', to: 'notebooklm-bridge', kind: 'normal', label: 'import functions', tag: ['all', 'ai-bridges'] },
+  { from: 'copilot-tasks', to: 'copilot-bridge', kind: 'normal', label: 'import functions', tag: ['all', 'm365', 'ai-bridges'] },
+  { from: 'm365-tasks', to: 'm365-graph-bridge', kind: 'normal', label: 'import functions', tag: ['all', 'm365'] },
+  { from: 'import-documents', to: 'db-brain', kind: 'db', label: 'documents_metadata + FTS5', tag: ['all', 'documents'] },
+  { from: 'review-checkpoint', to: 'db-brain', kind: 'db', label: 'INSERT workflow_checkpoints', tag: ['all', 'workflow-builder'] },
+  { from: 'webscraper', to: 'db-cortex', kind: 'db', label: 'web_scrape_jobs/data', tag: ['all', 'documents'] },
+  { from: 'misc-import-tasks', to: 'ext-tradesecrets', kind: 'api', label: 'scrape catalogue', tag: ['all', 'documents'] },
+
+  // Tools -> External
+  { from: 'copilot-bridge', to: 'ext-copilot', kind: 'api', label: 'Playwright automation', tag: ['all', 'ai-bridges', 'm365'] },
+  { from: 'gemini-bridge', to: 'ext-gemini', kind: 'api', label: 'gemini_webapi (mock-first)', tag: ['all', 'ai-bridges'] },
+  { from: 'claude-bridge', to: 'ext-anthropic', kind: 'critical', label: 'anthropic SDK — not wired', tag: ['overview', 'all', 'ai-bridges'] },
+  { from: 'chatgpt-bridge', to: 'ext-openai', kind: 'api', label: 'openai SDK — not wired', tag: ['all', 'ai-bridges'] },
+  { from: 'notebooklm-bridge', to: 'ext-notebooklm', kind: 'api', label: 'Enterprise API/MCP — not wired', tag: ['all', 'ai-bridges'] },
+  { from: 'm365-graph-bridge', to: 'ext-graph', kind: 'api', label: 'MSAL + msgraph-sdk — not wired', tag: ['all', 'm365'] },
+];
+
+const FIXES = {
+  'gemini-bridge': [{ n: 1, t: 'Added GEMINI_MOCK_MODE toggle so ask_gemini()/generate_image() run without a live browser session, matching the other 3 AI bridges.' }],
+  'ai-ask-tasks': [{ n: 2, t: 'Added standalone ask_claude/ask_chatgpt/ask_gemini/generate_gemini_image Tasks — real files, discoverable in the Tasks tab, not just Workflow-Builder-only metadata.' }],
+  'notebooklm-tasks': [{ n: 2, t: 'Added standalone create_notebooklm_notebook/upload_notebooklm_sources/run_notebooklm_prompt_loop Tasks, same reasoning as the AI Ask Tasks.' }],
+  'claude-bridge': [{ n: 3, t: 'Added the missing adapter-level test, test_claude_bridge.py (notebooklm_bridge had one; claude/chatgpt did not).' }],
+  'chatgpt-bridge': [{ n: 3, t: 'Added the missing adapter-level test, test_chatgpt_bridge.py.' }],
+};
+
+const KNOWN_BUGS = {
+  'db-brain': [{ sev: 'high', ref: 'db-collision', t: 'database.py:54 and cortex_database.py:29 both resolve to the exact same file (00_System/cortex.db), despite being documented as two separate databases ("brain_state.db" vs "cortex.db").' }],
+  'db-cortex': [{ sev: 'high', ref: 'db-collision', t: 'Same collision as database.py — web_scrape_jobs/web_scrape_data tables physically live inside the exact same SQLite file as every brain_state table.' }],
+  'copilot-html': [{ sev: 'high', ref: 'broken-execute-path', t: 'copilot.html:236,299,409 POST to /execute/05_Processes/copilot_bridge. CATEGORY_DIR_MAP maps "05_Processes" → 11_Processes/, but copilot_bridge.py lives in 14_Adapters/ — every button on this page 404s.' }],
+  'gemini-html': [{ sev: 'high', ref: 'broken-execute-path', t: 'gemini.html:147,174 have the identical bug, calling /execute/05_Processes/gemini_bridge.' }],
+  'srv-execute': [{ sev: 'high', ref: 'broken-execute-path', t: 'The generic executor trusts whatever category string the client sends — it has no way to catch copilot.html/gemini.html sending the wrong one.' }],
+  'runtime-state': [{ sev: 'med', ref: 'dead-runtime-state', t: 'save_state()/load_state() have zero callers anywhere in the codebase — not even sandbox_smoke_test.py touches them.' }],
+  'observer-schema': [{ sev: 'low', ref: 'unwired-observer', t: 'Own header comment: "not wired into any real page yet... Either wire this into a real page, or fold its useful ideas... and retire this one."' }],
+  'observer-transformer': [{ sev: 'low', ref: 'unwired-observer', t: 'Same self-documented tech debt as observer_schema.py.' }],
+  'svgl-icon-manager': [{ sev: 'low', ref: 'duplicate-icon-map', t: 'Fully built brand-icon resolver that server.py never calls — server.py hardcodes a separate TOOL_SVGL_MAP (server.py:376) doing the same job.' }],
+  'logger-py': [{ sev: 'low', ref: 'orphan-logger', t: 'Own docstring says CoreWorkflowRouter is "the only current consumer" — and CoreWorkflowRouter itself is dead in production, so this structured logger never actually fires during a real request.' }],
+};
+
+// =============================================================================
+// RENDER ENGINE
+// =============================================================================
+
+const svg = document.getElementById('svg');
+const viewport = document.getElementById('viewport');
+const clusterLayer = document.getElementById('cluster-layer');
+const edgeLayer = document.getElementById('edge-layer');
+const nodeLayer = document.getElementById('node-layer');
+const sidebar = document.getElementById('sidebar');
+const canvasWrap = document.getElementById('canvas-wrap');
+
+const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
+const outgoing = {}, incoming = {};
+nodes.forEach(n => { outgoing[n.id] = []; incoming[n.id] = []; });
+edges.forEach(e => { outgoing[e.from].push(e); incoming[e.to].push(e); });
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs = {}, children = []) {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  children.forEach(c => e.appendChild(c));
+  return e;
+}
+
+// -- Clusters --
+clusters.forEach(c => {
+  clusterLayer.appendChild(el('rect', { class: 'cluster-bg', x: c.x, y: c.y, width: c.w, height: c.h, rx: 12 }));
+  clusterLayer.appendChild(el('text', { class: 'cluster-label', x: c.x + 16, y: c.y + 26 }, [document.createTextNode(c.label)]));
+});
+
+// -- Edges (drawn before nodes) --
+const edgeElsByTag = [];
+function nodeSide(node, fromLeft) {
+  const cx = fromLeft ? node.x + node.w : node.x;
+  return { x: cx, y: node.y + node.h / 2 };
+}
+edges.forEach((e, i) => {
+  const a = nodeById[e.from], b = nodeById[e.to];
+  if (!a || !b) return;
+  const goingRight = a.x <= b.x;
+  const p1 = goingRight ? nodeSide(a, true) : nodeSide(a, false);
+  const p2 = goingRight ? nodeSide(b, false) : nodeSide(b, true);
+  const dx = Math.max(60, Math.abs(p2.x - p1.x) * 0.45);
+  const c1x = goingRight ? p1.x + dx : p1.x - dx;
+  const c2x = goingRight ? p2.x - dx : p2.x + dx;
+  const d = `M ${p1.x} ${p1.y} C ${c1x} ${p1.y}, ${c2x} ${p2.y}, ${p2.x} ${p2.y}`;
+
+  let strokeVar = 'var(--border-strong)', marker = 'arrow-normal', width = 1.4, dash = null;
+  if (e.kind === 'critical') { strokeVar = 'var(--critical)'; marker = 'arrow-critical'; width = 2.4; }
+  else if (e.kind === 'api') { strokeVar = 'var(--accent)'; marker = 'arrow-api'; width = 1.6; }
+  else if (e.kind === 'db') { strokeVar = 'var(--db)'; marker = 'arrow-db'; width = 1.6; }
+  else if (e.kind === 'mount') { strokeVar = 'var(--client)'; marker = 'arrow-mount'; width = 1.4; }
+  if (e.bug) { strokeVar = 'var(--critical)'; marker = 'arrow-critical'; dash = '6,4'; width = 1.8; }
+
+  const path = el('path', {
+    class: 'edge-path', d, stroke: strokeVar, 'stroke-width': width,
+    'marker-end': `url(#${marker})`, 'data-from': e.from, 'data-to': e.to, 'data-tags': e.tag.join(',')
+  });
+  if (dash) path.setAttribute('stroke-dasharray', dash);
+  edgeLayer.appendChild(path);
+
+  const midT = 0.5;
+  const mx = Math.pow(1 - midT, 3) * p1.x + 3 * Math.pow(1 - midT, 2) * midT * c1x + 3 * (1 - midT) * Math.pow(midT, 2) * c2x + Math.pow(midT, 3) * p2.x;
+  const my = Math.pow(1 - midT, 3) * p1.y + 3 * Math.pow(1 - midT, 2) * midT * p1.y + 3 * (1 - midT) * Math.pow(midT, 2) * p2.y + Math.pow(midT, 3) * p2.y;
+  const stagger = (i % 3) * 11 - 11;
+  const label = el('text', { class: 'edge-label', x: mx, y: my + stagger, 'text-anchor': 'middle', 'data-from': e.from, 'data-to': e.to, 'data-tags': e.tag.join(',') }, [document.createTextNode(e.label)]);
+  edgeLayer.appendChild(label);
+  edgeElsByTag.push({ path, label, edge: e });
+});
+
+// -- Nodes --
+const nodeGroups = {};
+nodes.forEach(n => {
+  const g = el('g', { class: 'node' + (n.critical ? ' critical' : ''), 'data-id': n.id, 'data-tags': n.tag.join(',') });
+  const rect = el('rect', { class: 'card', x: n.x, y: n.y, width: n.w, height: n.h, stroke: `var(--${n.color})` });
+  g.appendChild(rect);
+
+  const barW = 4;
+  g.appendChild(el('rect', { x: n.x, y: n.y, width: barW, height: n.h, rx: 2, fill: `var(--${n.color})` }));
+
+  const title = el('text', { class: 'title', x: n.x + 14, y: n.y + 24 }, [document.createTextNode(n.label)]);
+  g.appendChild(title);
+  const sub = el('text', { class: 'sub', x: n.x + 14, y: n.y + 42 }, [document.createTextNode(n.sub)]);
+  g.appendChild(sub);
+
+  if (n.tag.includes('dead-code')) {
+    g.appendChild(el('text', { class: 'deadmark', x: n.x + n.w - 10, y: n.y + n.h - 10, 'text-anchor': 'end' }, [document.createTextNode('DEAD')]));
+  }
+
+  // badges
+  let badgeX = n.x + n.w - 14;
+  const fixList = FIXES[n.id], bugList = KNOWN_BUGS[n.id];
+  if (bugList) {
+    g.appendChild(el('circle', { class: 'badge-circle', cx: badgeX, cy: n.y - 2, r: 9, fill: 'var(--critical)' }));
+    g.appendChild(el('text', { class: 'badge-text', x: badgeX, y: n.y + 1.5 }, [document.createTextNode(String(bugList.length))]));
+    badgeX -= 22;
+  }
+  if (fixList) {
+    g.appendChild(el('circle', { class: 'badge-circle', cx: badgeX, cy: n.y - 2, r: 9, fill: 'var(--route)' }));
+    g.appendChild(el('text', { class: 'badge-text', x: badgeX, y: n.y + 1.5 }, [document.createTextNode(String(fixList.length))]));
+  }
+
+  g.addEventListener('click', (ev) => { ev.stopPropagation(); selectNode(n.id); });
+  g.addEventListener('mouseenter', () => { if (!selectedId) hoverNode(n.id); });
+  g.addEventListener('mouseleave', () => { if (!selectedId) hoverNode(null); });
+
+  nodeLayer.appendChild(g);
+  nodeGroups[n.id] = g;
+});
+
+// -- Filters --
+const CHIP_DEFS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'ai-bridges', label: 'AI Bridges' },
+  { id: 'workflow-builder', label: 'Workflow Builder' },
+  { id: 'm365', label: 'M365' },
+  { id: 'documents', label: 'Documents' },
+  { id: 'dead-code', label: 'Dead Code' },
+  { id: 'all', label: 'Show All Wires' },
+  { id: 'bugs', label: 'Roadmap & Bugs' },
+];
+let activeFilter = 'overview';
+const chipsWrap = document.getElementById('chips');
+CHIP_DEFS.forEach(c => {
+  const btn = document.createElement('div');
+  btn.className = 'chip' + (c.id === activeFilter ? ' active' : '');
+  btn.textContent = c.label;
+  btn.dataset.chip = c.id;
+  btn.addEventListener('click', () => setFilter(c.id));
+  chipsWrap.appendChild(btn);
+});
+
+function setFilter(id) {
+  activeFilter = id;
+  document.querySelectorAll('.chip').forEach(b => b.classList.toggle('active', b.dataset.chip === id));
+  applyFilter();
+}
+
+function applyFilter() {
+  if (activeFilter === 'bugs') {
+    nodes.forEach(n => {
+      const has = FIXES[n.id] || KNOWN_BUGS[n.id];
+      nodeGroups[n.id].classList.toggle('dimmed', !has);
+    });
+    edgeElsByTag.forEach(({ path, label, edge }) => {
+      const relevant = (FIXES[edge.from] || KNOWN_BUGS[edge.from] || FIXES[edge.to] || KNOWN_BUGS[edge.to] || edge.bug);
+      path.classList.toggle('dimmed', !relevant);
+      label.classList.toggle('dimmed', !relevant);
+    });
+    return;
+  }
+  nodes.forEach(n => {
+    const match = activeFilter === 'all' ? true : n.tag.includes(activeFilter);
+    nodeGroups[n.id].classList.toggle('dimmed', !match);
+  });
+  edgeElsByTag.forEach(({ path, label, edge }) => {
+    const match = activeFilter === 'all' ? true : edge.tag.includes(activeFilter);
+    path.classList.toggle('dimmed', !match);
+    label.classList.toggle('dimmed', !match);
+  });
+}
+applyFilter();
+
+// -- Selection / hover / sidebar --
+let selectedId = null;
+function neighborsOf(id) {
+  const s = new Set([id]);
+  outgoing[id].forEach(e => s.add(e.to));
+  incoming[id].forEach(e => s.add(e.from));
+  return s;
+}
+function dimExcept(id) {
+  if (!id) { applyFilter(); return; }
+  const keep = neighborsOf(id);
+  nodes.forEach(n => nodeGroups[n.id].classList.toggle('dimmed', !keep.has(n.id)));
+  edgeElsByTag.forEach(({ path, label, edge }) => {
+    const relevant = edge.from === id || edge.to === id;
+    path.classList.toggle('dimmed', !relevant);
+    label.classList.toggle('dimmed', !relevant);
+  });
+}
+function hoverNode(id) { dimExcept(id); if (id) renderSidebar(id); else renderSidebarDefault(); }
+function selectNode(id) {
+  selectedId = selectedId === id ? null : id;
+  Object.values(nodeGroups).forEach(g => g.classList.remove('selected'));
+  if (selectedId) { nodeGroups[selectedId].classList.add('selected'); dimExcept(selectedId); renderSidebar(selectedId); }
+  else { applyFilter(); renderSidebarDefault(); }
+}
+canvasWrap.addEventListener('click', () => { if (!isPanning) selectNode(null); });
+
+function renderSidebar(id) {
+  const n = nodeById[id];
+  const outs = outgoing[id], ins = incoming[id];
+  const fixList = FIXES[id] || [], bugList = KNOWN_BUGS[id] || [];
+  sidebar.innerHTML = `
+    <h2>${n.label}</h2>
+    ${n.path ? `<div class="path">${n.path}</div>` : ''}
+    <div class="plain">${n.plain || ''}</div>
+    ${n.role ? `<div class="section-label">Technical role</div><div class="plain" style="margin-bottom:8px">${n.role}</div>` : ''}
+    ${n.notes && n.notes.length ? `<div class="section-label">Notes</div><ul class="notes">${n.notes.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
+    ${bugList.length ? `<div class="section-label">Known issues</div>${bugList.map(b => `<div class="bugitem"><span class="sev ${b.sev}">${b.sev}</span>${b.t}</div>`).join('')}` : ''}
+    ${fixList.length ? `<div class="section-label">Fixed this session</div>${fixList.map(f => `<div class="fixitem">#${f.n} — ${f.t}</div>`).join('')}` : ''}
+    <div class="section-label">Tags</div>
+    <div class="taglist">${n.tag.map(t => `<span class="tagpill">${t}</span>`).join('')}</div>
+    ${outs.length ? `<div class="section-label">Outgoing (${outs.length})</div><ul class="edgelist">${outs.map(e => `<li><span>${e.label}</span><span class="arrow">→ ${nodeById[e.to].label}</span></li>`).join('')}</ul>` : ''}
+    ${ins.length ? `<div class="section-label">Incoming (${ins.length})</div><ul class="edgelist">${ins.map(e => `<li><span>${nodeById[e.from].label} →</span><span class="arrow">${e.label}</span></li>`).join('')}</ul>` : ''}
+  `;
+}
+
+function renderSidebarDefault() {
+  const bugCount = Object.values(KNOWN_BUGS).reduce((s, a) => s + a.length, 0);
+  const fixCount = new Set(Object.values(FIXES).flat().map(f => f.n)).size;
+  const deadCount = nodes.filter(n => n.tag.includes('dead-code')).length;
+  sidebar.innerHTML = `
+    <h2>Cortex — Full-Stack Map</h2>
+    <div class="plain">FastAPI "Workbrain Operations Console": a browser UI backed by a subprocess-dispatch router (CoreRouter), a Drawflow-based workflow engine, two SQLite files, and 5 AI-model bridges (Copilot, Gemini, Claude, ChatGPT, NotebookLM) that all run in a mock-first mode until real credentials exist.</div>
+    <div class="stat-row">
+      <div class="stat"><div class="n">${nodes.length}</div><div class="l">Nodes</div></div>
+      <div class="stat"><div class="n">${edges.length}</div><div class="l">Edges</div></div>
+      <div class="stat"><div class="n">${deadCount}</div><div class="l">Dead-code nodes</div></div>
+    </div>
+    <div class="section-label">Critical path traced</div>
+    <div class="plain" style="margin-bottom:4px">Building and running an AI-model workflow step, end to end:</div>
+    <ul class="notes">
+      <li><b>workflow-builder.html</b> (drag a Claude node, hit Run)</li>
+      <li>→ <b>server.py — Workflow Run</b> (POST /api/workflow-builder/run)</li>
+      <li>→ <b>workflow_engine.py — WorkflowEngine</b> (walks the graph)</li>
+      <li>→ <b>core_router.py — CoreRouter</b> (subprocess dispatch)</li>
+      <li>→ <b>claude_bridge.py</b> (mock-mode ask())</li>
+      <li>→ <b>Anthropic Claude API</b> — not actually wired up yet</li>
+    </ul>
+    <div class="section-label">Notable findings from this map</div>
+    <div class="bugitem"><span class="sev high">high</span>database.py and cortex_database.py both resolve to the exact same physical file (00_System/cortex.db) — documented as two separate databases, but they are one.</div>
+    <div class="bugitem"><span class="sev high">high</span>copilot.html and gemini.html's standalone pages POST to /execute/05_Processes/{copilot,gemini}_bridge — a category string that resolves to the wrong folder (11_Processes instead of 14_Adapters). Every button on both pages 404s.</div>
+    <div class="bugitem"><span class="sev low">low</span>An entire second "reference architecture" (CoreWorkflowRouter, canvas_schema/parser, observer_schema/transformer, enterprise_adapters, theme_exporter, svgl_icon_manager, runtime_state — ${deadCount} files) is fully built but reachable only from sandbox_smoke_test.py. The real app evolved its own separate, simpler engine instead.</div>
+    <div class="bugitem"><span class="sev med">med</span>runtime_state.py's save_state()/load_state() have zero callers anywhere — more thoroughly dead than the rest of that cluster, which at least the smoke test touches.</div>
+    <div class="section-label">Fixed this session (${fixCount})</div>
+    <div class="fixitem">#1 gemini_bridge.py gained a MOCK_MODE toggle, matching the other 3 AI bridges.</div>
+    <div class="fixitem">#2 7 new standalone Tasks (ask_claude, ask_chatgpt, ask_gemini, generate_gemini_image, + 3 NotebookLM Tasks) — real files, not just Workflow-Builder-only metadata.</div>
+    <div class="fixitem">#3 Added the 2 missing adapter-level tests (claude_bridge, chatgpt_bridge).</div>
+    <div class="section-label">Legend</div>
+    <div class="legend">
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--critical)"></span> Critical path</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--accent)"></span> External API call</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--db)"></span> Database read/write</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--client)"></span> Route mount (client → server)</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--border-strong)"></span> Normal / in-process call</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--critical);border-top:2px dashed var(--critical);height:0"></span> Known bug</div>
+    </div>
+    <div class="section-label" style="margin-top:18px">Tip</div>
+    <div class="empty-hint">Click any node for its full detail. Use the filter chips above to isolate a feature slice, or "Roadmap & Bugs" to see only flagged nodes.</div>
+  `;
+}
+renderSidebarDefault();
+
+// -- Pan / zoom --
+let viewBox = { x: 0, y: 0, w: 2220, h: 1780 };
+let isPanning = false, panStart = null, didDrag = false;
+function updateViewBox() { svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`); }
+canvasWrap.addEventListener('mousedown', (e) => {
+  isPanning = true; didDrag = false; canvasWrap.classList.add('dragging');
+  panStart = { x: e.clientX, y: e.clientY, vb: { ...viewBox } };
+});
+window.addEventListener('mousemove', (e) => {
+  if (!isPanning || !panStart) return;
+  const dx = e.clientX - panStart.x, dy = e.clientY - panStart.y;
+  if (Math.abs(dx) > 3 || Math.abs(dy) > 3) didDrag = true;
+  const scale = viewBox.w / canvasWrap.clientWidth;
+  viewBox.x = panStart.vb.x - dx * scale;
+  viewBox.y = panStart.vb.y - dy * scale;
+  updateViewBox();
+});
+window.addEventListener('mouseup', () => { isPanning = false; canvasWrap.classList.remove('dragging'); setTimeout(() => didDrag = false, 0); });
+
+canvasWrap.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const rect = canvasWrap.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const fx = viewBox.x + (mx / rect.width) * viewBox.w;
+  const fy = viewBox.y + (my / rect.height) * viewBox.h;
+  const factor = e.deltaY > 0 ? 1.12 : 1 / 1.12;
+  const newW = Math.min(6000, Math.max(300, viewBox.w * factor));
+  const newH = newW * (viewBox.h / viewBox.w);
+  viewBox.x = fx - (mx / rect.width) * newW;
+  viewBox.y = fy - (my / rect.height) * newH;
+  viewBox.w = newW; viewBox.h = newH;
+  updateViewBox();
+}, { passive: false });
+
+function zoomBy(factor) {
+  const cx = viewBox.x + viewBox.w / 2, cy = viewBox.y + viewBox.h / 2;
+  const newW = Math.min(6000, Math.max(300, viewBox.w * factor));
+  const newH = newW * (viewBox.h / viewBox.w);
+  viewBox.x = cx - newW / 2; viewBox.y = cy - newH / 2;
+  viewBox.w = newW; viewBox.h = newH;
+  updateViewBox();
+}
+document.getElementById('zoom-in').addEventListener('click', () => zoomBy(1 / 1.25));
+document.getElementById('zoom-out').addEventListener('click', () => zoomBy(1.25));
+document.getElementById('zoom-fit').addEventListener('click', () => { viewBox = { x: 0, y: 0, w: 2220, h: 1780 }; updateViewBox(); });
+updateViewBox();
+
+document.getElementById('node-count-label').textContent = `${nodes.length} nodes · ${edges.length} edges`;
+
+// Re-bind background click to ignore drag-releases
+canvasWrap.removeEventListener('click', () => {});
+canvasWrap.addEventListener('click', (e) => {
+  if (didDrag) return;
+  if (e.target === svg || e.target === canvasWrap) selectNode(null);
+});
+</script>
+</body>
+</html>
