@@ -325,6 +325,13 @@ TOOL_MODELS = {
     "ask_copilot_agent": "copilot",
     "generate_copilot_image": "copilot",
     "format_text_with_copilot": "copilot",
+    "ask_claude": "claude",
+    "ask_chatgpt": "chatgpt",
+    "ask_gemini": "gemini",
+    "generate_gemini_image": "gemini",
+    "create_notebooklm_notebook": "notebooklm",
+    "upload_notebooklm_sources": "notebooklm",
+    "run_notebooklm_prompt_loop": "notebooklm",
 }
 
 # Explicit toggle display order for the Workflow Builder's model-toggle row --
@@ -414,6 +421,10 @@ TOOL_SVGL_MAP: Dict[str, str] = {
     "function_claude_ask": CLAUDE_ICON,
     "chatgpt_bridge": OPENAI_ICON,
     "function_chatgpt_ask": OPENAI_ICON,
+    "ask_claude": CLAUDE_ICON,
+    "ask_chatgpt": OPENAI_ICON,
+    "ask_gemini": GEMINI_ICON,
+    "generate_gemini_image": GEMINI_ICON,
 }
 
 # tool_id -> Font Awesome 6 Free solid glyph (no "fa-solid" prefix), for every node with no
@@ -450,6 +461,9 @@ TOOL_FA_ICON_MAP: Dict[str, str] = {
     "function_notebooklm_create": "fa-book-open",
     "function_notebooklm_upload_sources": "fa-book-open",
     "function_notebooklm_prompt_loop": "fa-book-open",
+    "create_notebooklm_notebook": "fa-book-open",
+    "upload_notebooklm_sources": "fa-book-open",
+    "run_notebooklm_prompt_loop": "fa-book-open",
     # Text utilities
     "function_concatenate": "fa-link",
     "split_text": "fa-arrows-split-up-and-left",
