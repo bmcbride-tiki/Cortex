@@ -74,6 +74,11 @@ from playwright.sync_api import sync_playwright
 from loguru import logger as _loguru_logger
 _loguru_logger.remove()
 
+# Same MOCK_MODE / [MOCK ...] contract as claude_bridge.py, chatgpt_bridge.py, and
+# notebooklm_bridge.py -- lets ask_gemini()/generate_image() run without a live
+# signed-in Playwright/Edge session. Real (non-mock) behavior is unchanged when off.
+MOCK_MODE = os.environ.get("GEMINI_MOCK_MODE", "1") != "0"
+
 # Locate the root workbrain directory, matching copilot_bridge.py's layout
 SCRIPT_PATH = Path(__file__).resolve()
 ROOT_DIR = SCRIPT_PATH.parents[2]  # gemini_bridge -> 14_Adapters -> project root
@@ -297,6 +302,9 @@ async def _generate_image_async(psid: str, psidts: str, prompt: str, output_dir:
 
 def ask_gemini(prompt: str, use_search: bool = False) -> str:
     """Text generation. use_search=True runs it as a full Deep Research pass instead."""
+    if MOCK_MODE:
+        mode = "search-grounded " if use_search else ""
+        return f"[MOCK {mode}Gemini response] {prompt[:300]}"
     # Public entry point used by main() below. Handles the "get the login
     # cookies, then run the actual async Gemini call" sequence in one step.
     psid, psidts = _get_session_cookies()
@@ -305,6 +313,12 @@ def ask_gemini(prompt: str, use_search: bool = False) -> str:
 
 def generate_image(prompt: str, output_dir: str) -> str:
     """Generates one image via Gemini's built-in image generation, saved to output_dir."""
+    if MOCK_MODE:
+        out_dir = Path(output_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        filename = f"gemini_image_mock_{int(time.time())}.png"
+        (out_dir / filename).write_bytes(b"\x89PNG\r\n\x1a\n")
+        return str(out_dir / filename)
     psid, psidts = _get_session_cookies()
     return asyncio.run(_generate_image_async(psid, psidts, prompt, output_dir))
 
