@@ -1,6 +1,7 @@
 # =============================================================================
 # upload_notebooklm_sources.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: uploads source files (PDF/Docx/JSON) to a NotebookLM notebook.
 #   Mock-mode until real API/MCP access exists (see notebooklm_bridge.py).

@@ -1,6 +1,7 @@
 # =============================================================================
 # import_documents.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A zero-input Task: picks up every pending .docx/.pdf file sitting in
 #   `01_inbox/documents/`, pulls out simple "Label: Value" metadata (title,

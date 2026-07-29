@@ -1,6 +1,7 @@
 # =============================================================================
 # database.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Defines and creates every table in Workbrain's single shared database
 #   file, `brain_state.db`. Nearly every other file in this project that

@@ -1,6 +1,7 @@
 # =============================================================================
 # generate_vault_map.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Walks the whole Cortex project folder and writes a plain-text tree
 #   diagram of it (like the output of the `tree` command) to

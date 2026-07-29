@@ -1,6 +1,7 @@
 # =============================================================================
 # test_model_classifications.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Automated checks confirming `model_classifications.py`'s "most
 #   restrictive AI model wins" logic actually behaves as documented -- that

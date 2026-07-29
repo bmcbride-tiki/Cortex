@@ -1,6 +1,7 @@
 # =============================================================================
 # format_text_with_copilot.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: asks M365 Copilot to reformat/restyle a piece of text according
 #   to free-text style notes (e.g. "format as a formal briefing note").

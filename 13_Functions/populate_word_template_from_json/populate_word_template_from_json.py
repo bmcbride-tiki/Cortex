@@ -1,6 +1,7 @@
 # =============================================================================
 # populate_word_template_from_json.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Function: fills a .docx template's `{{key}}` placeholders from a
 #   JSON object's keys, one placeholder per key (e.g. `{{name}}`,

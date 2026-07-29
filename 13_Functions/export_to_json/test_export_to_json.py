@@ -1,6 +1,7 @@
 # =============================================================================
 # test_export_to_json.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that export_to_json.py's `run()` re-formats already-valid JSON
 #   and wraps non-JSON text in `{"content": ...}`, writing real files to a

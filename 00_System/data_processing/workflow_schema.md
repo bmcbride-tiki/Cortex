@@ -5,6 +5,7 @@ classification: '00_System_Core/data_processing'
 data_policy: 'internal'
 execution_engine: 'pure_code'
 tags: [type/module, domain/system-core, domain/data-processing, tier/zero-input, function/schema-definition, function/workflow-execution, scope/workflow-builder, connects/core-router, connects/user-identity, connects/canvas-parser, connects/observer-transformer, connects/runtime-state]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # workflow-schema

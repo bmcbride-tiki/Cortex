@@ -144,7 +144,7 @@ python gemini_bridge.py "{\"action\": \"generate_image\", \"prompt\": \"A friend
 
             appendTerminalLog("[SYSTEM] Dispatching Gemini session initializer...", "info-400");
             try {
-                const res = await fetch('/execute/05_Processes/gemini_bridge', {
+                const res = await fetch('/execute/08_Adapters/gemini_bridge', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ args: [JSON.stringify({ action: "init" })] })
@@ -171,7 +171,7 @@ python gemini_bridge.py "{\"action\": \"generate_image\", \"prompt\": \"A friend
             }
 
             try {
-                const res = await fetch('/execute/05_Processes/gemini_bridge', {
+                const res = await fetch('/execute/08_Adapters/gemini_bridge', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ args: [JSON.stringify({ action: mode, prompt: promptPreview })] })

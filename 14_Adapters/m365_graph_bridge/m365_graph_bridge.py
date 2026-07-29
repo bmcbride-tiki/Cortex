@@ -1,6 +1,7 @@
 # =============================================================================
 # m365_graph_bridge.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Adapter for Microsoft 365 via the Microsoft Graph API (OneDrive/
 #   SharePoint file access, Excel's Workbook API for cell-level operations)

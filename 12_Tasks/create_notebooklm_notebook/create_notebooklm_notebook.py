@@ -1,6 +1,7 @@
 # =============================================================================
 # create_notebooklm_notebook.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: creates a new Google NotebookLM notebook. Mock-mode until real
 #   API/MCP access exists (see notebooklm_bridge.py).

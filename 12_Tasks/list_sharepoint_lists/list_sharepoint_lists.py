@@ -1,6 +1,7 @@
 # =============================================================================
 # list_sharepoint_lists.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: lists a SharePoint site's Microsoft Lists.
 #

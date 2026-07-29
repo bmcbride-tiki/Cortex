@@ -1,6 +1,7 @@
 # =============================================================================
 # split_text.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Function: splits text on a delimiter and returns the segment at a
 #   given index.

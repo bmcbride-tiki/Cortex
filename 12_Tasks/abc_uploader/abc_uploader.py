@@ -1,6 +1,7 @@
 # =============================================================================
 # abc_uploader.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   The "Agentic Workflow Uploader": manages a library of JSON workflow
 #   template files (stored as text directly in the database, not as

@@ -1,6 +1,7 @@
 # =============================================================================
 # send_outlook_mail.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: sends an email via Outlook.
 #

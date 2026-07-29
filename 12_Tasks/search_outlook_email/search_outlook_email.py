@@ -1,6 +1,7 @@
 # =============================================================================
 # search_outlook_email.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: searches Outlook for emails by keyword and/or sender -- unlike
 #   a plain folder listing, this filters.

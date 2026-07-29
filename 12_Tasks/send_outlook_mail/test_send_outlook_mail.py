@@ -1,6 +1,7 @@
 # =============================================================================
 # test_send_outlook_mail.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that send_outlook_mail.py's `run()` returns a successful result
 #   with a real-looking message ID, using m365_graph_bridge's existing

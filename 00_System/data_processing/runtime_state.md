@@ -5,6 +5,7 @@ classification: '00_System_Core/data_processing'
 data_policy: 'internal'
 execution_engine: 'pure_code'
 tags: [type/module, domain/system-core, domain/data-processing, tier/zero-input, function/state-persistence, scope/workflow-builder, connects/workflow-schema]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # runtime-state

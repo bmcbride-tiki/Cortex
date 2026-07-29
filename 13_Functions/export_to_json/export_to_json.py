@@ -1,6 +1,7 @@
 # =============================================================================
 # export_to_json.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Function: writes text to a new .json file. If the text is already
 #   valid JSON it's re-saved neatly formatted; otherwise it's wrapped in

@@ -1,6 +1,7 @@
 # =============================================================================
 # list_onenote_pages.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: lists the pages inside a given OneNote notebook.
 #

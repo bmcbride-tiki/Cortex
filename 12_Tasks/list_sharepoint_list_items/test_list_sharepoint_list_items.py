@@ -1,6 +1,7 @@
 # =============================================================================
 # test_list_sharepoint_list_items.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that list_sharepoint_list_items.py's `run()` returns a
 #   successful result with at least one item, using m365_graph_bridge's

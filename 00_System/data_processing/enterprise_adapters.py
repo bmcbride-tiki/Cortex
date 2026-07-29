@@ -1,6 +1,7 @@
 # =============================================================================
 # enterprise_adapters.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Translates a raw API response from Microsoft Graph (OneDrive/SharePoint)
 #   or Google Drive into Cortex's own standard `FileReference` shape (see

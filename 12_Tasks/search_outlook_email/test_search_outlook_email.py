@@ -1,6 +1,7 @@
 # =============================================================================
 # test_search_outlook_email.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that search_outlook_email.py's `run()` correctly filters mock
 #   messages down to the ones matching a given sender.

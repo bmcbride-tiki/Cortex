@@ -5,6 +5,7 @@ classification: '06_Tasks'
 data_policy: 'internal'
 execution_engine: 'pure_code'
 tags: [type/test, domain/04-task, tier/zero-input, function/testing, scope/onedrive, scope/sharepoint, connects/upload-m365-file]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # test-upload-m365-file

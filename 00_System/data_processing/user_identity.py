@@ -1,6 +1,7 @@
 # =============================================================================
 # user_identity.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Figures out "what is this signed-in user actually allowed to use?" --
 #   which Microsoft 365 / Google Workspace licenses (SKUs) they hold, and

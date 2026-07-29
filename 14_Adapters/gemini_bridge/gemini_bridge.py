@@ -1,6 +1,7 @@
 # =============================================================================
 # gemini_bridge.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   This is the adapter that lets the rest of Workbrain talk to Google
 #   Gemini (text answers, "Deep Research" reports, and AI-generated images)

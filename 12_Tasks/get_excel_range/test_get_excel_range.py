@@ -1,6 +1,7 @@
 # =============================================================================
 # test_get_excel_range.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that get_excel_range.py's `run()` returns a successful result
 #   with the expected number of rows, using m365_graph_bridge's existing

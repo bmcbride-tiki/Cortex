@@ -1,6 +1,7 @@
 # =============================================================================
 # logger.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Provides one shared way to produce log messages as structured JSON lines
 #   (instead of plain text), each one tagged with which workflow and which

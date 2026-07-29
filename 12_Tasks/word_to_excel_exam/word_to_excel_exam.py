@@ -7,6 +7,8 @@ schema_version: '1.0.0'
 ---
 Self-contained, UI-free engine for converting Word exam banks into Excel ingestion layouts.
 
+Copyright 2025 Brian McBride at Tiki-1 Studio
+
 WHAT THIS FILE DOES
     Parses a Word exam question bank into structured question records
     (stem, four options, correct answer, difficulty, rationale) and writes

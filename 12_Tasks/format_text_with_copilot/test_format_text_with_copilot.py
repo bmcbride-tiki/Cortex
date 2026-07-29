@@ -1,6 +1,7 @@
 # =============================================================================
 # test_format_text_with_copilot.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that format_text_with_copilot.py rejects an empty `text`
 #   without touching the browser, and that a mocked Copilot call builds a

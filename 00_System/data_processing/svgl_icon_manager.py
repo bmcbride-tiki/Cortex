@@ -1,6 +1,7 @@
 # =============================================================================
 # svgl_icon_manager.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Resolves a brand name (like "m365" or "openai") to the web address of
 #   its real logo, hosted by SVGL (https://svgl.app), a free public library

@@ -1,6 +1,7 @@
 # =============================================================================
 # test_read_powerpoint.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that read_powerpoint.py's `run()` extracts real slide title/body
 #   text from a real generated `.pptx`, and fails cleanly on a missing file.

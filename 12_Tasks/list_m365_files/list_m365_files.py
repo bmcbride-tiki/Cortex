@@ -1,6 +1,7 @@
 # =============================================================================
 # list_m365_files.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: lists files in a given OneDrive/SharePoint folder path.
 #

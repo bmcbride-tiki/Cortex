@@ -5,6 +5,7 @@ classification: '06_Tasks'
 data_policy: 'internal'
 execution_engine: 'pure_code'
 tags: [type/test, domain/04-task, tier/zero-input, function/testing, scope/powerbi, connects/refresh-powerbi-dataset]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # test-refresh-powerbi-dataset

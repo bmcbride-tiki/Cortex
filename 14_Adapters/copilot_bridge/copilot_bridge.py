@@ -1,6 +1,7 @@
 # =============================================================================
 # copilot_bridge.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   This is the main, production adapter that lets the rest of Workbrain
 #   (the Cortex web app, the Workflow Builder, and anything scripted) talk

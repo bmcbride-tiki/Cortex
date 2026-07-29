@@ -1,6 +1,7 @@
 # =============================================================================
 # run_copilot_test.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A manual, one-off test script for the "upload a file to Copilot and ask
 #   about it" feature. It is not part of the normal running system -- you'd

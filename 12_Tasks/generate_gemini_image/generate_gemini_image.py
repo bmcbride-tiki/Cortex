@@ -1,6 +1,7 @@
 # =============================================================================
 # generate_gemini_image.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: asks Google Gemini's built-in image generation to create an image
 #   from a prompt and saves it to a local folder. Runs in mock mode by

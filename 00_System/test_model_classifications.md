@@ -5,6 +5,7 @@ classification: '00_System_Core'
 data_policy: 'internal'
 execution_engine: 'pure_code'
 tags: [type/test, domain/system-core, tier/zero-input, function/testing, scope/workflow-builder, connects/model-classifications]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # test-model-classifications

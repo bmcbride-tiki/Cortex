@@ -1,6 +1,7 @@
 # =============================================================================
 # import_class_schedule.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: scrapes the (real, public) Alberta Tradesecrets training
 #   catalogue website for one school year -- every trade's class schedule

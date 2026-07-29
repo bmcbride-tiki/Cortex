@@ -1,6 +1,7 @@
 # =============================================================================
 # test_list_copilot_agents.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that list_copilot_agents.py behaves correctly both when the
 #   Copilot browser automation succeeds and when it fails -- without

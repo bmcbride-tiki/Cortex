@@ -1,6 +1,7 @@
 # =============================================================================
 # workflow_schema.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Defines the standard "envelope" every workflow step passes to the next --
 #   a single, consistent shape for the data, attached files, and run history

@@ -5,6 +5,7 @@ classification: '00_System_Core/adapters'
 data_policy: 'internal'
 execution_engine: 'browser_automation'
 tags: [type/script, domain/system-core, tier/manual-test, function/browser-automation, scope/m365-copilot, connects/copilot-ask]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # run-copilot-download-test

@@ -1,6 +1,7 @@
 # =============================================================================
 # copilot_prompt_engineer.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A small command-line helper for manually testing one specific way of
 #   opening Copilot chat: by baking your question directly into the web

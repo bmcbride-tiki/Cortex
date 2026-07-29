@@ -1,10 +1,11 @@
 # =============================================================================
 # webscraper.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A same-domain website crawler: starting from one URL, it follows links
 #   across the site (breadth-first), reading each page's title, visible text,
-#   and outgoing links, and stores what it found in `cortex.db`. Stops once
+#   and outgoing links, and stores what it found in `cortex_scrape.db`. Stops once
 #   it hits either cap you gave it: a max number of distinct URL "folders"
 #   (first path segment, e.g. /docs/... vs /blog/...) or a max total number
 #   of pages scanned.

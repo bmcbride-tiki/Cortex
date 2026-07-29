@@ -5,6 +5,7 @@ classification: '00_System_Core/protocol'
 data_policy: 'internal'
 execution_engine: 'desktop_gui'
 tags: [type/module, domain/system-core, tier/interactive, function/markdown-editor, scope/desktop-tool]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # md-editor

@@ -1,6 +1,7 @@
 # =============================================================================
 # observer_transformer.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Converts a real, in-progress `WorkflowPayload` (a workflow's current
 #   state plus its step-by-step history) into the fixed 6-stage

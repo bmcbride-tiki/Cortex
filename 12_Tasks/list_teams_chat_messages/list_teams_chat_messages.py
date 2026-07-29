@@ -1,6 +1,7 @@
 # =============================================================================
 # list_teams_chat_messages.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: lists messages in a 1:1 or group Teams chat.
 #

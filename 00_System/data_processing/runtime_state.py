@@ -1,6 +1,7 @@
 # =============================================================================
 # runtime_state.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Saves a workflow's current state to a plain JSON file on disk, and loads
 #   it back later -- the mechanism that lets a long-running or paused

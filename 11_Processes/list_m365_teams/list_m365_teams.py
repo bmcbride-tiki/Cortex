@@ -1,6 +1,7 @@
 # =============================================================================
 # list_m365_teams.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A zero-input, one-click Process: lists the Microsoft Teams the
 #   signed-in M365 user belongs to.

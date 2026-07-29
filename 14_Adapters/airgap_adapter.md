@@ -5,6 +5,7 @@ classification: '00_System_Core/adapters'
 data_policy: 'protected'
 execution_engine: 'pure_code'
 tags: [type/module, domain/system-core, tier/zero-input, function/clipboard-bridge, scope/air-gap-ingestion, connects/database]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # airgap-adapter

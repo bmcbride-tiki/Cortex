@@ -1,6 +1,7 @@
 # =============================================================================
 # create_onenote_page.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: creates a new OneNote page (with a title and HTML content) in a
 #   given section.

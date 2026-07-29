@@ -261,14 +261,14 @@ const nodes = [
     role: 'Dedicated single-purpose page for asking Copilot, generating Designer images, and @-agent chat.',
     plain: 'A simple one-screen chat page for talking to Microsoft Copilot directly, outside the workflow builder.',
     path: '00_System/templates/copilot.html:236',
-    notes: ['3 call sites (lines 236, 299, 409) all POST to /execute/05_Processes/copilot_bridge.', '⚠ That route 404s — see the bug badge on this node.'],
+    notes: ['3 call sites (lines 236, 299, 409) POST to /execute/08_Adapters/copilot_bridge.', 'Fixed this session — see the fix badge on this node.'],
     tag: ['all', 'm365', 'ai-bridges'],
   }),
   N('gemini-html', 'client', 'gemini.html', 'Standalone Gemini ask/search/image page', 60, 476, 260, 64, 'client', {
     role: 'Dedicated single-purpose page for asking Gemini, running Deep Research, and generating images.',
     plain: 'A simple one-screen page for talking to Google Gemini directly, outside the workflow builder.',
     path: '00_System/templates/gemini.html:147',
-    notes: ['2 call sites (lines 147, 174) POST to /execute/05_Processes/gemini_bridge.', '⚠ That route 404s — see the bug badge on this node.'],
+    notes: ['2 call sites (lines 147, 174) POST to /execute/08_Adapters/gemini_bridge.', 'Fixed this session — see the fix badge on this node.'],
     tag: ['all', 'ai-bridges'],
   }),
   N('review-html', 'client', 'review-queue.html', '"Awaiting Review" checkpoint queue', 60, 580, 260, 64, 'client', {
@@ -390,7 +390,7 @@ const nodes = [
     role: 'Thin wrapper around CoreRouter.execute_app_logic, run off the event loop thread.',
     plain: 'The universal "run this specific tool" button used by dozens of pages.',
     path: '00_System/server.py:1527',
-    notes: ['category is a raw string from the client — copilot.html/gemini.html send the wrong one ("05_Processes"), see bug badge.'],
+    notes: ['category is a raw string from the client — copilot.html/gemini.html used to send the wrong one ("05_Processes"), fixed this session.'],
     tag: ['all', 'ai-bridges', 'm365'],
   }),
   N('srv-pages', 'server', 'server.py — Page Serving', '/, /page/{page_name}', 420, 1308, 260, 64, 'route', {
@@ -425,18 +425,18 @@ const nodes = [
     tag: ['overview', 'all', 'workflow-builder', 'ai-bridges'],
     critical: true,
   }),
-  N('db-brain', 'core', 'database.py — brain_state.db schema', '17 tables incl. workflow_checkpoints', 780, 372, 260, 64, 'db', {
+  N('db-brain', 'core', 'database.py — cortex.db schema', '17 tables incl. workflow_checkpoints', 780, 372, 260, 64, 'db', {
     role: 'initialize_database() creates every core table (idempotent CREATE TABLE IF NOT EXISTS) plus starter seed rows.',
     plain: 'The blueprint for the app\'s main database — one file holding classes, exams, contacts, workflows, and more.',
     path: '00_System/database.py:54',
-    notes: ['DB_PATH (line 54) is literally "cortex.db", not "brain_state.db" as every comment in the codebase calls it.', 'See bug badge: this is the exact same file cortex_database.py also writes to.'],
+    notes: ['DB_PATH (line 54) is "cortex.db" — every code comment elsewhere in the repo still calls it "brain_state.db" (a stale name, harmless, left as-is).'],
     tag: ['all'],
   }),
-  N('db-cortex', 'core', 'cortex_database.py — "second" DB schema', 'web_scrape_jobs / web_scrape_data tables', 780, 476, 260, 64, 'db', {
-    role: 'Meant to be a separate SQLite file for scraped web content, kept apart from the main app database.',
-    plain: 'Was supposed to be its own separate file for scraped web pages — turns out it isn\'t.',
+  N('db-cortex', 'core', 'cortex_database.py — scrape DB schema', 'web_scrape_jobs / web_scrape_data tables', 780, 476, 260, 64, 'db', {
+    role: 'A separate SQLite file for scraped web content, kept apart from the main app database.',
+    plain: 'Its own separate file for scraped web pages, apart from the main database.',
     path: '00_System/cortex_database.py:29',
-    notes: ['DB_PATH (line 29) resolves to the exact same "00_System/cortex.db" as database.py — they are one file, not two.'],
+    notes: ['DB_PATH (line 29) resolves to "00_System/cortex_scrape.db" — fixed this session, see fix badge (used to collide with database.py\'s cortex.db).'],
     tag: ['all', 'documents'],
   }),
   N('health-py', 'core', 'health.py — Liveness probe', 'Container health-check entrypoint', 780, 580, 260, 64, 'service', {
@@ -658,7 +658,7 @@ const nodes = [
     role: 'General-purpose seeded crawler writing one web_scrape_jobs row per run and one web_scrape_data row per page visited.',
     plain: 'A generic "crawl this site and save what you find" tool, separate from the specific training-catalogue scraper.',
     path: '12_Tasks/webscraper/webscraper.py',
-    notes: ['Writes into the same physical file as brain_state.db — see the DB-collision bug on database.py/cortex_database.py.'],
+    notes: ['Writes into cortex_scrape.db, its own file separate from database.py\'s cortex.db (fixed this session — used to collide).'],
     tag: ['all', 'documents'],
   }),
 
@@ -724,8 +724,8 @@ const edges = [
   { from: 'wb-html', to: 'ext-svgl', kind: 'api', label: '<img> brand icons', tag: ['all'] },
   { from: 'wm-html', to: 'srv-wb-crud', kind: 'mount', label: 'GET /workflows/{id}/map', tag: ['all', 'workflow-builder'] },
   { from: 'wm-html', to: 'srv-wb-run', kind: 'mount', label: 'POST /run (dry_run)', tag: ['all', 'workflow-builder'] },
-  { from: 'copilot-html', to: 'srv-execute', kind: 'normal', label: 'POST /execute/05_Processes/copilot_bridge — 404', tag: ['all', 'm365', 'ai-bridges'], bug: true },
-  { from: 'gemini-html', to: 'srv-execute', kind: 'normal', label: 'POST /execute/05_Processes/gemini_bridge — 404', tag: ['all', 'ai-bridges'], bug: true },
+  { from: 'copilot-html', to: 'srv-execute', kind: 'normal', label: 'POST /execute/08_Adapters/copilot_bridge', tag: ['all', 'm365', 'ai-bridges'] },
+  { from: 'gemini-html', to: 'srv-execute', kind: 'normal', label: 'POST /execute/08_Adapters/gemini_bridge', tag: ['all', 'ai-bridges'] },
   { from: 'copilot-html', to: 'srv-copilot-ctx', kind: 'mount', label: 'GET transcripts', tag: ['all', 'm365', 'ai-bridges'] },
   { from: 'review-html', to: 'srv-review', kind: 'mount', label: 'GET/POST checkpoints', tag: ['all', 'workflow-builder'] },
   { from: 'skills-html', to: 'srv-tools-api', kind: 'mount', label: 'GET /api/skills', tag: ['all'] },
@@ -756,7 +756,6 @@ const edges = [
   { from: 'workflow-engine', to: 'core-router', kind: 'critical', label: 'execute_app_logic()', tag: ['overview', 'all', 'workflow-builder', 'ai-bridges'] },
   { from: 'core-router', to: 'wf-schema', kind: 'normal', label: 'import', tag: ['all'] },
   { from: 'core-router', to: 'user-identity', kind: 'normal', label: 'import', tag: ['all'] },
-  { from: 'db-brain', to: 'db-cortex', kind: 'normal', label: 'BUG: identical DB_PATH', tag: ['all'], bug: true },
 
   // Dead-cluster internal wiring
   { from: 'canvas-parser', to: 'wf-schema', kind: 'normal', label: 'WorkflowPayload', tag: ['all', 'dead-code'] },
@@ -825,14 +824,14 @@ const FIXES = {
   'notebooklm-tasks': [{ n: 2, t: 'Added standalone create_notebooklm_notebook/upload_notebooklm_sources/run_notebooklm_prompt_loop Tasks, same reasoning as the AI Ask Tasks.' }],
   'claude-bridge': [{ n: 3, t: 'Added the missing adapter-level test, test_claude_bridge.py (notebooklm_bridge had one; claude/chatgpt did not).' }],
   'chatgpt-bridge': [{ n: 3, t: 'Added the missing adapter-level test, test_chatgpt_bridge.py.' }],
+  'db-brain': [{ n: 4, t: 'cortex_database.py no longer collides with database.py\'s cortex.db — see the db-cortex fix.' }],
+  'db-cortex': [{ n: 4, t: 'Gave cortex_database.py its own file (cortex_scrape.db) instead of silently sharing database.py\'s cortex.db. Migrated the 2 existing web_scrape_jobs/web_scrape_data rows over so no data was lost.' }],
+  'copilot-html': [{ n: 5, t: 'copilot.html\'s 3 call sites now POST to /execute/08_Adapters/copilot_bridge (was the wrong category, "05_Processes", which 404\'d).' }],
+  'gemini-html': [{ n: 5, t: 'gemini.html\'s 2 call sites now POST to /execute/08_Adapters/gemini_bridge, same fix as copilot.html.' }],
+  'srv-execute': [{ n: 5, t: 'No server-side change needed — the bug was the wrong category string sent by copilot.html/gemini.html, fixed at the callers.' }],
 };
 
 const KNOWN_BUGS = {
-  'db-brain': [{ sev: 'high', ref: 'db-collision', t: 'database.py:54 and cortex_database.py:29 both resolve to the exact same file (00_System/cortex.db), despite being documented as two separate databases ("brain_state.db" vs "cortex.db").' }],
-  'db-cortex': [{ sev: 'high', ref: 'db-collision', t: 'Same collision as database.py — web_scrape_jobs/web_scrape_data tables physically live inside the exact same SQLite file as every brain_state table.' }],
-  'copilot-html': [{ sev: 'high', ref: 'broken-execute-path', t: 'copilot.html:236,299,409 POST to /execute/05_Processes/copilot_bridge. CATEGORY_DIR_MAP maps "05_Processes" → 11_Processes/, but copilot_bridge.py lives in 14_Adapters/ — every button on this page 404s.' }],
-  'gemini-html': [{ sev: 'high', ref: 'broken-execute-path', t: 'gemini.html:147,174 have the identical bug, calling /execute/05_Processes/gemini_bridge.' }],
-  'srv-execute': [{ sev: 'high', ref: 'broken-execute-path', t: 'The generic executor trusts whatever category string the client sends — it has no way to catch copilot.html/gemini.html sending the wrong one.' }],
   'runtime-state': [{ sev: 'med', ref: 'dead-runtime-state', t: 'save_state()/load_state() have zero callers anywhere in the codebase — not even sandbox_smoke_test.py touches them.' }],
   'observer-schema': [{ sev: 'low', ref: 'unwired-observer', t: 'Own header comment: "not wired into any real page yet... Either wire this into a real page, or fold its useful ideas... and retire this one."' }],
   'observer-transformer': [{ sev: 'low', ref: 'unwired-observer', t: 'Same self-documented tech debt as observer_schema.py.' }],
@@ -1073,14 +1072,14 @@ function renderSidebarDefault() {
       <li>→ <b>Anthropic Claude API</b> — not actually wired up yet</li>
     </ul>
     <div class="section-label">Notable findings from this map</div>
-    <div class="bugitem"><span class="sev high">high</span>database.py and cortex_database.py both resolve to the exact same physical file (00_System/cortex.db) — documented as two separate databases, but they are one.</div>
-    <div class="bugitem"><span class="sev high">high</span>copilot.html and gemini.html's standalone pages POST to /execute/05_Processes/{copilot,gemini}_bridge — a category string that resolves to the wrong folder (11_Processes instead of 14_Adapters). Every button on both pages 404s.</div>
     <div class="bugitem"><span class="sev low">low</span>An entire second "reference architecture" (CoreWorkflowRouter, canvas_schema/parser, observer_schema/transformer, enterprise_adapters, theme_exporter, svgl_icon_manager, runtime_state — ${deadCount} files) is fully built but reachable only from sandbox_smoke_test.py. The real app evolved its own separate, simpler engine instead.</div>
     <div class="bugitem"><span class="sev med">med</span>runtime_state.py's save_state()/load_state() have zero callers anywhere — more thoroughly dead than the rest of that cluster, which at least the smoke test touches.</div>
     <div class="section-label">Fixed this session (${fixCount})</div>
     <div class="fixitem">#1 gemini_bridge.py gained a MOCK_MODE toggle, matching the other 3 AI bridges.</div>
     <div class="fixitem">#2 7 new standalone Tasks (ask_claude, ask_chatgpt, ask_gemini, generate_gemini_image, + 3 NotebookLM Tasks) — real files, not just Workflow-Builder-only metadata.</div>
     <div class="fixitem">#3 Added the 2 missing adapter-level tests (claude_bridge, chatgpt_bridge).</div>
+    <div class="fixitem">#4 database.py and cortex_database.py no longer share one physical file — cortex_database.py now writes to its own cortex_scrape.db, existing rows migrated over.</div>
+    <div class="fixitem">#5 copilot.html and gemini.html now POST to /execute/08_Adapters/{copilot,gemini}_bridge — the correct category for 14_Adapters. Every button on both pages works again.</div>
     <div class="section-label">Legend</div>
     <div class="legend">
       <div class="legend-row"><span class="legend-swatch" style="background:var(--critical)"></span> Critical path</div>

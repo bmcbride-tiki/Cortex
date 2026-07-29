@@ -5,6 +5,7 @@ classification: '06_Tasks'
 data_policy: 'public'
 execution_engine: 'pure_code'
 tags: [type/task, domain/04-task, tier/single-input, function/ingestion, scope/class-schedules]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # import-class-schedule

@@ -1,6 +1,7 @@
 # =============================================================================
 # generate_pptx_from_word_with_copilot.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: has M365 Copilot generate/populate a PowerPoint from a Word
 #   file. Tagged model="copilot" in server.py's TOOL_MODELS (not plain

@@ -5,6 +5,7 @@ classification: '05_Processes'
 data_policy: 'protected'
 execution_engine: 'pure_code'
 tags: [type/process, domain/03-process, tier/zero-input, function/m365, scope/teams]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # list-m365-teams

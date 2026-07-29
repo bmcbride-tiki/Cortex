@@ -5,6 +5,7 @@ classification: '00_System_Core'
 data_policy: 'internal'
 execution_engine: 'pure_code'
 tags: [type/test, domain/system-core, tier/zero-input, function/testing, scope/data-processing, connects/workflow-schema, connects/enterprise-adapters, connects/user-identity, connects/canvas-schema, connects/canvas-parser, connects/observer-transformer, connects/core-router]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # sandbox-smoke-test

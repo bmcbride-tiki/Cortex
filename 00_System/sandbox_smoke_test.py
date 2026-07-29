@@ -1,6 +1,7 @@
 # =============================================================================
 # sandbox_smoke_test.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A single runnable script that exercises every piece of the
 #   `data_processing/` layer together, end to end, without needing the web

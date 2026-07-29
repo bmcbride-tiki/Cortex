@@ -1,6 +1,7 @@
 # =============================================================================
 # list_copilot_agents.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A zero-input, one-click Process: lists the agents available to
 #   @-mention in Microsoft 365 Copilot chat (name + description).

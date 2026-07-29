@@ -1,6 +1,7 @@
 # =============================================================================
 # test_generate_copilot_image.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that generate_copilot_image.py rejects a missing `prompt` or
 #   `output_dir` without touching the browser, and that a mocked Copilot

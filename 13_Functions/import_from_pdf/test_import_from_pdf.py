@@ -1,6 +1,7 @@
 # =============================================================================
 # test_import_from_pdf.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that import_from_pdf.py's `run()` extracts real text from a
 #   real generated `.pdf`, and fails cleanly on a missing file.

@@ -5,6 +5,7 @@ classification: '00_System_Core/adapters'
 data_policy: 'internal'
 execution_engine: 'mock'
 tags: [type/module, domain/system-core, tier/zero-input, function/mock-adapter, scope/m365, scope/graph, scope/powerbi, scope/outlook, scope/teams, scope/sharepoint, scope/lists, scope/onenote, scope/onedrive, connects/core-router, connects/workflow-engine]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # m365-graph-bridge

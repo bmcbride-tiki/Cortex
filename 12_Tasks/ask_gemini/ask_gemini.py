@@ -1,6 +1,7 @@
 # =============================================================================
 # ask_gemini.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: sends a prompt to Google Gemini and captures its response, or runs
 #   it as a full Deep Research pass when search=True. Uses your signed-in

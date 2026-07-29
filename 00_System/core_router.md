@@ -5,6 +5,7 @@ classification: '00_System_Core'
 data_policy: 'internal'
 execution_engine: 'pure_code'
 tags: [type/module, domain/system-core, tier/zero-input, function/routing, function/workflow-execution, function/license-gating, scope/automation-dispatch, scope/workflow-builder, connects/server, connects/workflow-engine, connects/data-processing, connects/logger, connects/gemini-bridge, connects/copilot-bridge]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # core-router

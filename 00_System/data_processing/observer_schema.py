@@ -1,6 +1,7 @@
 # =============================================================================
 # observer_schema.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Defines the data shape for a "pipeline observer" view: a workflow drawn
 #   as a fixed sequence of named stages (Capture -> Classify -> Route ->

@@ -1,6 +1,7 @@
 # =============================================================================
 # test_list_outlook_calendar_events.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that list_outlook_calendar_events.py's `run()` returns a
 #   successful result with at least one event, using m365_graph_bridge's

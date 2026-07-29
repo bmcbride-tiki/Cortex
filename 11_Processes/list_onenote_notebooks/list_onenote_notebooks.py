@@ -1,6 +1,7 @@
 # =============================================================================
 # list_onenote_notebooks.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A zero-input, one-click Process: lists the signed-in user's OneNote
 #   notebooks.

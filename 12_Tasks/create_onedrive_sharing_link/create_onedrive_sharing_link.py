@@ -1,6 +1,7 @@
 # =============================================================================
 # create_onedrive_sharing_link.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: creates a shareable link for a OneDrive file, given its path.
 #

@@ -1,6 +1,7 @@
 # =============================================================================
 # test_export_to_pdf.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that export_to_pdf.py's `run()` writes a real `.pdf` file for
 #   plain text, and fails cleanly (rather than crashing) on a character

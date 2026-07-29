@@ -1,6 +1,7 @@
 # =============================================================================
 # test_create_outlook_calendar_event.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that create_outlook_calendar_event.py's `run()` returns a
 #   successful result with a real-looking event ID, using

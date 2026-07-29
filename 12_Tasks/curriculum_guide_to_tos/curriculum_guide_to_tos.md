@@ -5,6 +5,7 @@ classification: '06_Tasks'
 data_policy: 'protected'
 execution_engine: 'pure_code'
 tags: [type/task, domain/04-task, tier/single-input, function/transform, scope/curriculum-guides]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # curriculum-guide-to-tos

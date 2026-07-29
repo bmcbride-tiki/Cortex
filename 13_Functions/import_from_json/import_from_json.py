@@ -1,6 +1,7 @@
 # =============================================================================
 # import_from_json.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Function: reads a local .json file and returns its pretty-printed
 #   contents as text.

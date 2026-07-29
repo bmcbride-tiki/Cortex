@@ -1,6 +1,7 @@
 # =============================================================================
 # test_import_from_json.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that import_from_json.py's `run()` reads and pretty-prints a
 #   real `.json` file, and fails cleanly on a missing file.

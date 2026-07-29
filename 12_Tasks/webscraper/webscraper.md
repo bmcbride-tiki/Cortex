@@ -5,11 +5,12 @@ classification: '06_Tasks'
 data_policy: 'protected'
 execution_engine: 'pure_code'
 tags: [type/task, domain/04-task, tier/user-input, function/ingestion, scope/web]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # webscraper
 
-> **Status:** Active. User-configured utility — crawls a website starting from a given URL and indexes page content into `cortex.db`.
+> **Status:** Active. User-configured utility — crawls a website starting from a given URL and indexes page content into `cortex_scrape.db`.
 
 ## Purpose
 
@@ -34,6 +35,6 @@ Three positional arguments (supplied via the popup's fields, or directly through
 
 ## Output
 
-* `cortex.db` (separate from `brain_state.db`, see `00_System/cortex_database.py`):
+* `cortex_scrape.db` (separate from `cortex.db`, see `00_System/cortex_database.py`):
   * `web_scrape_jobs` — one row per run (seed URL, caps, status, counts, timestamps).
   * `web_scrape_data` — one row per page scanned (url, title, content, links_found).

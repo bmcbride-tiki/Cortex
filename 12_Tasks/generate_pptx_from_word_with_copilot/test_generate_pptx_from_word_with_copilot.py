@@ -1,6 +1,7 @@
 # =============================================================================
 # test_generate_pptx_from_word_with_copilot.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that generate_pptx_from_word_with_copilot.py's `run()` produces
 #   a real .pptx file on disk from a small generated .docx source, using

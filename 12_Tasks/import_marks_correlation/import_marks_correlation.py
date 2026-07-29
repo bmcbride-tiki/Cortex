@@ -1,6 +1,7 @@
 # =============================================================================
 # import_marks_correlation.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A zero-input Task: picks up pending "Marks Correlation" .xlsx reports
 #   (their "Section Scores Details" sheet) from `01_inbox/reports/`,

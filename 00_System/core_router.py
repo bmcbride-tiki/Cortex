@@ -1,6 +1,7 @@
 # =============================================================================
 # core_router.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   This is the traffic-control layer between the Cortex web app and every
 #   automation script in the project. It does two jobs:

@@ -1,6 +1,7 @@
 # =============================================================================
 # run_notebooklm_prompt_loop.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: asks a NotebookLM notebook a sequence of questions and collects
 #   the answers. Mock-mode until real API/MCP access exists (see

@@ -1,6 +1,7 @@
 # =============================================================================
 # test_fill_docx_template.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that fill_docx_template.py's `run()` replaces a `{{ content }}`
 #   token in a real generated .docx template, and fails cleanly on a

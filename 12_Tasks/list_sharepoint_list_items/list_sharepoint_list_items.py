@@ -1,6 +1,7 @@
 # =============================================================================
 # list_sharepoint_list_items.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: gets a Microsoft List's items, each with a `fields` object of
 #   column values.

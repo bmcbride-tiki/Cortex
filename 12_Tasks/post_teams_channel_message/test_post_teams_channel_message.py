@@ -1,6 +1,7 @@
 # =============================================================================
 # test_post_teams_channel_message.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that post_teams_channel_message.py's `run()` returns a
 #   successful, "posted (mock)" result, using m365_graph_bridge's existing

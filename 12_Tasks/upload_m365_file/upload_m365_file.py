@@ -1,6 +1,7 @@
 # =============================================================================
 # upload_m365_file.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: uploads a local file to OneDrive/SharePoint.
 #

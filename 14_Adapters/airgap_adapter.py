@@ -1,6 +1,7 @@
 # =============================================================================
 # airgap_adapter.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Watches the Windows clipboard (the same "copy/paste" buffer you use with
 #   Ctrl+C and Ctrl+V) and notices whenever new text gets copied into it.

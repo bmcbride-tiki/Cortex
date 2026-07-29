@@ -5,6 +5,7 @@ classification: '00_System_Core'
 data_policy: 'internal'
 execution_engine: 'pure_code'
 tags: [type/module, domain/system-core, tier/zero-input, function/workflow-execution, scope/workflow-builder, connects/server, connects/core-router, connects/gemini-bridge, connects/copilot-bridge, connects/notebooklm-bridge, connects/database]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # workflow-engine

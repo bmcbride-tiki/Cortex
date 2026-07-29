@@ -1,6 +1,7 @@
 # =============================================================================
 # test_import_from_word.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that import_from_word.py's `run()` extracts real paragraph text
 #   from a real generated `.docx`, and fails cleanly on a missing file.

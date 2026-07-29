@@ -5,6 +5,7 @@ classification: '07_Workflows'
 data_policy: 'internal'
 execution_engine: 'playwright'
 tags: [type/workflow, domain/07-workflows, tier/single-input, function/automation, scope/agent-builder-console]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # abc-uploader

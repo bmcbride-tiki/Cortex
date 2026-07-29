@@ -5,6 +5,7 @@ classification: '00_System_Core'
 data_policy: 'internal'
 execution_engine: 'pure_code'
 tags: [type/module, domain/system-core, tier/zero-input, function/liveness-probe, scope/data-processing, connects/workflow-schema, connects/enterprise-adapters]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # health

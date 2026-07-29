@@ -1,6 +1,7 @@
 # =============================================================================
 # test_split_text.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that split_text.py's `run()` splits on a given/default
 #   delimiter and selects the right segment, and fails cleanly on an

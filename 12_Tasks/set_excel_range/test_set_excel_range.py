@@ -1,6 +1,7 @@
 # =============================================================================
 # test_set_excel_range.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that set_excel_range.py's `run()` returns a successful result
 #   reporting the correct number of rows written, using

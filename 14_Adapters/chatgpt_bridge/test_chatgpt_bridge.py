@@ -1,3 +1,4 @@
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 import sys
 from pathlib import Path
 

@@ -1,6 +1,7 @@
 # =============================================================================
 # md_editor.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A small, standalone desktop window app (not a web page) for viewing and
 #   editing Markdown notes (the plain-text ".md" file format this whole

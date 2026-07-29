@@ -1,6 +1,7 @@
 # =============================================================================
 # test_send_teams_chat_message.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that send_teams_chat_message.py's `run()` returns a successful,
 #   "sent (mock)" result, using m365_graph_bridge's existing mock data.

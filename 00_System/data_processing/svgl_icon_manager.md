@@ -5,6 +5,7 @@ classification: '00_System_Core/data_processing'
 data_policy: 'internal'
 execution_engine: 'pure_code'
 tags: [type/module, domain/system-core, domain/data-processing, tier/zero-input, function/icon-resolution, scope/workflow-builder, connects/canvas-schema, connects/server]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # svgl-icon-manager

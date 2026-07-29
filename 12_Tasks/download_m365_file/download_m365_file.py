@@ -1,6 +1,7 @@
 # =============================================================================
 # download_m365_file.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: downloads a file from OneDrive/SharePoint into a local folder,
 #   so a downstream tool (Import from Word, Read PowerPoint, etc.) can read it.

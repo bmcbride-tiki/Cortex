@@ -5,6 +5,7 @@ classification: '00_System_Core/adapters'
 data_policy: 'internal'
 execution_engine: 'mock'
 tags: [type/module, domain/system-core, tier/zero-input, function/mock-adapter, scope/chatgpt, connects/core-router, connects/workflow-engine]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # chatgpt-bridge

@@ -1,6 +1,7 @@
 # =============================================================================
 # format_json.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Function: parses text as JSON and re-serializes it pretty-printed;
 #   fails clearly if the text isn't valid JSON.

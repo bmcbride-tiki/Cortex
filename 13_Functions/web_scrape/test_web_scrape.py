@@ -1,6 +1,7 @@
 # =============================================================================
 # test_web_scrape.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that web_scrape.py's `run()` rejects a missing `url` before
 #   attempting any real network request.

@@ -1,6 +1,7 @@
 # =============================================================================
 # test_download_m365_file.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that download_m365_file.py's `run()` actually writes a local
 #   file to a temporary folder, using m365_graph_bridge's existing mock data.

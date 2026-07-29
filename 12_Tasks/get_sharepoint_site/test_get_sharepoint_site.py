@@ -1,6 +1,7 @@
 # =============================================================================
 # test_get_sharepoint_site.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that get_sharepoint_site.py's `run()` returns a successful
 #   result with a real-looking site ID, using m365_graph_bridge's existing

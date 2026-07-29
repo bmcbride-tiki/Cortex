@@ -5,6 +5,7 @@ classification: '00_System_Core/adapters'
 data_policy: 'internal'
 execution_engine: 'browser_automation'
 tags: [type/module, domain/system-core, tier/zero-input, function/browser-automation, scope/m365-copilot, connects/core-router, connects/server, connects/workflow-engine]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # copilot-bridge

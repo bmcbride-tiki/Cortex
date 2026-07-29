@@ -1,6 +1,7 @@
 # =============================================================================
 # model_classifications.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Single source of truth for which AI model backends this project talks to
 #   are approved for which information-security classification level, per

@@ -1,6 +1,7 @@
 # =============================================================================
 # create_outlook_calendar_event.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: creates an Outlook calendar event (subject, start/end time,
 #   attendees).

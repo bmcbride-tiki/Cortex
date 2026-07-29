@@ -1,6 +1,7 @@
 # =============================================================================
 # list_outlook_calendar_events.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: lists Outlook calendar events between a start and end date.
 #

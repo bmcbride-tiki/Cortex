@@ -1,6 +1,7 @@
 # =============================================================================
 # export_to_markdown.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Function: writes text as-is to a new .md file.
 #

@@ -1,6 +1,7 @@
 # =============================================================================
 # copilot_ask.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   An earlier, experimental version of the Microsoft 365 Copilot automation
 #   engine, built as a reusable class (`CopilotBridge`) rather than a set of

@@ -1,6 +1,7 @@
 # =============================================================================
 # test_create_onedrive_sharing_link.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that create_onedrive_sharing_link.py's `run()` returns a
 #   successful result with a real-looking share URL, using

@@ -1,6 +1,7 @@
 # =============================================================================
 # run_copilot_download_test.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A manual, one-off test script for the "ask Copilot to generate a file and
 #   download it automatically" feature. Like run_copilot_test.py, this is

@@ -1,6 +1,7 @@
 # =============================================================================
 # list_sharepoint_sites.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A zero-input, one-click Process: lists SharePoint Online sites.
 #

@@ -1,6 +1,7 @@
 # =============================================================================
 # list_teams_channels.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: lists a Team's channels.
 #

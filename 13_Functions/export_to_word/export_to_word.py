@@ -1,6 +1,7 @@
 # =============================================================================
 # export_to_word.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Function: writes text into a new .docx file, one paragraph per line.
 #

@@ -5,6 +5,7 @@ classification: '00_System_Core'
 data_policy: 'internal'
 execution_engine: 'pure_code'
 tags: [type/module, domain/system-core, tier/zero-input, function/logging, scope/workflow-builder, connects/core-router]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # logger

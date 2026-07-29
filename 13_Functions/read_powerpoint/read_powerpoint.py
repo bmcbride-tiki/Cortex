@@ -1,6 +1,7 @@
 # =============================================================================
 # read_powerpoint.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Function: reads a local .pptx file's slide text and returns it as
 #   text, one `--- Slide N ---` section per slide.

@@ -1,17 +1,18 @@
 # =============================================================================
 # cortex_database.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
-#   A second, separate SQLite database file (`cortex.db`, sitting right next
-#   to `brain_state.db`) for data that doesn't belong in the main Workbrain
-#   database -- starting with web-scraped page content. Kept as its own file
-#   (rather than more tables in `brain_state.db`) since scraped page content
-#   can grow large and has nothing to do with Workbrain's own trade/exam/
-#   contact records.
+#   A second, separate SQLite database file (`cortex_scrape.db`, sitting right
+#   next to `database.py`'s `cortex.db`) for data that doesn't belong in the
+#   main Workbrain database -- starting with web-scraped page content. Kept as
+#   its own file (rather than more tables in `cortex.db`) since scraped page
+#   content can grow large and has nothing to do with Workbrain's own
+#   trade/exam/contact records.
 #
 # WHAT IT INTERACTS WITH
-#   - `cortex.db`, created automatically (if it doesn't already exist) right
-#     next to this file, in `00_System`.
+#   - `cortex_scrape.db`, created automatically (if it doesn't already exist)
+#     right next to this file, in `00_System`.
 #   - `12_Tasks/webscraper/webscraper.py`, the first (and so far only)
 #     consumer, which writes one `web_scrape_jobs` row per run and one
 #     `web_scrape_data` row per page it visits.
@@ -26,7 +27,7 @@ import sqlite3
 from pathlib import Path
 
 CURRENT_DIR = Path(__file__).resolve().parent
-DB_PATH = CURRENT_DIR / "cortex.db"
+DB_PATH = CURRENT_DIR / "cortex_scrape.db"
 
 def get_db_connection():
     conn = sqlite3.connect(str(DB_PATH))

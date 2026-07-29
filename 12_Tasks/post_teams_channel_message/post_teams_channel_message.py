@@ -1,6 +1,7 @@
 # =============================================================================
 # post_teams_channel_message.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: posts a message to a Teams channel.
 #

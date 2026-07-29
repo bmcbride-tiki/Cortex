@@ -5,6 +5,7 @@ classification: '05_Processes'
 data_policy: 'protected'
 execution_engine: 'browser_automation'
 tags: [type/process, domain/03-process, tier/zero-input, function/copilot, scope/agents]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # list-copilot-agents

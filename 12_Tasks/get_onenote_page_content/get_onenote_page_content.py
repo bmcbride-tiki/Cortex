@@ -1,6 +1,7 @@
 # =============================================================================
 # get_onenote_page_content.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: gets a OneNote page's content as HTML (Graph's real OneNote
 #   pages are HTML-based, not plain text).

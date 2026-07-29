@@ -1,6 +1,7 @@
 # =============================================================================
 # notebooklm_bridge.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Adapter for Google NotebookLM: create a notebook, upload sources
 #   (PDF/Docx/JSON files), and ask it a sequence of questions. There is no

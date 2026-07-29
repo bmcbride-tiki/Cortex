@@ -1,6 +1,7 @@
 # =============================================================================
 # test_populate_word_template_from_json.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that populate_word_template_from_json.py's `run()` fills
 #   multiple distinct named placeholders in a real generated `.docx`

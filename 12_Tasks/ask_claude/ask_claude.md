@@ -5,6 +5,7 @@ classification: '06_Tasks'
 data_policy: 'public'
 execution_engine: 'mock'
 tags: [type/task, domain/04-task, tier/zero-input, function/claude]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # ask-claude

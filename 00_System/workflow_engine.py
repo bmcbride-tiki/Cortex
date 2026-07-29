@@ -1,6 +1,7 @@
 # =============================================================================
 # workflow_engine.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   This is the engine that actually RUNS the visual workflows built in the
 #   Cortex web app's drag-and-drop "Workflow Builder" page. In that page, a

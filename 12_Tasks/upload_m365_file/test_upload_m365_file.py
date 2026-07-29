@@ -1,6 +1,7 @@
 # =============================================================================
 # test_upload_m365_file.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that upload_m365_file.py's `run()` returns a successful result
 #   with a real-looking item ID, using a real temporary local file and

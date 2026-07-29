@@ -1,6 +1,7 @@
 # =============================================================================
 # canvas_parser.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Actually RUNS a `WorkflowCanvasGraph` (see `canvas_schema.py`) -- walks
 #   its nodes in order, calls each node's real Python function, and updates

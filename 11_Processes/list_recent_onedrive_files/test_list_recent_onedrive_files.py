@@ -1,6 +1,7 @@
 # =============================================================================
 # test_list_recent_onedrive_files.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that list_recent_onedrive_files.py's `run()` returns a
 #   successful result with at least one file, using the mock data

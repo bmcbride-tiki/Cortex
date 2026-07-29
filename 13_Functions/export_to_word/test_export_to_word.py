@@ -1,6 +1,7 @@
 # =============================================================================
 # test_export_to_word.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that export_to_word.py's `run()` writes a real `.docx` file
 #   with one paragraph per input line.

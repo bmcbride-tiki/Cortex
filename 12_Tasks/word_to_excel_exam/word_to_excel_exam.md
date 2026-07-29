@@ -5,6 +5,7 @@ classification: '06_Tasks'
 data_policy: 'protected'
 execution_engine: 'pure_code'
 tags: [type/task, domain/04-task, tier/single-input, function/transform, scope/exam-questions]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # word-to-excel-exam

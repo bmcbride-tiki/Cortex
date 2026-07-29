@@ -1,6 +1,7 @@
 # =============================================================================
 # copilot_login.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A small, standalone, one-time setup script. Running it opens a real,
 #   visible Microsoft Edge window pointed at the M365 Copilot chat website

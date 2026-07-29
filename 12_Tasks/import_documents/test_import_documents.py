@@ -1,6 +1,7 @@
 # =============================================================================
 # test_import_documents.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks import_documents.py's text-parsing helpers in isolation
 #   (label extraction, trade-list splitting, filename-fallback metadata) --

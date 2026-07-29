@@ -1,6 +1,7 @@
 # =============================================================================
 # chatgpt_bridge.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Adapter for OpenAI ChatGPT. There is no API key configured for this
 #   project yet, so every action runs in MOCK_MODE by default -- it returns

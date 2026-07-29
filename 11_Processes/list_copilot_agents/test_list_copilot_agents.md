@@ -5,6 +5,7 @@ classification: '05_Processes'
 data_policy: 'internal'
 execution_engine: 'pure_code'
 tags: [type/test, domain/03-process, tier/zero-input, function/testing, scope/agents, connects/list-copilot-agents]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # test-list-copilot-agents

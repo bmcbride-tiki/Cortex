@@ -1,6 +1,7 @@
 # =============================================================================
 # import_from_pdf.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Function: reads a local .pdf file's pages and returns the extracted
 #   text.

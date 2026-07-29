@@ -1,6 +1,7 @@
 # =============================================================================
 # test_list_powerbi_reports.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that list_powerbi_reports.py's `run()` returns a successful
 #   result with at least one report, using the mock data

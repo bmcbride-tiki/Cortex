@@ -1,6 +1,7 @@
 # =============================================================================
 # health.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A basic "is the app's data-processing layer intact?" check -- tries to
 #   import `data_processing`'s core modules and reports whether each one

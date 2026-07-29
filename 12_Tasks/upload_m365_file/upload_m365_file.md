@@ -5,6 +5,7 @@ classification: '06_Tasks'
 data_policy: 'protected'
 execution_engine: 'pure_code'
 tags: [type/task, domain/04-task, tier/zero-input, function/m365, scope/onedrive, scope/sharepoint]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # upload-m365-file

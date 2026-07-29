@@ -1,6 +1,7 @@
 # =============================================================================
 # auth.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Gets the access token needed to actually call Microsoft 365 Graph or
 #   Google Workspace APIs on the signed-in user's behalf. Real enterprise

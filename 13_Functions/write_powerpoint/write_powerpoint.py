@@ -1,6 +1,7 @@
 # =============================================================================
 # write_powerpoint.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Function: creates a new .pptx file with one slide per double-newline
 #   -separated block of text (first line of each block becomes the slide

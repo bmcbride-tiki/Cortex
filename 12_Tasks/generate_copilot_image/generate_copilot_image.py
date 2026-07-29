@@ -1,6 +1,7 @@
 # =============================================================================
 # generate_copilot_image.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: asks M365 Copilot's Designer plugin to generate an image from a
 #   prompt and saves it to a local folder.

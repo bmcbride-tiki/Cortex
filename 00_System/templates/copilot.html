@@ -233,7 +233,7 @@ python copilot_bridge.py "{\"action\": \"ask_agent\", \"agent\": \"Hal-9000\", \
         window.loadCopilotAgents = async function() {
             appendTerminalLog("[SYSTEM] Fetching your @-mentionable agent list from Copilot...", "info-400");
             try {
-                const res = await fetch('/execute/05_Processes/copilot_bridge', {
+                const res = await fetch('/execute/08_Adapters/copilot_bridge', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ args: [JSON.stringify({ action: "list_agents" })] })
@@ -296,7 +296,7 @@ python copilot_bridge.py "{\"action\": \"ask_agent\", \"agent\": \"Hal-9000\", \
 
             appendTerminalLog("[SYSTEM] Dispatching MS Edge headed profile initializer...", "info-400");
             try {
-                const res = await fetch('/execute/05_Processes/copilot_bridge', {
+                const res = await fetch('/execute/08_Adapters/copilot_bridge', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ args: [JSON.stringify({ action: "init" })] })
@@ -406,7 +406,7 @@ python copilot_bridge.py "{\"action\": \"ask_agent\", \"agent\": \"Hal-9000\", \
             }
 
             try {
-                const res = await fetch('/execute/05_Processes/copilot_bridge', {
+                const res = await fetch('/execute/08_Adapters/copilot_bridge', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ args: [JSON.stringify(payload)] })

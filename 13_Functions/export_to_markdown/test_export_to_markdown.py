@@ -1,6 +1,7 @@
 # =============================================================================
 # test_export_to_markdown.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that export_to_markdown.py's `run()` writes text unchanged into
 #   a real `.md` file in a temporary folder.

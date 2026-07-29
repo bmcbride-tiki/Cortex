@@ -1,6 +1,7 @@
 # =============================================================================
 # refresh_powerbi_dataset.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: triggers a Power BI dataset refresh -- the real way to run a
 #   Power Query transformation programmatically (Power Query itself has no

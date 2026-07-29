@@ -5,6 +5,7 @@ classification: '06_Tasks'
 data_policy: 'protected'
 execution_engine: 'browser_automation'
 tags: [type/task, domain/04-task, tier/zero-input, function/copilot, scope/image-generation]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # generate-copilot-image

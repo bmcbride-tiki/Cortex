@@ -1,6 +1,7 @@
 # =============================================================================
 # theme_exporter.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Holds a fixed set of dark-mode and light-mode color values (a "ShadCN
 #   UI"-style design token palette) meant for a future n8n-style visual

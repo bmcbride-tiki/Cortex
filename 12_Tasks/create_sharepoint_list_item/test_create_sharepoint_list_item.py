@@ -1,6 +1,7 @@
 # =============================================================================
 # test_create_sharepoint_list_item.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that create_sharepoint_list_item.py's `run()` returns a
 #   successful result with a real-looking item ID, using

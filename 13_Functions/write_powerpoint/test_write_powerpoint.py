@@ -1,6 +1,7 @@
 # =============================================================================
 # test_write_powerpoint.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that write_powerpoint.py's `run()` creates a real `.pptx` with
 #   one slide per double-newline-separated text block, titled from each

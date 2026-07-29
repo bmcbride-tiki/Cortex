@@ -7,6 +7,8 @@ schema_version: '1.0.0'
 ---
 Self-contained, UI-free engine for converting Curriculum Guide Word documents into TOS Excel workbooks.
 
+Copyright 2025 Brian McBride at Tiki-1 Studio
+
 WHAT THIS FILE DOES
     Takes an Alberta-style Curriculum Guide .docx (periods -> sections ->
     topics, with hours/percentage weights) and writes those same values

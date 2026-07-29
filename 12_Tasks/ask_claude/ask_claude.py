@@ -1,6 +1,7 @@
 # =============================================================================
 # ask_claude.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: sends a prompt to Anthropic Claude and captures its response.
 #   Mock-mode until a real ANTHROPIC_API_KEY exists (see claude_bridge.py).

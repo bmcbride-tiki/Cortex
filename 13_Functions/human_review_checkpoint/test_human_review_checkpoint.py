@@ -1,6 +1,7 @@
 # =============================================================================
 # test_human_review_checkpoint.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that human_review_checkpoint.py's `run()` writes a real review
 #   file in each supported format (docx/json/markdown), inserts a real

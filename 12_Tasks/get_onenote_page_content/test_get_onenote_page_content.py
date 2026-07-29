@@ -1,6 +1,7 @@
 # =============================================================================
 # test_get_onenote_page_content.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that get_onenote_page_content.py's `run()` returns a successful
 #   result containing HTML content, using m365_graph_bridge's existing

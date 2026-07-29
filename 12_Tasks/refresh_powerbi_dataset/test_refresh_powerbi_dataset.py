@@ -1,6 +1,7 @@
 # =============================================================================
 # test_refresh_powerbi_dataset.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that refresh_powerbi_dataset.py's `run()` returns a successful
 #   result with a real-looking refresh request ID, using

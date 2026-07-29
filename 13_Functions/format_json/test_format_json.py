@@ -1,6 +1,7 @@
 # =============================================================================
 # test_format_json.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that format_json.py's `run()` pretty-prints valid JSON and
 #   fails cleanly (rather than crashing) on invalid JSON.

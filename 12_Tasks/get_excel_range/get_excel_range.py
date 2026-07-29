@@ -1,6 +1,7 @@
 # =============================================================================
 # get_excel_range.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: reads a cell range from an Excel workbook via Graph's Workbook API.
 #

@@ -1,6 +1,7 @@
 # =============================================================================
 # import_transcripts.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A zero-input Task: picks up every pending .txt/.docx transcript file
 #   sitting in `01_inbox/transcripts/`, parses metadata (date/type/trade/

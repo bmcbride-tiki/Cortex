@@ -1,6 +1,7 @@
 # =============================================================================
 # test_list_onenote_notebooks.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that list_onenote_notebooks.py's `run()` returns a successful
 #   result with at least one notebook, using the mock data

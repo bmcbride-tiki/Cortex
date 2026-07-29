@@ -1,6 +1,7 @@
 # =============================================================================
 # import_exam_pass_fail.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A zero-input Task: picks up pending "Pass Fail" .xlsx reports from
 #   `01_inbox/reports/`, parses their fixed layout (region/exam summary

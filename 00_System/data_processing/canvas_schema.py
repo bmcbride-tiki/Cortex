@@ -1,6 +1,7 @@
 # =============================================================================
 # canvas_schema.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Defines the shape of an n8n-style visual workflow graph -- a list of
 #   `CanvasNode`s (boxes, each with a position, an icon, and a status) and

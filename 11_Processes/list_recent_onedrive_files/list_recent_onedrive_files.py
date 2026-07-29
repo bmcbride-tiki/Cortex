@@ -1,6 +1,7 @@
 # =============================================================================
 # list_recent_onedrive_files.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A zero-input, one-click Process: lists recently modified/accessed
 #   OneDrive files.

@@ -1,6 +1,7 @@
 # =============================================================================
 # get_sharepoint_site.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: gets one specific SharePoint Online site's details by path.
 #

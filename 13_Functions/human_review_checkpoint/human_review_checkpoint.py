@@ -1,6 +1,7 @@
 # =============================================================================
 # human_review_checkpoint.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Function: the app's one real human-in-the-loop mechanism. Writes
 #   upstream workflow content out to a real file (.docx/.json/.md) for a

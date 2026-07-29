@@ -1,6 +1,7 @@
 # =============================================================================
 # web_scrape.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Function: fetches a URL and extracts its visible, readable text
 #   (script/style blocks stripped), capped at 5000 characters so one

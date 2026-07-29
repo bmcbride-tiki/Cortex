@@ -1,6 +1,7 @@
 # =============================================================================
 # server.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   This is the single central program behind the entire "Cortex" web app --
 #   the thing you actually open in a browser to use Workbrain. Every page

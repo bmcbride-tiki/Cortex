@@ -1,6 +1,7 @@
 # =============================================================================
 # send_teams_chat_message.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: sends a message in a 1:1 or group Teams chat.
 #

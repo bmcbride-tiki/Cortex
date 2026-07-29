@@ -1,6 +1,7 @@
 # =============================================================================
 # ask_chatgpt.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Task: sends a prompt to OpenAI ChatGPT and captures its response.
 #   Mock-mode until a real OPENAI_API_KEY exists (see chatgpt_bridge.py).

@@ -5,6 +5,7 @@ classification: '05_Processes'
 data_policy: 'internal'
 execution_engine: 'pure_code'
 tags: [type/test, domain/03-process, tier/zero-input, function/testing, scope/onenote, connects/list-onenote-notebooks]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # test-list-onenote-notebooks

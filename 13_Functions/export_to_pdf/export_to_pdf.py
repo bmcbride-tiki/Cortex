@@ -1,6 +1,7 @@
 # =============================================================================
 # export_to_pdf.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Function: writes text into a new .pdf file (one line per row via
 #   `fpdf2`).

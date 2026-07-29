@@ -5,6 +5,7 @@ classification: '00_System_Core'
 data_policy: 'internal'
 execution_engine: 'pure_code'
 tags: [type/module, domain/system-core, tier/zero-input, function/schema-management, scope/cortex-db, connects/webscraper]
+copyright: '2025 Brian McBride at Tiki-1 Studio'
 ---
 
 # cortex-database
@@ -13,13 +14,13 @@ tags: [type/module, domain/system-core, tier/zero-input, function/schema-managem
 
 ## Purpose
 
-Owns a second, separate SQLite database (`cortex.db`, next to [[database|brain_state.db]]) for data that doesn't belong in the main Workbrain database -- currently just web-scraped page content. Kept as its own file since scraped content can grow large and has nothing to do with Workbrain's trade/exam/contact records.
+Owns a second, separate SQLite database (`cortex_scrape.db`, next to [[database]]'s `cortex.db`) for data that doesn't belong in the main Workbrain database -- currently just web-scraped page content. Kept as its own file since scraped content can grow large and has nothing to do with Workbrain's trade/exam/contact records.
 
 ## Processing Logic
 
 ### `get_db_connection() -> sqlite3.Connection`
 
-Opens `cortex.db` (created next to this file if it doesn't exist yet) with `row_factory = sqlite3.Row`.
+Opens `cortex_scrape.db` (created next to this file if it doesn't exist yet) with `row_factory = sqlite3.Row`.
 
 ### `initialize_database() -> None`
 
@@ -32,7 +33,7 @@ Plus two indexes (`job_id`, `url`) for the lookups `webscraper.py` actually does
 
 ## Output
 
-The live schema inside `cortex.db` (gitignored, never checked in). Console message on direct run only implicitly (no explicit print statement here, unlike [[database]]).
+The live schema inside `cortex_scrape.db` (gitignored, never checked in). Console message on direct run only implicitly (no explicit print statement here, unlike [[database]]).
 
 ## Notes for AI reuse
 

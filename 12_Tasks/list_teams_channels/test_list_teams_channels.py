@@ -1,6 +1,7 @@
 # =============================================================================
 # test_list_teams_channels.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   Checks that list_teams_channels.py's `run()` returns a successful
 #   result with at least one channel, using m365_graph_bridge's existing

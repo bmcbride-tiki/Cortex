@@ -1,6 +1,7 @@
 # =============================================================================
 # fill_docx_template.py
 # -----------------------------------------------------------------------------
+# Copyright 2025 Brian McBride at Tiki-1 Studio
 # WHAT THIS FILE DOES
 #   A Function: fills every `{{ content }}`/`{{content}}` token in a .docx
 #   template with a single block of text and writes the completed file.
