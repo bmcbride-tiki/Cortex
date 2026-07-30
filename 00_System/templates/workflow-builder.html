@@ -1030,6 +1030,19 @@
                     if (typeof value === "string" && value.includes(oldToken)) {
                         newParams[key] = value.split(oldToken).join(newToken);
                         changed = true;
+                    } else if (Array.isArray(value)) {
+                        // ARG_FIELD_SCHEMAS-backed nodes (curriculum_guide_to_tos,
+                        // webscraper, abc_uploader, send_outlook_mail, etc.) and
+                        // renderGenericArgsPanel store fields as params.args = [v1, v2, ...],
+                        // not flat string params -- rewrite each string element the
+                        // same way (a JSON-mode element is still just a string here).
+                        newParams[key] = value.map(el => {
+                            if (typeof el === "string" && el.includes(oldToken)) {
+                                changed = true;
+                                return el.split(oldToken).join(newToken);
+                            }
+                            return el;
+                        });
                     } else {
                         newParams[key] = value;
                     }
