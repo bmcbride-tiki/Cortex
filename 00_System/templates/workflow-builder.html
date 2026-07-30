@@ -1432,7 +1432,12 @@
             const box = document.getElementById("wfb-token-suggest");
             box.innerHTML = labels.map(l => `<div class="px-3 py-1.5 hover:bg-primary/15 cursor-pointer font-mono" data-suggest-label="${escapeHtml(l)}">{{${escapeHtml(l)}}}</div>`).join("");
             const fieldRect = field.getBoundingClientRect();
-            const panelRect = field.closest("#wfb-panel-body").getBoundingClientRect();
+            // #wfb-token-suggest is absolutely positioned, so its offsets must
+            // be measured against its actual positioning context -- the
+            // "relative" wrapper div (Step 1), not #wfb-panel-body, which has
+            // no position set and sits below the title bar / label+inputs
+            // header inside that wrapper.
+            const panelRect = field.closest(".relative").getBoundingClientRect();
             box.style.left = (fieldRect.left - panelRect.left) + "px";
             box.style.top = (fieldRect.bottom - panelRect.top) + "px";
             box.style.width = fieldRect.width + "px";
