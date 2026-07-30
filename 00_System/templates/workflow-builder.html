@@ -123,6 +123,10 @@
     #wfb-canvas .drawflow-node .input, #wfb-canvas .drawflow-node .output { background: var(--color-primary-400); height: 14px; width: 14px; border: 2px solid var(--color-surface); }
     #wfb-canvas .connection .main-path { stroke: var(--color-primary-400); stroke-width: 3px; }
     #wfb-canvas .connection .main-path:hover { stroke: var(--color-danger-400); cursor: pointer; }
+    .wfb-node-failed {
+        outline: 2px solid var(--color-danger-400, #ef4444) !important;
+        outline-offset: 2px;
+    }
     .wfb-node-card { display: flex; align-items: stretch; border-radius: 10px; overflow: hidden; }
     .wfb-node-card .wfb-node-body { padding: 10px 14px; min-width: 0; flex: 1; }
     .wfb-node-card .wfb-node-title { font-size: 12px; font-weight: 600; color: var(--color-heading); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1323,6 +1327,11 @@
             const dryRun = document.getElementById("wfb-dry-run").checked;
             const graphJson = editor.export();
 
+            document.querySelectorAll(".wfb-node-failed").forEach(el => {
+                el.classList.remove("wfb-node-failed");
+                el.removeAttribute("title");
+            });
+
             wfbSetRunStatus("Running...", "text-warning-400");
             wfbLog(`Starting ${dryRun ? "dry" : "live"} run...`, "text-info-400");
 
@@ -1338,6 +1347,12 @@
                 (data.steps || []).forEach(step => {
                     const color = step.status === "success" ? "text-body" : "text-danger-400";
                     wfbLog(`[${step.kind || "?"}] ${step.title || step.node_id}: ${step.status}${step.output ? " -- " + step.output : ""}`, color);
+
+                    const nodeEl = document.getElementById(`node-${step.node_id}`);
+                    if (nodeEl && step.status === "failed") {
+                        nodeEl.classList.add("wfb-node-failed");
+                        nodeEl.title = step.output || "Failed";
+                    }
                 });
 
                 if (data.success) {
