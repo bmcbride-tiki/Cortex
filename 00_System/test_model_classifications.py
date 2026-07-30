@@ -33,12 +33,15 @@ def test_single_model_returns_its_own_level():
     assert classification_ceiling(["copilot"]) == "protected_b"
     assert classification_ceiling(["gemini"]) == "protected_a"
     assert classification_ceiling(["chatgpt"]) == "public"
+    assert classification_ceiling(["agenty"]) == "public"  # ABC Builder
 
 
 def test_most_restrictive_model_wins():
     assert classification_ceiling(["copilot", "gemini"]) == "protected_a"
     assert classification_ceiling(["copilot", "chatgpt"]) == "public"
     assert classification_ceiling(["gemini", "notebooklm"]) == "protected_a"
+    # ABC Builder (Public) caps the ceiling even alongside a stricter model.
+    assert classification_ceiling(["copilot", "agenty"]) == "public"
 
 
 def test_empty_or_unknown_returns_none():

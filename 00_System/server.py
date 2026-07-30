@@ -339,6 +339,7 @@ TOOL_MODELS = {
     "create_notebooklm_notebook": "notebooklm",
     "upload_notebooklm_sources": "notebooklm",
     "run_notebooklm_prompt_loop": "notebooklm",
+    "abc_uploader": "agenty",
 }
 
 # Explicit toggle display order for the Workflow Builder's model-toggle row --

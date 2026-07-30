@@ -46,6 +46,11 @@ MODEL_CLASSIFICATIONS: Dict[str, str] = {
     "notebooklm": "protected_a",
     "chatgpt": "public",
     "claude": "public",
+    # ABC Builder (abc_uploader) is an external harness that only talks to
+    # public-facing agent-builder models -- not a specific AI model itself,
+    # but it needs its own key rather than reusing "claude"/"chatgpt" so its
+    # presence doesn't get tied to those models' own toggle/filter checkbox.
+    "agenty": "public",
 }
 
 
