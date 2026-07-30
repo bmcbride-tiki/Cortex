@@ -679,7 +679,7 @@ class WorkflowEngine:
 
     # --- Per-node dispatch ---------------------------------------------------------
 
-    def _execute_node(self, node_id: str, node: Dict[str, Any]) -> Tuple[str, Optional[str]]:
+    def _execute_node(self, node_id: str, node: Dict[str, Any]) -> Tuple[str, Optional[Union[str, List[str]]]]:
         # The main "what kind of box is this, and what does running it
         # actually mean?" dispatcher, called once per node during the
         # run loop at the bottom of this file. Every node falls into one
@@ -715,7 +715,7 @@ class WorkflowEngine:
 
         raise WorkflowRunError(f"Unknown node kind: {kind}")
 
-    def _execute_function_node(self, node_id: str, node: Dict[str, Any], params: Dict[str, Any]) -> Tuple[str, Optional[str]]:
+    def _execute_function_node(self, node_id: str, node: Dict[str, Any], params: Dict[str, Any]) -> Tuple[str, Optional[Union[str, List[str]]]]:
         # A big if/elif ladder: given a function node's tool_id (which
         # specific "Function" block type it is, chosen in the Workflow
         # Builder UI), run the matching real logic. Grouped below by
@@ -901,8 +901,14 @@ class WorkflowEngine:
             finished.add(node_id)
             if jump_to:
                 # A Review Gate (or similar) decided to loop back to an
-                # earlier node instead of continuing forward normally.
-                queue.insert(0, jump_to)
+                # earlier node instead of continuing forward normally. A
+                # Conditions node in all_matches mode returns a LIST of
+                # target ids instead of one -- queue every one of them at
+                # the front, in order, same as a single jump_to would be.
+                if isinstance(jump_to, list):
+                    queue[0:0] = jump_to
+                else:
+                    queue.insert(0, jump_to)
             else:
                 # Normal case: queue up whatever node(s) this one's output
                 # arrows point to next -- skipping any already waiting in the

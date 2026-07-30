@@ -194,6 +194,51 @@ def test_conditions_blank_field_tests_whole_upstream_text():
     assert target == "3", (verdict, target)
 
 
+def test_conditions_all_matches_runs_every_target_node_end_to_end():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([
+        ("1", "Src", "function_gemini_ask", {"instructions": "the quick brown fox"}, ["2"]),
+        ("2", "Cond", "function_conditions", {
+            "match_mode": "all_matches",
+            "default_target_node_id": "5",
+            "conditions": [
+                {"mode": "simple", "field": "", "operator": "contains", "value": "quick", "target_node_id": "3"},
+                {"mode": "simple", "field": "", "operator": "contains", "value": "fox", "target_node_id": "4"},
+            ],
+        }, ["3", "4", "5"]),
+        ("3", "First", "function_gemini_ask", {"instructions": "AAA"}, []),
+        ("4", "Second", "function_gemini_ask", {"instructions": "BBB"}, []),
+        ("5", "Default", "function_gemini_ask", {"instructions": "CCC"}, []),
+    ])
+    result = engine.run(graph)
+    assert result["success"], result
+    ran_ids = [s["node_id"] for s in result["steps"]]
+    # Both matching branches run, in order; the default branch does NOT run.
+    assert ran_ids == ["1", "2", "3", "4"], ran_ids
+
+
+def test_conditions_first_match_runs_only_one_target_node_end_to_end():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([
+        ("1", "Src", "function_gemini_ask", {"instructions": "the quick brown fox"}, ["2"]),
+        ("2", "Cond", "function_conditions", {
+            "match_mode": "first_match",
+            "default_target_node_id": "5",
+            "conditions": [
+                {"mode": "simple", "field": "", "operator": "contains", "value": "quick", "target_node_id": "3"},
+                {"mode": "simple", "field": "", "operator": "contains", "value": "fox", "target_node_id": "4"},
+            ],
+        }, ["3", "4", "5"]),
+        ("3", "First", "function_gemini_ask", {"instructions": "AAA"}, []),
+        ("4", "Second", "function_gemini_ask", {"instructions": "BBB"}, []),
+        ("5", "Default", "function_gemini_ask", {"instructions": "CCC"}, []),
+    ])
+    result = engine.run(graph)
+    assert result["success"], result
+    ran_ids = [s["node_id"] for s in result["steps"]]
+    assert ran_ids == ["1", "2", "3"], ran_ids
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0
