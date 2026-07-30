@@ -141,8 +141,15 @@ def _eval_condition_ast(node: ast.AST, namespace: Dict[str, Any]) -> Any:
     if isinstance(node, ast.Expression):
         return _eval_condition_ast(node.body, namespace)
     if isinstance(node, ast.BoolOp):
-        values = [_eval_condition_ast(v, namespace) for v in node.values]
-        return all(values) if isinstance(node.op, ast.And) else any(values)
+        is_and = isinstance(node.op, ast.And)
+        result = is_and
+        for v in node.values:
+            result = bool(_eval_condition_ast(v, namespace))
+            if is_and and not result:
+                return False
+            if not is_and and result:
+                return True
+        return result
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
         return not _eval_condition_ast(node.operand, namespace)
     if isinstance(node, ast.Compare):
@@ -173,7 +180,10 @@ def _eval_condition_expression(expr: str, namespace: Dict[str, Any]) -> bool:
         tree = ast.parse(expr, mode="eval")
     except SyntaxError as e:
         raise WorkflowRunError(f"Invalid condition expression: {e}")
-    return bool(_eval_condition_ast(tree, namespace))
+    try:
+        return bool(_eval_condition_ast(tree, namespace))
+    except TypeError as e:
+        raise WorkflowRunError(f"Invalid comparison in condition expression: {e}")
 
 
 class WorkflowEngine:

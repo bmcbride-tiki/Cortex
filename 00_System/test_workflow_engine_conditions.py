@@ -68,6 +68,24 @@ def test_expression_rejects_function_call():
         pass
 
 
+def test_expression_and_short_circuits_missing_field():
+    # has_discount is false, so discount_pct must never be looked up.
+    assert _eval_condition_expression("has_discount and discount_pct > 10", {"has_discount": False}) is False
+
+
+def test_expression_or_short_circuits_missing_field():
+    # already_approved is true, so needs_review must never be looked up.
+    assert _eval_condition_expression("already_approved or needs_review", {"already_approved": True}) is True
+
+
+def test_expression_type_mismatch_raises_workflow_run_error():
+    try:
+        _eval_condition_expression("total > region", {"total": 5, "region": "west"})
+        assert False, "expected WorkflowRunError"
+    except WorkflowRunError:
+        pass
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0
