@@ -220,6 +220,12 @@ FUNCTIONS_REGISTRY = [
         "model": None,
     },
     {
+        "tool_id": "function_conditions",
+        "title": "Conditions",
+        "description": "Evaluates up to 10 conditions (simple rules or expressions) against upstream data and branches to each one's target node; supports first-match or all-matches, with a required default.",
+        "model": None,
+    },
+    {
         "tool_id": "function_google_search",
         "title": "Google Search",
         "description": "Asks the Gemini bridge to run a full Deep Research pass via your signed-in Gemini session (no API key).",
@@ -433,6 +439,7 @@ TOOL_SVGL_MAP: Dict[str, str] = {
 TOOL_FA_ICON_MAP: Dict[str, str] = {
     # Control flow / structure
     "function_logic_gate": "fa-signs-post",       # if/else branch -- literal signpost
+    "function_conditions": "fa-code-branch",      # N-way branch
     "builtin_review_gate": "fa-repeat",           # loops back to an earlier node on fail
     "human_review_checkpoint": "fa-user-check",
     "generate_vault_map": "fa-folder-tree",
