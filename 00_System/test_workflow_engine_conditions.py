@@ -86,6 +86,114 @@ def test_expression_type_mismatch_raises_workflow_run_error():
         pass
 
 
+def _conditions_engine(upstream_text):
+    # Manually wires just enough WorkflowEngine state for _run_conditions to read
+    # one upstream node's captured text via _gather_upstream_text, without going
+    # through a full engine.run() (whose dry-run AI stubs wrap/prefix their output,
+    # which would get in the way of testing exact JSON field extraction here).
+    engine = WorkflowEngine(dry_run=True)
+    engine.backward_edges = {"cond": ["src"]}
+    engine.node_labels = {"src": "Src", "cond": "Cond"}
+    engine.context = {"Src": upstream_text}
+    return engine
+
+
+def test_conditions_first_match_stops_at_first_true():
+    engine = _conditions_engine('{"status": "approved", "region": "west"}')
+    verdict, target = engine._run_conditions("cond", {
+        "match_mode": "first_match",
+        "default_target_node_id": "9",
+        "conditions": [
+            {"mode": "simple", "field": "status", "operator": "equals", "value": "approved", "target_node_id": "3"},
+            {"mode": "simple", "field": "region", "operator": "equals", "value": "west", "target_node_id": "4"},
+        ],
+    })
+    # Both conditions are true; first_match must return only the first one's target.
+    assert target == "3", (verdict, target)
+
+
+def test_conditions_all_matches_returns_every_true_target():
+    engine = _conditions_engine('{"status": "approved", "region": "west"}')
+    verdict, target = engine._run_conditions("cond", {
+        "match_mode": "all_matches",
+        "default_target_node_id": "9",
+        "conditions": [
+            {"mode": "simple", "field": "status", "operator": "equals", "value": "approved", "target_node_id": "3"},
+            {"mode": "simple", "field": "region", "operator": "equals", "value": "west", "target_node_id": "4"},
+            {"mode": "simple", "field": "status", "operator": "equals", "value": "denied", "target_node_id": "5"},
+        ],
+    })
+    assert target == ["3", "4"], (verdict, target)
+
+
+def test_conditions_default_used_when_none_match():
+    engine = _conditions_engine('{"status": "pending"}')
+    verdict, target = engine._run_conditions("cond", {
+        "match_mode": "first_match",
+        "default_target_node_id": "9",
+        "conditions": [
+            {"mode": "simple", "field": "status", "operator": "equals", "value": "approved", "target_node_id": "3"},
+        ],
+    })
+    assert target == "9", (verdict, target)
+
+
+def test_conditions_numeric_operators():
+    engine = _conditions_engine('{"total": 1500}')
+    verdict, target = engine._run_conditions("cond", {
+        "match_mode": "first_match",
+        "default_target_node_id": "9",
+        "conditions": [
+            {"mode": "simple", "field": "total", "operator": "gt", "value": "1000", "target_node_id": "3"},
+        ],
+    })
+    assert target == "3", (verdict, target)
+
+    verdict, target = engine._run_conditions("cond", {
+        "match_mode": "first_match",
+        "default_target_node_id": "9",
+        "conditions": [
+            {"mode": "simple", "field": "total", "operator": "lt", "value": "1000", "target_node_id": "3"},
+        ],
+    })
+    assert target == "9", (verdict, target)  # 1500 is not < 1000 -- falls through to default
+
+
+def test_conditions_expression_mode_uses_parsed_fields_and_raw_input():
+    engine = _conditions_engine('{"total": 1500, "region": "west"}')
+    verdict, target = engine._run_conditions("cond", {
+        "match_mode": "first_match",
+        "default_target_node_id": "9",
+        "conditions": [
+            {"mode": "expression", "expression": "total > 1000 and region == 'west'", "target_node_id": "3"},
+        ],
+    })
+    assert target == "3", (verdict, target)
+
+    # "input" is always bound to the raw upstream text, even when it's not JSON.
+    engine2 = _conditions_engine("plain text here")
+    verdict, target = engine2._run_conditions("cond", {
+        "match_mode": "first_match",
+        "default_target_node_id": "9",
+        "conditions": [
+            {"mode": "expression", "expression": "'plain' in input", "target_node_id": "3"},
+        ],
+    })
+    assert target == "3", (verdict, target)
+
+
+def test_conditions_blank_field_tests_whole_upstream_text():
+    engine = _conditions_engine("the quick brown fox")
+    verdict, target = engine._run_conditions("cond", {
+        "match_mode": "first_match",
+        "default_target_node_id": "9",
+        "conditions": [
+            {"mode": "simple", "field": "", "operator": "contains", "value": "brown", "target_node_id": "3"},
+        ],
+    })
+    assert target == "3", (verdict, target)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0

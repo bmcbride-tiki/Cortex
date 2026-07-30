@@ -85,7 +85,7 @@ import re
 import ast
 import json
 from pathlib import Path
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Dict, Any, List, Tuple, Optional, Union
 
 CURRENT_DIR = Path(__file__).resolve().parent
 if str(CURRENT_DIR) not in sys.path:
@@ -569,6 +569,81 @@ class WorkflowEngine:
         verdict = f"Condition {'matched' if matched else 'did not match'} ({condition_type}: {condition_value!r})"
         return verdict, target
 
+    _CONDITION_NUMERIC_OPERATORS = {"gt", "gte", "lt", "lte"}
+
+    def _eval_simple_condition(self, cond: Dict[str, Any], fields: Dict[str, Any], upstream_text: str) -> bool:
+        # A "simple rule" condition row: field/operator/value, same operator
+        # vocabulary as Logic Gate (contains/equals/regex) plus four numeric
+        # comparisons. An empty field tests the whole upstream text, exactly
+        # like Logic Gate's condition_value does today.
+        field_name = cond.get("field") or ""
+        operator = cond.get("operator", "contains")
+        raw_value = cond.get("value", "")
+
+        if field_name:
+            if field_name not in fields:
+                return False  # named field not present in parsed upstream JSON
+            subject = str(fields[field_name])
+        else:
+            subject = upstream_text
+
+        if operator in self._CONDITION_NUMERIC_OPERATORS:
+            try:
+                left, right = float(subject), float(raw_value)
+            except ValueError:
+                return False
+            return {
+                "gt": left > right, "gte": left >= right,
+                "lt": left < right, "lte": left <= right,
+            }[operator]
+        if operator == "regex":
+            return bool(re.search(raw_value, subject))
+        if operator == "equals":
+            return subject.strip() == raw_value.strip()
+        return raw_value in subject  # "contains" -- also the fallback for an unrecognized operator
+
+    def _run_conditions(self, node_id: str, params: Dict[str, Any]) -> Tuple[str, Optional[Union[str, List[str]]]]:
+        # A "Conditions" node: up to 10 rows, each either a simple field/operator/value
+        # rule or a free-form expression (_eval_condition_expression), each with its
+        # own "Go To" target. match_mode picks whether only the first true row's
+        # target fires (switch-style) or every true row's target fires. A row with no
+        # target_node_id set is skipped -- it can never "match" anywhere useful.
+        upstream_text = self._gather_upstream_text(node_id)
+        try:
+            parsed = json.loads(upstream_text)
+            fields: Dict[str, Any] = parsed if isinstance(parsed, dict) else {}
+        except (TypeError, ValueError):
+            fields = {}
+        namespace = dict(fields)
+        namespace["input"] = upstream_text
+
+        match_mode = params.get("match_mode", "first_match")
+        default_target = params.get("default_target_node_id") or None
+        conditions = (params.get("conditions") or [])[:10]
+
+        matched_targets: List[str] = []
+        for i, cond in enumerate(conditions, start=1):
+            target = cond.get("target_node_id") or None
+            if not target:
+                continue
+            if cond.get("mode") == "expression":
+                is_match = _eval_condition_expression(cond.get("expression", ""), namespace)
+            else:
+                is_match = self._eval_simple_condition(cond, fields, upstream_text)
+            if is_match:
+                matched_targets.append(target)
+                if match_mode == "first_match":
+                    break
+
+        if not matched_targets:
+            return f"No condition matched -> default (node {default_target})", default_target
+        if match_mode == "first_match":
+            return f"Condition matched (first_match) -> node {matched_targets[0]}", matched_targets[0]
+        return (
+            f"{len(matched_targets)} condition(s) matched (all_matches) -> nodes {', '.join(matched_targets)}",
+            matched_targets,
+        )
+
     # --- Built-in node handlers ---------------------------------------------------
 
     def _run_review_gate(self, node_id: str, params: Dict[str, Any]) -> Tuple[str, Optional[str]]:
@@ -657,6 +732,9 @@ class WorkflowEngine:
 
         if tool_id == "function_logic_gate":
             return self._run_logic_gate(node_id, params)
+
+        if tool_id == "function_conditions":
+            return self._run_conditions(node_id, params)
 
         # --- Prompt-driven AI functions (Gemini / Claude / ChatGPT / image gen) ---
         # There's no implicit "whatever flowed in" fallback any more, so an empty
