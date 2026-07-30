@@ -306,17 +306,22 @@ class WorkflowEngine:
 
         return TOKEN_PATTERN.sub(replace, text)
 
-    def _gather_upstream_text(self, node_id: str) -> str:
-        # Collects the output of every node that feeds directly into this
-        # one and joins them together (separated by a blank line) -- this
-        # is the default "input" most node types receive automatically,
-        # without the user needing to manually reference {{...}} tokens.
-        parts = [
+    def _direct_predecessor_texts(self, node_id: str) -> List[str]:
+        # Every direct predecessor's captured output, in edge order -- the
+        # raw material both _gather_upstream_text (whole-text join) and the
+        # Concatenate function (custom-separator join) build on.
+        return [
             self.context[self.node_labels[p]]
             for p in self.backward_edges.get(node_id, [])
             if self.node_labels.get(p) in self.context
         ]
-        return "\n\n".join(parts)
+
+    def _gather_upstream_text(self, node_id: str) -> str:
+        # Used only by node types whose entire defined behavior IS "operate
+        # on whatever's directly connected" -- Skill nodes, Logic Gate, and
+        # Review Gate -- which have no settings field to explicitly bind a
+        # {{label}} into instead.
+        return "\n\n".join(self._direct_predecessor_texts(node_id))
 
     # --- AI bridge (reuses adapters/copilot-bridge via the existing 05_Processes route) --
 
@@ -402,17 +407,20 @@ class WorkflowEngine:
 
     # --- NotebookLM (notebooklm_bridge, mock-mode until real API/MCP access exists) ---
 
-    def _extract_json_field(self, text: str, key: str) -> str:
-        # Lets a node accept an upstream node's raw JSON output (e.g. a
-        # Create Notebook node's {"notebook_id": ..., "title": ...}) and
-        # pull out just one field, so later nodes can chain directly off it
-        # without the user needing to hand-write a {{node_id}} token for
-        # each field.
+    def _extract_json_field_or_raw(self, value: str, key: str) -> str:
+        # Lets a field accept either a bare string (typed directly, or the
+        # plain output of a node whose captured output already IS that
+        # value) or an upstream node's raw JSON output (e.g. a Create
+        # Notebook node's {"notebook_id": ..., "title": ...}) -- if value
+        # parses as a JSON object containing key, that field is pulled out;
+        # otherwise value is used exactly as given.
         try:
-            parsed = json.loads(text)
+            parsed = json.loads(value)
         except (TypeError, ValueError):
-            return ""
-        return str(parsed.get(key, "")) if isinstance(parsed, dict) else ""
+            return value
+        if isinstance(parsed, dict) and key in parsed:
+            return str(parsed[key])
+        return value
 
     def _create_notebooklm_notebook(self, title: str) -> str:
         if self.dry_run:
@@ -449,12 +457,13 @@ class WorkflowEngine:
 
     # --- Logic / data function handlers --------------------------------------------
 
-    def _run_logic_gate(self, params: Dict[str, Any], upstream_text: str) -> Tuple[str, Optional[str]]:
+    def _run_logic_gate(self, node_id: str, params: Dict[str, Any]) -> Tuple[str, Optional[str]]:
         # An "If/Else" style workflow node: checks the incoming text
         # against a condition (does it contain a certain word/phrase,
         # exactly equal a value, or match a regex pattern?) and reports
         # which of two possible next nodes execution should continue to,
         # based on whether the condition matched.
+        upstream_text = self._gather_upstream_text(node_id)
         condition_type = params.get("condition_type", "contains")
         condition_value = self._substitute_tokens(params.get("condition_value", ""))
         true_node = params.get("true_node_id") or None
@@ -473,13 +482,14 @@ class WorkflowEngine:
 
     # --- Built-in node handlers ---------------------------------------------------
 
-    def _run_review_gate(self, node_id: str, params: Dict[str, Any], upstream_text: str) -> Tuple[str, Optional[str]]:
+    def _run_review_gate(self, node_id: str, params: Dict[str, Any]) -> Tuple[str, Optional[str]]:
         # Asks an AI to judge the upstream text against a plain-English
         # pass/fail criteria (e.g. "does this summary mention all three key
         # decisions?"). If it fails and there's still an attempt remaining,
         # execution jumps backward to loop_back_node_id to try again
         # (e.g. re-run the step that generated the text); otherwise it lets
         # execution continue forward as normal.
+        upstream_text = self._gather_upstream_text(node_id)
         criteria = params.get("criteria", "")
         loop_back = params.get("loop_back_node_id")
         max_attempts = int(params.get("max_attempts") or 3)
@@ -521,7 +531,6 @@ class WorkflowEngine:
         self._current_scope = self._build_scope(node_id)
         kind = node.get("kind")
         params = node.get("params") or {}
-        upstream_text = self._gather_upstream_text(node_id)
 
         if kind in ("task", "process", "adapter") or (kind == "function" and node.get("category") == "09_Functions"):
             args = [self._substitute_tokens(str(a)) for a in (params.get("args") or [])]
@@ -533,15 +542,16 @@ class WorkflowEngine:
             return log_msg, None
 
         if kind == "skill":
+            upstream_text = self._gather_upstream_text(node_id)
             prompt = f"{node['title']}: {node.get('description', '')}\n\nInput:\n{upstream_text}"
             return self._ask_copilot(prompt), None
 
         if kind == "function":
-            return self._execute_function_node(node_id, node, params, upstream_text)
+            return self._execute_function_node(node_id, node, params)
 
         raise WorkflowRunError(f"Unknown node kind: {kind}")
 
-    def _execute_function_node(self, node_id: str, node: Dict[str, Any], params: Dict[str, Any], upstream_text: str) -> Tuple[str, Optional[str]]:
+    def _execute_function_node(self, node_id: str, node: Dict[str, Any], params: Dict[str, Any]) -> Tuple[str, Optional[str]]:
         # A big if/elif ladder: given a function node's tool_id (which
         # specific "Function" block type it is, chosen in the Workflow
         # Builder UI), run the matching real logic. Grouped below by
@@ -549,45 +559,36 @@ class WorkflowEngine:
         tool_id = node.get("tool_id")
 
         if tool_id == "builtin_review_gate":
-            return self._run_review_gate(node_id, params, upstream_text)
+            return self._run_review_gate(node_id, params)
 
         # --- String / logic / data functions (no dependency, no credentials) ---
         if tool_id == "function_concatenate":
             separator = self._substitute_tokens(params.get("separator", "\n\n"))
-            parts = [
-                self.context[self.node_labels[p]]
-                for p in self.backward_edges.get(node_id, [])
-                if self.node_labels.get(p) in self.context
-            ]
-            return separator.join(parts), None
+            return separator.join(self._direct_predecessor_texts(node_id)), None
 
         if tool_id == "function_logic_gate":
-            return self._run_logic_gate(params, upstream_text)
+            return self._run_logic_gate(node_id, params)
 
         # --- Gemini-backed functions (adapters/gemini-bridge, uses a signed-in browser session, no API key) ---
         if tool_id == "function_google_search":
             instructions = self._substitute_tokens(params.get("instructions", ""))
-            prompt = f"{instructions}\n\n{upstream_text}".strip() if instructions else upstream_text
-            return self._ask_gemini(prompt, use_search=True), None
+            return self._ask_gemini(instructions, use_search=True), None
         if tool_id == "function_gemini_ask":
             instructions = self._substitute_tokens(params.get("instructions", ""))
-            prompt = f"{instructions}\n\nInput:\n{upstream_text}" if instructions else upstream_text
-            return self._ask_gemini(prompt), None
+            return self._ask_gemini(instructions), None
 
         # --- Claude-backed functions (adapters/claude-bridge, mock-mode until real API access exists) ---
         if tool_id == "function_claude_ask":
             instructions = self._substitute_tokens(params.get("instructions", ""))
-            prompt = f"{instructions}\n\nInput:\n{upstream_text}" if instructions else upstream_text
-            return self._ask_claude(prompt), None
+            return self._ask_claude(instructions), None
 
         # --- ChatGPT-backed functions (adapters/chatgpt-bridge, mock-mode until real API access exists) ---
         if tool_id == "function_chatgpt_ask":
             instructions = self._substitute_tokens(params.get("instructions", ""))
-            prompt = f"{instructions}\n\nInput:\n{upstream_text}" if instructions else upstream_text
-            return self._ask_chatgpt(prompt), None
+            return self._ask_chatgpt(instructions), None
 
         if tool_id == "function_image_generate":
-            prompt = self._substitute_tokens(params.get("prompt", "")) or upstream_text
+            prompt = self._substitute_tokens(params.get("prompt", ""))
             output_dir = params.get("output_dir") or str(self.router.base_dir / "02_vault" / "generated_images")
             return self._generate_image_gemini(prompt, output_dir), None
 
@@ -597,9 +598,9 @@ class WorkflowEngine:
             return self._create_notebooklm_notebook(title), None
 
         if tool_id == "function_notebooklm_upload_sources":
-            notebook_id = self._substitute_tokens(params.get("notebook_id", "")) or self._extract_json_field(upstream_text, "notebook_id")
+            notebook_id = self._extract_json_field_or_raw(self._substitute_tokens(params.get("notebook_id", "")), "notebook_id")
             if not notebook_id:
-                raise WorkflowRunError("Upload Sources requires a notebook_id (set one directly, or chain from a Create Notebook node).")
+                raise WorkflowRunError("Upload Sources requires a notebook_id -- bind {{label}} to a Create Notebook node's output, or type one directly.")
             raw_paths = self._substitute_tokens(params.get("file_paths", ""))
             file_paths = [p.strip() for p in raw_paths.splitlines() if p.strip()]
             if not file_paths:
@@ -607,9 +608,9 @@ class WorkflowEngine:
             return self._upload_notebooklm_sources(notebook_id, file_paths), None
 
         if tool_id == "function_notebooklm_prompt_loop":
-            notebook_id = self._substitute_tokens(params.get("notebook_id", "")) or self._extract_json_field(upstream_text, "notebook_id")
+            notebook_id = self._extract_json_field_or_raw(self._substitute_tokens(params.get("notebook_id", "")), "notebook_id")
             if not notebook_id:
-                raise WorkflowRunError("Prompt Loop requires a notebook_id (set one directly, or chain from a Create Notebook node).")
+                raise WorkflowRunError("Prompt Loop requires a notebook_id -- bind {{label}} to a Create Notebook node's output, or type one directly.")
             raw_prompts = self._substitute_tokens(params.get("prompts", ""))
             prompts = [p.strip() for p in raw_prompts.splitlines() if p.strip()]
             if not prompts:

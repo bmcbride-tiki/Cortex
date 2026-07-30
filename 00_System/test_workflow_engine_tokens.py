@@ -75,6 +75,55 @@ def test_nonexistent_label_raises_missing_input():
     assert "DoesNotExist" in step["output"], step
 
 
+def test_ai_prompt_node_has_no_implicit_upstream_text():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([
+        ("1", "Upstream", "function_gemini_ask", {"instructions": "IGNORED"}, ["2"]),
+        ("2", "Prompted", "function_gemini_ask", {"instructions": "ONLY THIS"}, []),
+    ])
+    result = engine.run(graph)
+    assert result["success"], result
+    step = next(s for s in result["steps"] if s["node_id"] == "2")
+    assert step["output"] == "[DRY RUN] Simulated Gemini response for prompt:\nONLY THIS", step
+
+
+def test_concatenate_joins_direct_predecessors_with_separator():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([
+        ("1", "A", "function_gemini_ask", {"instructions": "AAA"}, ["3"]),
+        ("2", "B", "function_gemini_ask", {"instructions": "BBB"}, ["3"]),
+        ("3", "Combine", "function_concatenate", {"separator": "|"}, []),
+    ])
+    result = engine.run(graph)
+    assert result["success"], result
+    step = next(s for s in result["steps"] if s["node_id"] == "3")
+    parts = step["output"].split("|")
+    assert len(parts) == 2 and "AAA" in parts[0] and "BBB" in parts[1], step
+
+
+def test_notebook_id_extracted_from_json_shaped_value():
+    engine = WorkflowEngine(dry_run=True)
+    result = engine._extract_json_field_or_raw('{"notebook_id": "nb-123", "title": "X"}', "notebook_id")
+    assert result == "nb-123", result
+
+
+def test_notebook_id_passthrough_when_not_json():
+    engine = WorkflowEngine(dry_run=True)
+    result = engine._extract_json_field_or_raw("nb-123", "notebook_id")
+    assert result == "nb-123", result
+
+
+def test_upload_sources_requires_notebook_id():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([
+        ("1", "Upload", "function_notebooklm_upload_sources", {"notebook_id": "", "file_paths": "a.pdf"}, []),
+    ])
+    result = engine.run(graph)
+    step = next(s for s in result["steps"] if s["node_id"] == "1")
+    assert step["status"] == "failed", step
+    assert "notebook_id" in step["output"], step
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0
