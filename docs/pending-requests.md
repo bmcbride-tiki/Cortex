@@ -4,7 +4,7 @@ Captured at the point `main` was set as the new baseline (commit `9b18a22`, afte
 
 ## From zzzz_todo.txt
 
-1. **ABC Builder: change taxonomy to Public** — no further detail was recorded. Needs scoping: which taxonomy/setting, and what "Public" should change about ABC Builder's behavior.
+1. ~~**ABC Builder: change taxonomy to Public**~~ — **Done** (commit `55a2a9f`). ABC Builder is an external harness that only talks to public-facing agent-builder models; it's now tagged with a dedicated `"agenty"` model key mapped to the `"public"` classification level, so adding it to a workflow caps the Workflow Classification badge at Public via the existing "most restrictive model wins" ceiling logic — verified live (badge reads "Workflow Classification: Public" once an ABC Builder node is on canvas).
 2. **500 server error — add error log to server.py / API load** — no further detail was recorded. Needs scoping: which endpoint(s) produced the 500, and whether this means general server-side error logging (e.g. a catch-all exception logger) or something specific to app/API loading at startup.
 
 ## Discarded uncommitted changes (documented here, not carried forward)
