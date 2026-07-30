@@ -106,6 +106,15 @@ class WorkflowRunError(Exception):
     pass
 
 
+class MissingInputError(WorkflowRunError):
+    # Raised when a {{label}} reference can't be resolved -- either the
+    # label doesn't exist anywhere in the graph, or it exists but isn't on
+    # a node directly wired into the one currently executing. Unlike a
+    # generic WorkflowRunError, callers can catch this one specifically if
+    # they ever need to distinguish "bad wiring" from other failure modes.
+    pass
+
+
 class WorkflowEngine:
     """
     Walks a saved Workflow Builder graph (Drawflow export, see workflow_builder.html)
@@ -121,10 +130,17 @@ class WorkflowEngine:
     def __init__(self, dry_run: bool = True):
         self.dry_run = dry_run
         self.router = CoreRouter()
-        # Every node's captured text output, keyed by that node's ID -- this
-        # is the shared "memory" that lets later nodes reference earlier
-        # nodes' results via {{node_id}} tokens.
+        # Every node's captured text output, keyed by that node's LABEL (not
+        # its raw ID) -- this is the shared "memory" that lets later nodes
+        # reference earlier nodes' results via {{label}} tokens.
         self.context: Dict[str, str] = {}
+        # node_id -> label, rebuilt fresh at the start of every run() call.
+        self.node_labels: Dict[str, str] = {}
+        # The subset of self.context visible to whichever node is currently
+        # executing -- only its direct predecessors' labels, rebuilt by
+        # _build_scope() right before that node runs. This is what makes
+        # token resolution connection-scoped instead of graph-wide.
+        self._current_scope: Dict[str, str] = {}
         # How many times each Review-Gate-style node has been attempted so
         # far, keyed by that node's ID -- used to enforce each gate's own
         # max_attempts limit.
@@ -170,6 +186,7 @@ class WorkflowEngine:
                     "tool_id": data.get("tool_id"),
                     "category": data.get("category"),
                     "title": data.get("title") or raw.get("name") or node_id,
+                    "label": data.get("label") or node_id,
                     "params": data.get("params") or {},
                     "module_name": data.get("module_name"),
                 }
@@ -253,24 +270,52 @@ class WorkflowEngine:
         # begin.
         return [n for n in nodes if not backward_edges.get(n)]
 
+    def _build_scope(self, node_id: str) -> Dict[str, str]:
+        # Only labels belonging to nodes with a DIRECT edge into node_id are
+        # visible to it -- this is what makes {{label}} a connection, not a
+        # graph-wide lookup. A predecessor whose label isn't in self.context
+        # yet (shouldn't happen given run()'s topological-ish walk order,
+        # but defensively) is just left out of scope rather than crashing.
+        scope: Dict[str, str] = {}
+        for pred_id in self.backward_edges.get(node_id, []):
+            label = self.node_labels.get(pred_id)
+            if label and label in self.context:
+                scope[label] = self.context[label]
+        return scope
+
     # --- Token substitution + upstream text gathering -----------------------------
 
     def _substitute_tokens(self, text: str) -> str:
-        # Finds every {{node_id}} placeholder in a piece of text and
-        # replaces it with that node's actual captured output so far
-        # (or an empty string if that node hasn't run yet/produced
-        # nothing) -- this is the actual mechanism that lets one step's
-        # settings reference an earlier step's result.
+        # Finds every {{label}} placeholder in a piece of text and replaces
+        # it with that label's captured output -- but only if the label is
+        # in self._current_scope (set by _execute_node right before this
+        # node's handler runs, see below). A label that doesn't exist, or
+        # exists but isn't directly connected, is a hard failure rather
+        # than a silent blank.
         if not text:
             return text
-        return TOKEN_PATTERN.sub(lambda m: self.context.get(m.group(1), ""), text)
+
+        def replace(m: "re.Match[str]") -> str:
+            label = m.group(1)
+            if label not in self._current_scope:
+                token_display = "{{" + label + "}}"
+                raise MissingInputError(
+                    f'Missing input value: {token_display} -- "{label}" isn\'t directly connected to this node.'
+                )
+            return self._current_scope[label]
+
+        return TOKEN_PATTERN.sub(replace, text)
 
     def _gather_upstream_text(self, node_id: str) -> str:
         # Collects the output of every node that feeds directly into this
         # one and joins them together (separated by a blank line) -- this
         # is the default "input" most node types receive automatically,
         # without the user needing to manually reference {{...}} tokens.
-        parts = [self.context[p] for p in self.backward_edges.get(node_id, []) if p in self.context]
+        parts = [
+            self.context[self.node_labels[p]]
+            for p in self.backward_edges.get(node_id, [])
+            if self.node_labels.get(p) in self.context
+        ]
         return "\n\n".join(parts)
 
     # --- AI bridge (reuses adapters/copilot-bridge via the existing 05_Processes route) --
@@ -473,6 +518,7 @@ class WorkflowEngine:
         #     task/process/adapter above) or one of the many built-in
         #     operations handled by _execute_function_node below (string
         #     ops, file export/import, AI calls, web scraping, etc.)
+        self._current_scope = self._build_scope(node_id)
         kind = node.get("kind")
         params = node.get("params") or {}
         upstream_text = self._gather_upstream_text(node_id)
@@ -508,7 +554,11 @@ class WorkflowEngine:
         # --- String / logic / data functions (no dependency, no credentials) ---
         if tool_id == "function_concatenate":
             separator = self._substitute_tokens(params.get("separator", "\n\n"))
-            parts = [self.context[p] for p in self.backward_edges.get(node_id, []) if p in self.context]
+            parts = [
+                self.context[self.node_labels[p]]
+                for p in self.backward_edges.get(node_id, [])
+                if self.node_labels.get(p) in self.context
+            ]
             return separator.join(parts), None
 
         if tool_id == "function_logic_gate":
@@ -578,6 +628,7 @@ class WorkflowEngine:
         # arrows dictate, until there's nothing left queued up to run.
         nodes, forward_edges, backward_edges = self._parse_graph(graph_json)
         self.backward_edges = backward_edges
+        self.node_labels = {nid: (n.get("label") or nid) for nid, n in nodes.items()}
 
         if not nodes:
             return {"success": False, "steps": [], "error": "Workflow graph is empty."}
@@ -605,7 +656,8 @@ class WorkflowEngine:
 
             try:
                 output_text, jump_to = self._execute_node(node_id, node)
-                self.context[node_id] = output_text
+                label = self.node_labels.get(node_id, node_id)
+                self.context[label] = output_text
                 self.log.append({
                     "node_id": node_id, "title": node["title"], "kind": node["kind"],
                     "status": "success", "output": (output_text or "")[:600],
