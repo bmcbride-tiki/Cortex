@@ -239,6 +239,29 @@ def test_conditions_first_match_runs_only_one_target_node_end_to_end():
     assert ran_ids == ["1", "2", "3"], ran_ids
 
 
+def test_conditions_all_matches_does_not_double_execute_shared_target():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([
+        ("1", "Src", "function_gemini_ask", {"instructions": "the quick brown fox"}, ["2"]),
+        ("2", "Cond", "function_conditions", {
+            "match_mode": "all_matches",
+            "default_target_node_id": "4",
+            "conditions": [
+                {"mode": "simple", "field": "", "operator": "contains", "value": "quick", "target_node_id": "3"},
+                {"mode": "simple", "field": "", "operator": "contains", "value": "fox", "target_node_id": "3"},
+            ],
+        }, ["3", "4"]),
+        ("3", "Shared", "function_gemini_ask", {"instructions": "AAA"}, []),
+        ("4", "Default", "function_gemini_ask", {"instructions": "CCC"}, []),
+    ])
+    result = engine.run(graph)
+    assert result["success"], result
+    ran_ids = [s["node_id"] for s in result["steps"]]
+    # Both conditions match the same target "3" -- it must run exactly once, not twice.
+    assert ran_ids == ["1", "2", "3"], ran_ids
+    assert ran_ids.count("3") == 1, ran_ids
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0

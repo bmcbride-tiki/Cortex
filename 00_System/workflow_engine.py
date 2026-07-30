@@ -906,7 +906,14 @@ class WorkflowEngine:
                 # target ids instead of one -- queue every one of them at
                 # the front, in order, same as a single jump_to would be.
                 if isinstance(jump_to, list):
-                    queue[0:0] = jump_to
+                    # Insert in reverse so the resulting queue order matches
+                    # the original list order (each insert(0, t) puts t at
+                    # the very front) -- and skip anything already queued,
+                    # same guard as the forward-edges path below, so two
+                    # condition rows targeting the same node don't run it twice.
+                    for t in reversed(jump_to):
+                        if t not in queue:
+                            queue.insert(0, t)
                 else:
                     queue.insert(0, jump_to)
             else:
