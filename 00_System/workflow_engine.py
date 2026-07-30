@@ -644,6 +644,53 @@ class WorkflowEngine:
 
         raise WorkflowRunError(f"Unknown function tool_id: {tool_id}")
 
+    # --- Run-loop scheduling ---------------------------------------------------------
+
+    @staticmethod
+    def _pick_next(
+        queue: List[str],
+        forward_edges: Dict[str, List[str]],
+        backward_edges: Dict[str, List[str]],
+        finished: set,
+    ) -> str:
+        """Which queued node to run next. Normally the first one whose direct
+        predecessors have ALL finished -- running a node before everything feeding
+        it has produced output is what made a join node fail on a token that was
+        only moments away, then run a second time once it arrived.
+
+        When nothing is runnable, something has to be forced or the run stalls.
+        The node to force is one whose unfinished predecessors can never run --
+        i.e. aren't reachable from anything still queued. That's a dead branch a
+        Logic Gate never took. Picking the queue's head instead would force a node
+        whose blocker IS still coming, re-creating the exact double-execution bug
+        (silently, if that node's params happen not to reference the missing
+        label -- a duplicated live AI call or file write with nothing to show it).
+        """
+        for nid in queue:
+            if all(p in finished for p in backward_edges.get(nid, [])):
+                return nid
+
+        # Everything still reachable from a queued node may yet run, so it doesn't
+        # count as a dead blocker.
+        pending = set(queue)
+        stack = list(queue)
+        while stack:
+            for nxt in forward_edges.get(stack.pop(), []):
+                if nxt not in pending:
+                    pending.add(nxt)
+                    stack.append(nxt)
+
+        for nid in queue:
+            if all(p in finished or p not in pending for p in backward_edges.get(nid, [])):
+                return nid
+
+        # ponytail: every queued node is blocked by something still pending, which
+        # only happens in a real cycle that no Review Gate jump breaks. Force the
+        # head to guarantee progress -- that node may run more than once before
+        # MAX_TOTAL_STEPS halts the run. Upgrade path: reject cyclic graphs (that
+        # aren't gate loop-backs) up front, at save time, instead of at run time.
+        return queue[0]
+
     # --- Top-level run ---------------------------------------------------------------
 
     def run(self, graph_json: Dict[str, Any]) -> Dict[str, Any]:
@@ -672,10 +719,6 @@ class WorkflowEngine:
         # the short A->D edge before C had produced anything, fail it on {{C}},
         # then run it a second time via C->D.
         finished: set = set()
-        # How many nodes in a row have been popped and put back unrun. When that
-        # reaches the queue length, nothing left in the queue can ever become
-        # ready, so force-run the head to guarantee progress (see below).
-        skipped_in_a_row = 0
 
         while queue:
             if len(self.log) >= MAX_TOTAL_STEPS:
@@ -685,25 +728,11 @@ class WorkflowEngine:
                 })
                 break
 
-            node_id = queue.pop(0)
+            node_id = self._pick_next(queue, forward_edges, backward_edges, finished)
+            queue.remove(node_id)
             node = nodes.get(node_id)
             if node is None:
                 continue
-
-            if any(p not in finished for p in backward_edges.get(node_id, [])) and skipped_in_a_row <= len(queue):
-                # Not everything feeding this node has run yet -- send it to the
-                # back of the queue and let the rest drain first.
-                queue.append(node_id)
-                skipped_in_a_row += 1
-                continue
-            # ponytail: when NOTHING queued is ready we force-run the head rather
-            # than erroring out. That happens for legitimately unreachable
-            # predecessors too -- a Logic Gate only ever follows one of its two
-            # branches, so a node joining both branches would otherwise stall
-            # forever -- and force-running just reproduces the old behaviour
-            # (it fails cleanly on the missing {{label}} if it really needed it).
-            # Upgrade path: mark not-taken branches as skipped and gate on that.
-            skipped_in_a_row = 0
 
             try:
                 output_text, jump_to = self._execute_node(node_id, node)

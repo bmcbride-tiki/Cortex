@@ -143,6 +143,51 @@ def test_diamond_join_waits_for_all_predecessors():
     assert "AAA" in d_steps[0]["output"] and "CCC" in d_steps[0]["output"], d_steps
 
 
+def test_logic_gate_join_does_not_double_execute():
+    """Gate -> A (taken) / B (never taken); A -> J, A -> C, B -> C, C -> J.
+    At the stall point the queue is [J, C]: J is blocked on C, which IS queued and
+    will run; C is blocked on B, which never will. Forcing the queue's head picks
+    J -- too early -- so J fails on {{C}} and then runs again via C -> J. The dead
+    branch (C) has to be the one forced."""
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([
+        ("1", "G", "function_logic_gate",
+         {"condition_type": "contains", "condition_value": "", "true_node_id": "2", "false_node_id": "3"}, ["2", "3"]),
+        ("2", "A", "function_gemini_ask", {"instructions": "AAA"}, ["5", "4"]),
+        ("3", "B", "function_gemini_ask", {"instructions": "BBB"}, ["4"]),
+        ("4", "C", "function_gemini_ask", {"instructions": "CCC"}, ["5"]),
+        ("5", "J", "function_gemini_ask", {"instructions": "{{A}} ++ {{C}}"}, []),
+    ])
+    result = engine.run(graph)
+    j_steps = [s for s in result["steps"] if s["node_id"] == "5"]
+    assert len(j_steps) == 1, f"J ran {len(j_steps)} time(s): {j_steps}"
+    assert result["success"], result
+    assert "AAA" in j_steps[0]["output"] and "CCC" in j_steps[0]["output"], j_steps
+    assert not [s for s in result["steps"] if s["node_id"] == "3"], "untaken branch B ran"
+
+
+def test_stall_pick_looks_past_the_queue_itself():
+    """Same shape one level deeper: G -> A (taken) / B (dead); A -> J, A -> C,
+    B -> C, C -> X, X -> J. Stall queue is [J, C]. J's blocker X isn't in the queue
+    yet, but IS reachable from C, which is -- so X will run and J must keep waiting.
+    Only C is truly dead-blocked (on B). Checking just 'is the blocker queued right
+    now' picks J and double-executes it."""
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([
+        ("1", "G", "function_logic_gate",
+         {"condition_type": "contains", "condition_value": "", "true_node_id": "2", "false_node_id": "3"}, ["2", "3"]),
+        ("2", "A", "function_gemini_ask", {"instructions": "AAA"}, ["5", "4"]),
+        ("3", "B", "function_gemini_ask", {"instructions": "BBB"}, ["4"]),
+        ("4", "C", "function_gemini_ask", {"instructions": "CCC"}, ["6"]),
+        ("6", "X", "function_gemini_ask", {"instructions": "XXX"}, ["5"]),
+        ("5", "J", "function_gemini_ask", {"instructions": "{{A}} ++ {{X}}"}, []),
+    ])
+    result = engine.run(graph)
+    j_steps = [s for s in result["steps"] if s["node_id"] == "5"]
+    assert len(j_steps) == 1, f"J ran {len(j_steps)} time(s): {j_steps}"
+    assert result["success"], result
+
+
 def test_review_gate_loop_back_still_terminates():
     """Regression guard for the predecessor gating above: a Review Gate's loop-back
     jump re-runs an already-executed node, so gating must not stall it."""
