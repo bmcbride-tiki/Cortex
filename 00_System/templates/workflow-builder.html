@@ -86,13 +86,27 @@
     </div>
 
     <!-- Right panel: selected node's config, identical fields to its popup where one exists -->
-    <div class="w-80 shrink-0 bg-surface border border-border rounded-xl flex flex-col overflow-hidden">
+    <div class="w-80 shrink-0 bg-surface border border-border rounded-xl flex flex-col overflow-hidden relative">
         <div class="px-4 py-3 border-b border-border shrink-0">
             <h4 class="text-xs font-semibold text-heading uppercase tracking-wider">Node Configuration</h4>
+        </div>
+        <div id="wfb-panel-header" class="hidden px-4 py-3 border-b border-border shrink-0 space-y-2">
+            <div class="space-y-1.5">
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Output Label (reference as {{label}})</label>
+                <div class="flex gap-1.5">
+                    <input type="text" id="wfb-panel-label-input" onkeydown="if (event.key === 'Enter') window.wfbSaveLabel()" class="flex-1 bg-canvas border border-border rounded px-3 py-2 text-heading font-mono text-xs focus:outline-none focus:border-primary">
+                    <button onclick="window.wfbSaveLabel()" class="px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors">Save</button>
+                </div>
+            </div>
+            <div class="space-y-1">
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Input(s)</label>
+                <div id="wfb-panel-inputs" class="flex flex-wrap gap-1"></div>
+            </div>
         </div>
         <div id="wfb-panel-body" class="flex-1 overflow-y-auto custom-scrollbar p-4 text-xs space-y-3">
             <div class="text-muted">Select a node on the canvas to configure it.</div>
         </div>
+        <div id="wfb-token-suggest" class="hidden absolute z-50 bg-surface border border-border-strong rounded-lg shadow-lg max-h-40 overflow-y-auto custom-scrollbar text-xs"></div>
     </div>
 </div>
 
@@ -109,6 +123,10 @@
     #wfb-canvas .drawflow-node .input, #wfb-canvas .drawflow-node .output { background: var(--color-primary-400); height: 14px; width: 14px; border: 2px solid var(--color-surface); }
     #wfb-canvas .connection .main-path { stroke: var(--color-primary-400); stroke-width: 3px; }
     #wfb-canvas .connection .main-path:hover { stroke: var(--color-danger-400); cursor: pointer; }
+    .wfb-node-failed {
+        outline: 2px solid var(--color-danger-400, #ef4444) !important;
+        outline-offset: 2px;
+    }
     .wfb-node-card { display: flex; align-items: stretch; border-radius: 10px; overflow: hidden; }
     .wfb-node-card .wfb-node-body { padding: 10px 14px; min-width: 0; flex: 1; }
     .wfb-node-card .wfb-node-title { font-size: 12px; font-weight: 600; color: var(--color-heading); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -378,7 +396,7 @@
                 const moduleName = `container_${Date.now()}_${containerCounter}`;
                 const title = `Container ${containerCounter}`;
                 editor.addModule(moduleName);
-                const data = { kind: "container", tool_id: "container", category: null, title, description: "", params: {}, module_name: moduleName };
+                const data = { kind: "container", tool_id: "container", category: null, title, label: nextDefaultLabel("container"), description: "", params: {}, module_name: moduleName };
                 editor.addNode("container", 1, 1, posX, posY, "kind-container", data, containerNodeHtml(title), false);
                 return;
             }
@@ -388,6 +406,7 @@
                 tool_id: meta.tool_id,
                 category: meta.category || null,
                 title: meta.title,
+                label: nextDefaultLabel(meta.tool_id),
                 description: meta.description || "",
                 model: meta.model || null,
                 licensed: meta.licensed,
@@ -518,13 +537,13 @@
                 { key: "instructions", label: "Search Instructions", type: "textarea", placeholder: "e.g. What changed in the latest Red Seal standard?" },
             ],
             function_gemini_ask: [
-                { key: "instructions", label: "Instructions", type: "textarea", placeholder: "e.g. Summarize the key findings from: {{upstream_node_id}}" },
+                { key: "instructions", label: "Instructions", type: "textarea", placeholder: "e.g. Summarize the key findings from: {{label}}" },
             ],
             function_claude_ask: [
-                { key: "instructions", label: "Instructions", type: "textarea", placeholder: "e.g. Summarize the key findings from: {{upstream_node_id}}" },
+                { key: "instructions", label: "Instructions", type: "textarea", placeholder: "e.g. Summarize the key findings from: {{label}}" },
             ],
             function_chatgpt_ask: [
-                { key: "instructions", label: "Instructions", type: "textarea", placeholder: "e.g. Summarize the key findings from: {{upstream_node_id}}" },
+                { key: "instructions", label: "Instructions", type: "textarea", placeholder: "e.g. Summarize the key findings from: {{label}}" },
             ],
             function_image_generate: [
                 { key: "prompt", label: "Image Prompt", type: "textarea", placeholder: "e.g. A friendly robot mascot, flat vector style" },
@@ -534,11 +553,11 @@
                 { key: "title", label: "Notebook Title", type: "text", placeholder: "e.g. Electrician Curriculum Review" },
             ],
             function_notebooklm_upload_sources: [
-                { key: "notebook_id", label: "Notebook ID (optional if chained from Create)", type: "text", mono: true },
+                { key: "notebook_id", label: "Notebook ID (bind {{label}} from a Create Notebook node, or type one directly)", type: "text", mono: true },
                 { key: "file_paths", label: "File Paths (one per line)", type: "textarea", mono: true, placeholder: "C:\\...\\source1.pdf\nC:\\...\\source2.docx" },
             ],
             function_notebooklm_prompt_loop: [
-                { key: "notebook_id", label: "Notebook ID (optional if chained from Create)", type: "text", mono: true },
+                { key: "notebook_id", label: "Notebook ID (bind {{label}} from a Create Notebook node, or type one directly)", type: "text", mono: true },
                 { key: "prompts", label: "Prompts (one per line)", type: "textarea", placeholder: "What are the key topics in Period 1?" },
             ],
         };
@@ -640,7 +659,7 @@
             send_outlook_mail: { mode: "json", fields: [
                 { key: "to", label: "To (comma-separated)", type: "text", placeholder: "a@example.com, b@example.com" },
                 { key: "subject", label: "Subject", type: "text" },
-                { key: "body", label: "Body", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "body", label: "Body", type: "textarea", placeholder: "e.g. {{label}}" },
             ]},
             search_outlook_email: { mode: "json", fields: [
                 { key: "query", label: "Query / Topic", type: "text", placeholder: "e.g. curriculum" },
@@ -664,14 +683,14 @@
             post_teams_channel_message: { mode: "json", fields: [
                 { key: "team_id", label: "Team ID", type: "text", mono: true },
                 { key: "channel_id", label: "Channel ID", type: "text", mono: true },
-                { key: "message", label: "Message", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "message", label: "Message", type: "textarea", placeholder: "e.g. {{label}}" },
             ]},
             list_teams_chat_messages: { mode: "json", fields: [
                 { key: "chat_id", label: "Chat ID", type: "text", mono: true },
             ]},
             send_teams_chat_message: { mode: "json", fields: [
                 { key: "chat_id", label: "Chat ID", type: "text", mono: true },
-                { key: "message", label: "Message", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "message", label: "Message", type: "textarea", placeholder: "e.g. {{label}}" },
             ]},
             generate_pptx_from_word_with_copilot: { mode: "json", fields: [
                 { key: "word_file_path", label: "Word File Path", type: "text", mono: true },
@@ -710,18 +729,18 @@
             // --- Copilot Agent connectors (real browser automation, not mocked --
             // reuse copilot_bridge.py's functions directly, see 12_Tasks/ask_copilot/) ---
             ask_copilot: { mode: "json", fields: [
-                { key: "prompt", label: "Prompt", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "prompt", label: "Prompt", type: "textarea", placeholder: "e.g. {{label}}" },
             ]},
             ask_copilot_agent: { mode: "json", fields: [
                 { key: "agent_name", label: "Agent Name (@-mention)", type: "text", mono: true, placeholder: "e.g. Hal-9000" },
-                { key: "prompt", label: "Prompt", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "prompt", label: "Prompt", type: "textarea", placeholder: "e.g. {{label}}" },
             ]},
             generate_copilot_image: { mode: "json", fields: [
                 { key: "prompt", label: "Image Prompt", type: "textarea", placeholder: "e.g. A friendly robot mascot, flat vector style" },
                 { key: "output_dir", label: "Output Folder", type: "text", mono: true },
             ]},
             format_text_with_copilot: { mode: "json", fields: [
-                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{label}}" },
                 { key: "style_notes", label: "Style Notes", type: "textarea", placeholder: "e.g. Format as a formal government briefing note with headers." },
             ]},
             // --- 09_Functions (migrated from built-in engine functions) ---
@@ -731,7 +750,7 @@
                 { key: "output_dir", label: "Output Folder (optional)", type: "text", mono: true },
             ]},
             human_review_checkpoint: { mode: "json", fields: [
-                { key: "content_text", label: "Content to Review", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "content_text", label: "Content to Review", type: "textarea", placeholder: "e.g. {{label}}" },
                 { key: "output_dir", label: "Output Folder", type: "text", mono: true },
                 { key: "filename", label: "Filename", type: "text", mono: true },
                 { key: "format", label: "Format", type: "select", options: ["docx", "json", "markdown"] },
@@ -739,22 +758,22 @@
                 { key: "workflow_label", label: "Workflow Label", type: "text", placeholder: "e.g. AI Exam Builder (Part 1)" },
             ]},
             export_to_json: { mode: "json", fields: [
-                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{label}}" },
                 { key: "output_dir", label: "Output Folder", type: "text", mono: true },
                 { key: "filename", label: "Filename (optional)", type: "text", mono: true },
             ]},
             export_to_markdown: { mode: "json", fields: [
-                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{label}}" },
                 { key: "output_dir", label: "Output Folder", type: "text", mono: true },
                 { key: "filename", label: "Filename (optional)", type: "text", mono: true },
             ]},
             export_to_word: { mode: "json", fields: [
-                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{label}}" },
                 { key: "output_dir", label: "Output Folder", type: "text", mono: true },
                 { key: "filename", label: "Filename (optional)", type: "text", mono: true },
             ]},
             export_to_pdf: { mode: "json", fields: [
-                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{label}}" },
                 { key: "output_dir", label: "Output Folder", type: "text", mono: true },
                 { key: "filename", label: "Filename (optional)", type: "text", mono: true },
             ]},
@@ -768,18 +787,18 @@
                 { key: "file_path", label: "File Path", type: "text", mono: true, placeholder: "C:\\Data\\input.pdf" },
             ]},
             split_text: { mode: "json", fields: [
-                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{label}}" },
                 { key: "delimiter", label: "Delimiter", type: "text", mono: true, placeholder: "\\n (default)" },
                 { key: "index", label: "Segment Index", type: "number", placeholder: "0" },
             ]},
             format_json: { mode: "json", fields: [
-                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "text", label: "Text", type: "textarea", placeholder: "e.g. {{label}}" },
             ]},
             web_scrape: { mode: "json", fields: [
                 { key: "url", label: "URL", type: "text", placeholder: "https://example.com" },
             ]},
             fill_docx_template: { mode: "json", fields: [
-                { key: "content_text", label: "Content Text", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "content_text", label: "Content Text", type: "textarea", placeholder: "e.g. {{label}}" },
                 { key: "template_path", label: "Template Path (.docx, with {{ content }} placeholder)", type: "text", mono: true, placeholder: "C:\\Templates\\briefing_note_template.docx" },
                 { key: "output_dir", label: "Output Folder (optional)", type: "text", mono: true, placeholder: "Defaults to 02_vault/generated" },
             ]},
@@ -877,7 +896,7 @@
                 { key: "file_path", label: "File Path", type: "text", mono: true, placeholder: "C:\\Data\\input.pptx" },
             ]},
             write_powerpoint: { mode: "json", fields: [
-                { key: "text", label: "Text (blank line = new slide, first line = title)", type: "textarea", placeholder: "e.g. {{upstream_node_id}}" },
+                { key: "text", label: "Text (blank line = new slide, first line = title)", type: "textarea", placeholder: "e.g. {{label}}" },
                 { key: "output_dir", label: "Output Folder", type: "text", mono: true },
                 { key: "filename", label: "Filename (optional)", type: "text", mono: true },
             ]},
@@ -954,6 +973,126 @@
                 .filter(id => id !== nodeId)
                 .map(id => ({ id, title: editor.getNodeFromId(id).data.title }));
         }
+
+        function allWorkflowLabels(excludeNodeId) {
+            // Graph-wide (every module, not just the currently open one) --
+            // labels must be unique across the whole flattened workflow,
+            // the same way node IDs already are.
+            const exported = editor.export().drawflow;
+            const result = [];
+            Object.values(exported).forEach(mod => {
+                Object.entries(mod.data || {}).forEach(([id, node]) => {
+                    if (id !== excludeNodeId) result.push({ id, label: node.data.label });
+                });
+            });
+            return result;
+        }
+
+        function uniqueLabel(candidate, excludeNodeId) {
+            const taken = new Set(allWorkflowLabels(excludeNodeId).map(n => n.label));
+            if (!taken.has(candidate)) return candidate;
+            let n = 2;
+            while (taken.has(`${candidate}_${n}`)) n += 1;
+            return `${candidate}_${n}`;
+        }
+
+        // Must stay in lockstep with workflow_engine.py's TOKEN_PATTERN
+        // ([a-zA-Z0-9_-]+): a label containing anything else -- a space, most
+        // obviously -- would make {{that label}} unmatchable, so it'd be shipped
+        // to the AI/adapter verbatim with nothing flagging it.
+        const LABEL_CHARSET = /^[A-Za-z0-9_-]+$/;
+        const sanitizeLabel = (s) => s.replace(/[^A-Za-z0-9_-]+/g, "_");
+
+        const labelCounters = {};
+        function nextDefaultLabel(toolId) {
+            labelCounters[toolId] = (labelCounters[toolId] || 0) + 1;
+            return uniqueLabel(sanitizeLabel(`${toolId}_${labelCounters[toolId]}`), null);
+        }
+
+        function directPredecessorLabels(nodeId) {
+            const node = editor.getNodeFromId(nodeId);
+            const connections = (node.inputs && node.inputs.input_1 && node.inputs.input_1.connections) || [];
+            // Containers are spliced out of the graph before the engine builds its
+            // label map, so a container's own label can never resolve -- don't
+            // recommend a token that's guaranteed to fail. Documented limitation:
+            // full container-aware label propagation is future work.
+            return connections
+                .map(c => editor.getNodeFromId(c.node))
+                .filter(n => n.data.kind !== "container")
+                .map(n => n.data.label)
+                .filter(Boolean);
+        }
+
+        function renderInputsChips(nodeId) {
+            const box = document.getElementById("wfb-panel-inputs");
+            const labels = directPredecessorLabels(nodeId);
+            if (!labels.length) {
+                box.innerHTML = `<span class="text-muted text-[10px]">No connected inputs yet.</span>`;
+                return;
+            }
+            box.innerHTML = labels.map(l => `<span class="px-2 py-1 rounded bg-canvas border border-border-strong font-mono text-[10px] text-primary-400 cursor-pointer hover:bg-primary/15" data-insert-label="${escapeHtml(l)}">{{${escapeHtml(l)}}}</span>`).join("");
+        }
+
+        function wfbRenameLabelReferences(oldLabel, newLabel) {
+            // Connections never cross modules (Drawflow enforces this), and a
+            // label is only ever referenceable via a direct connection -- so
+            // only the current module can possibly contain a {{oldLabel}}
+            // reference. No need to switch modules to check others.
+            if (oldLabel === newLabel) return;
+            const oldToken = "{{" + oldLabel + "}}";
+            const newToken = "{{" + newLabel + "}}";
+            const moduleData = editor.export().drawflow[currentModuleName].data;
+            Object.entries(moduleData).forEach(([id, rawNode]) => {
+                const params = rawNode.data.params || {};
+                let changed = false;
+                const newParams = {};
+                Object.entries(params).forEach(([key, value]) => {
+                    if (typeof value === "string" && value.includes(oldToken)) {
+                        newParams[key] = value.split(oldToken).join(newToken);
+                        changed = true;
+                    } else if (Array.isArray(value)) {
+                        // ARG_FIELD_SCHEMAS-backed nodes (curriculum_guide_to_tos,
+                        // webscraper, abc_uploader, send_outlook_mail, etc.) and
+                        // renderGenericArgsPanel store fields as params.args = [v1, v2, ...],
+                        // not flat string params -- rewrite each string element the
+                        // same way (a JSON-mode element is still just a string here).
+                        newParams[key] = value.map(el => {
+                            if (typeof el === "string" && el.includes(oldToken)) {
+                                changed = true;
+                                return el.split(oldToken).join(newToken);
+                            }
+                            return el;
+                        });
+                    } else {
+                        newParams[key] = value;
+                    }
+                });
+                if (changed) editor.updateNodeDataFromId(id, { ...rawNode.data, params: newParams });
+            });
+            // Deliberately NOT re-rendering the panel body here: it would discard
+            // whatever the user has typed but not yet saved in the fields below.
+            // Only the Input(s) chips can go stale (if the renamed node feeds the
+            // selected one), and those are re-rendered from live node data.
+            if (selectedNodeId) renderInputsChips(selectedNodeId);
+        }
+
+        window.wfbSaveLabel = function() {
+            if (!selectedNodeId) return;
+            const input = document.getElementById("wfb-panel-label-input");
+            const requested = input.value.trim();
+            if (!requested) { alert("Output label can't be empty."); return; }
+            if (!LABEL_CHARSET.test(requested)) {
+                alert("Output labels can only contain letters, numbers, underscores and hyphens (no spaces) -- otherwise {{the token}} won't be recognised.\n\nSuggested: " + sanitizeLabel(requested));
+                return;
+            }
+            const finalLabel = uniqueLabel(requested, selectedNodeId);
+            const node = editor.getNodeFromId(selectedNodeId);
+            const oldLabel = node.data.label;
+            editor.updateNodeDataFromId(selectedNodeId, { ...node.data, label: finalLabel });
+            input.value = finalLabel;
+            if (finalLabel !== oldLabel) wfbRenameLabelReferences(oldLabel, finalLabel);
+            wfbLog(`Output label set to "${finalLabel}". Reference it elsewhere as {{${finalLabel}}}.`, "text-success-400");
+        };
 
         function renderContainerPanel(nodeId, data) {
             const body = document.getElementById("wfb-panel-body");
@@ -1040,6 +1179,12 @@
         function selectNode(nodeId) {
             selectedNodeId = nodeId;
             const data = currentNodeData(nodeId);
+
+            const header = document.getElementById("wfb-panel-header");
+            header.classList.remove("hidden");
+            document.getElementById("wfb-panel-label-input").value = data.label || "";
+            renderInputsChips(nodeId);
+
             if (data.kind === "task" || data.kind === "process" || data.kind === "adapter") {
                 const argSchema = ARG_FIELD_SCHEMAS[data.tool_id];
                 if (FIELD_PARTIAL_TOOL_IDS.includes(data.tool_id)) {
@@ -1060,6 +1205,7 @@
 
         function clearPanel() {
             selectedNodeId = null;
+            document.getElementById("wfb-panel-header").classList.add("hidden");
             document.getElementById("wfb-panel-body").innerHTML = `<div class="text-muted">Select a node on the canvas to configure it.</div>`;
         }
 
@@ -1204,6 +1350,11 @@
             const dryRun = document.getElementById("wfb-dry-run").checked;
             const graphJson = editor.export();
 
+            document.querySelectorAll(".wfb-node-failed").forEach(el => {
+                el.classList.remove("wfb-node-failed");
+                el.removeAttribute("title");
+            });
+
             wfbSetRunStatus("Running...", "text-warning-400");
             wfbLog(`Starting ${dryRun ? "dry" : "live"} run...`, "text-info-400");
 
@@ -1219,6 +1370,18 @@
                 (data.steps || []).forEach(step => {
                     const color = step.status === "success" ? "text-body" : "text-danger-400";
                     wfbLog(`[${step.kind || "?"}] ${step.title || step.node_id}: ${step.status}${step.output ? " -- " + step.output : ""}`, color);
+
+                    // A node can appear twice in one run's steps (a Review Gate
+                    // loop-back re-runs it), so a later success must clear the
+                    // outline and stale tooltip left by an earlier failure.
+                    const nodeEl = document.getElementById(`node-${step.node_id}`);
+                    if (nodeEl && step.status === "failed") {
+                        nodeEl.classList.add("wfb-node-failed");
+                        nodeEl.title = step.output || "Failed";
+                    } else if (nodeEl) {
+                        nodeEl.classList.remove("wfb-node-failed");
+                        nodeEl.removeAttribute("title");
+                    }
                 });
 
                 if (data.success) {
@@ -1277,6 +1440,83 @@
 
         document.getElementById("wfb-container-palette-item").addEventListener("dragstart", (e) => {
             e.dataTransfer.setData("application/json", JSON.stringify({ tool_id: "container", kind: "container", title: "Container", description: "" }));
+        });
+
+        // One delegated focus listener covers every text/textarea field in
+        // the node config panel, present and future, so click-to-insert
+        // knows where to put the token without each renderXPanel wiring it.
+        let wfbLastFocusedField = null;
+        document.getElementById("wfb-panel-body").addEventListener("focusin", (e) => {
+            if (e.target.matches("textarea, input[type='text']")) wfbLastFocusedField = e.target;
+        });
+
+        document.getElementById("wfb-panel-inputs").addEventListener("click", (e) => {
+            const chip = e.target.closest("[data-insert-label]");
+            if (!chip || !wfbLastFocusedField) return;
+            const field = wfbLastFocusedField;
+            const token = "{{" + chip.dataset.insertLabel + "}}";
+            const cursor = field.selectionStart ?? field.value.length;
+            field.value = field.value.slice(0, cursor) + token + field.value.slice(cursor);
+            const newCursor = cursor + token.length;
+            field.focus();
+            field.setSelectionRange(newCursor, newCursor);
+        });
+
+        let wfbSuggestField = null;
+
+        function closeTokenSuggest() {
+            document.getElementById("wfb-token-suggest").classList.add("hidden");
+            wfbSuggestField = null;
+        }
+
+        function openTokenSuggest(field) {
+            if (!selectedNodeId) return;
+            const labels = directPredecessorLabels(selectedNodeId);
+            if (!labels.length) { closeTokenSuggest(); return; }
+            const box = document.getElementById("wfb-token-suggest");
+            box.innerHTML = labels.map(l => `<div class="px-3 py-1.5 hover:bg-primary/15 cursor-pointer font-mono" data-suggest-label="${escapeHtml(l)}">{{${escapeHtml(l)}}}</div>`).join("");
+            const fieldRect = field.getBoundingClientRect();
+            // #wfb-token-suggest is absolutely positioned, so its offsets must
+            // be measured against its actual positioning context -- the
+            // "relative" wrapper div (Step 1), not #wfb-panel-body, which has
+            // no position set and sits below the title bar / label+inputs
+            // header inside that wrapper.
+            const panelRect = field.closest(".relative").getBoundingClientRect();
+            box.style.left = (fieldRect.left - panelRect.left) + "px";
+            box.style.top = (fieldRect.bottom - panelRect.top) + "px";
+            box.style.width = fieldRect.width + "px";
+            box.classList.remove("hidden");
+            wfbSuggestField = field;
+        }
+
+        document.getElementById("wfb-panel-body").addEventListener("input", (e) => {
+            const field = e.target;
+            if (!field.matches("textarea, input[type='text']")) return;
+            const cursor = field.selectionStart;
+            const lastTwo = field.value.slice(Math.max(0, cursor - 2), cursor);
+            if (lastTwo === "{{") {
+                openTokenSuggest(field);
+            } else {
+                closeTokenSuggest();
+            }
+        });
+
+        document.getElementById("wfb-token-suggest").addEventListener("mousedown", (e) => {
+            const opt = e.target.closest("[data-suggest-label]");
+            if (!opt || !wfbSuggestField) return;
+            e.preventDefault(); // keep focus (and cursor position) in the field
+            const field = wfbSuggestField;
+            const cursor = field.selectionStart;
+            const insertion = opt.dataset.suggestLabel + "}}";
+            field.value = field.value.slice(0, cursor) + insertion + field.value.slice(cursor);
+            const newCursor = cursor + insertion.length;
+            field.focus();
+            field.setSelectionRange(newCursor, newCursor);
+            closeTokenSuggest();
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!e.target.closest("#wfb-token-suggest") && e.target !== wfbSuggestField) closeTokenSuggest();
         });
 
         document.getElementById("wfb-palette-search").addEventListener("input", function() {
