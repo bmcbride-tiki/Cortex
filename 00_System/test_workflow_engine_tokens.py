@@ -113,6 +113,51 @@ def test_notebook_id_passthrough_when_not_json():
     assert result == "nb-123", result
 
 
+def test_blank_ai_prompt_fails_instead_of_sending_nothing():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([
+        ("1", "Up", "function_gemini_ask", {"instructions": "AAA"}, ["2"]),
+        ("2", "Blank", "function_gemini_ask", {"instructions": "   "}, []),
+    ])
+    result = engine.run(graph)
+    step = next(s for s in result["steps"] if s["node_id"] == "2")
+    assert step["status"] == "failed", step
+    assert "requires instructions" in step["output"], step
+
+
+def test_diamond_join_waits_for_all_predecessors():
+    """A -> B -> C -> D plus a direct A -> D edge. D must run exactly once, after
+    BOTH A and C have produced output -- a plain BFS pops D as soon as the A -> D
+    edge is followed, fails it on {{C}}, then re-queues and re-runs it via C -> D."""
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([
+        ("1", "A", "function_gemini_ask", {"instructions": "AAA"}, ["2", "4"]),
+        ("2", "B", "function_gemini_ask", {"instructions": "BBB"}, ["3"]),
+        ("3", "C", "function_gemini_ask", {"instructions": "CCC"}, ["4"]),
+        ("4", "D", "function_gemini_ask", {"instructions": "{{A}} ++ {{C}}"}, []),
+    ])
+    result = engine.run(graph)
+    d_steps = [s for s in result["steps"] if s["node_id"] == "4"]
+    assert len(d_steps) == 1, f"D ran {len(d_steps)} time(s): {d_steps}"
+    assert result["success"], result
+    assert "AAA" in d_steps[0]["output"] and "CCC" in d_steps[0]["output"], d_steps
+
+
+def test_review_gate_loop_back_still_terminates():
+    """Regression guard for the predecessor gating above: a Review Gate's loop-back
+    jump re-runs an already-executed node, so gating must not stall it."""
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([
+        ("1", "Src", "function_gemini_ask", {"instructions": "SSS"}, ["2"]),
+        ("2", "Gate", "builtin_review_gate", {"criteria": "ok", "loop_back_node_id": "1", "max_attempts": 2}, []),
+    ])
+    result = engine.run(graph)
+    assert result["success"], result
+    gate_steps = [s for s in result["steps"] if s["node_id"] == "2"]
+    assert len(gate_steps) == 2, gate_steps  # fails attempt 1, loops back, passes attempt 2
+    assert "PASS" in gate_steps[-1]["output"], gate_steps
+
+
 def test_upload_sources_requires_notebook_id():
     engine = WorkflowEngine(dry_run=True)
     graph = _graph([

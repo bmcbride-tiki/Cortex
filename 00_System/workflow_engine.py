@@ -46,11 +46,13 @@
 #     me") and the overall run loop needs to look forward (e.g. "what runs
 #     next").
 #   - Passing data between boxes: whatever text a node produces gets stored
-#     using that node's own ID as the key. Any later node can pull in an
-#     earlier node's output by writing a small placeholder like
-#     `{{that_node_id}}` in one of its own settings -- `_substitute_tokens`
-#     is what finds and replaces those placeholders with the real captured
-#     text before a node actually runs.
+#     using that node's human-readable output LABEL as the key (each box has
+#     one, editable in the builder's right-hand panel). A node can pull in an
+#     earlier node's output by writing a small placeholder like `{{that_label}}`
+#     in one of its own settings -- `_substitute_tokens` is what finds and
+#     replaces those placeholders with the real captured text before a node
+#     actually runs. Only labels belonging to boxes wired DIRECTLY into this
+#     one can be referenced; anything else is a hard error, not a silent blank.
 #   - "Containers" are the Workflow Builder's way of letting you group a
 #     cluster of boxes into one collapsible sub-diagram (like a folder full
 #     of steps that displays as a single box on the main canvas). Before
@@ -90,9 +92,10 @@ if str(CURRENT_DIR) not in sys.path:
 
 from core_router import CoreRouter
 
-# Matches placeholder tokens like {{some_node_id}} anywhere inside a node's
+# Matches placeholder tokens like {{some_label}} anywhere inside a node's
 # settings text, so they can be swapped out for that earlier node's real
-# captured output before this node actually runs.
+# captured output before this node actually runs. The allowed character set
+# here is what workflow-builder.html's wfbSaveLabel enforces on labels.
 TOKEN_PATTERN = re.compile(r"\{\{\s*([a-zA-Z0-9_\-]+)\s*\}\}")
 MAX_TOTAL_STEPS = 200  # guards against runaway loops even when a gate's own max_attempts is misconfigured
 
@@ -119,7 +122,9 @@ class WorkflowEngine:
     """
     Walks a saved Workflow Builder graph (Drawflow export, see workflow_builder.html)
     and executes each node for real, threading captured text output from one node into
-    the next via {{node_id}} token substitution. Tasks/Processes dispatch through the
+    the next via {{label}} token substitution, scoped to direct connections only (an
+    unresolvable label raises MissingInputError rather than resolving to a blank).
+    A node waits until every one of its direct predecessors has run. Tasks/Processes dispatch through the
     exact same CoreRouter.execute_app_logic used everywhere else in the app. Skills and
     AI-flavored built-ins dispatch through the existing copilot_bridge adapter (08_Adapters)
     -- the same mechanism templates/copilot.html already uses -- rather than a new AI
@@ -141,6 +146,10 @@ class WorkflowEngine:
         # _build_scope() right before that node runs. This is what makes
         # token resolution connection-scoped instead of graph-wide.
         self._current_scope: Dict[str, str] = {}
+        # Labels of ALL direct predecessors of the currently-executing node,
+        # including any that haven't produced output -- lets _substitute_tokens
+        # tell "not connected" apart from "connected but empty".
+        self._current_pred_labels: set = set()
         # How many times each Review-Gate-style node has been attempted so
         # far, keyed by that node's ID -- used to enforce each gate's own
         # max_attempts limit.
@@ -273,13 +282,18 @@ class WorkflowEngine:
     def _build_scope(self, node_id: str) -> Dict[str, str]:
         # Only labels belonging to nodes with a DIRECT edge into node_id are
         # visible to it -- this is what makes {{label}} a connection, not a
-        # graph-wide lookup. A predecessor whose label isn't in self.context
-        # yet (shouldn't happen given run()'s topological-ish walk order,
-        # but defensively) is just left out of scope rather than crashing.
+        # graph-wide lookup. run() now holds a node back until every one of its
+        # predecessors has finished, so the only way a predecessor's label is
+        # missing from self.context is that it failed -- leave it out of scope
+        # rather than crashing here, and let _substitute_tokens report it.
         scope: Dict[str, str] = {}
+        self._current_pred_labels = set()
         for pred_id in self.backward_edges.get(node_id, []):
             label = self.node_labels.get(pred_id)
-            if label and label in self.context:
+            if not label:
+                continue
+            self._current_pred_labels.add(label)
+            if label in self.context:
                 scope[label] = self.context[label]
         return scope
 
@@ -299,9 +313,16 @@ class WorkflowEngine:
             label = m.group(1)
             if label not in self._current_scope:
                 token_display = "{{" + label + "}}"
-                raise MissingInputError(
-                    f'Missing input value: {token_display} -- "{label}" isn\'t directly connected to this node.'
+                # A connected-but-empty predecessor shouldn't happen now that
+                # run() waits for every predecessor to finish, but if it does
+                # (e.g. that predecessor failed) say so precisely rather than
+                # blaming the wiring.
+                why = (
+                    "hasn't produced output yet"
+                    if label in self._current_pred_labels
+                    else "isn't directly connected to this node"
                 )
+                raise MissingInputError(f'Missing input value: {token_display} -- "{label}" {why}.')
             return self._current_scope[label]
 
         return TOKEN_PATTERN.sub(replace, text)
@@ -569,28 +590,32 @@ class WorkflowEngine:
         if tool_id == "function_logic_gate":
             return self._run_logic_gate(node_id, params)
 
-        # --- Gemini-backed functions (adapters/gemini-bridge, uses a signed-in browser session, no API key) ---
-        if tool_id == "function_google_search":
-            instructions = self._substitute_tokens(params.get("instructions", ""))
-            return self._ask_gemini(instructions, use_search=True), None
-        if tool_id == "function_gemini_ask":
-            instructions = self._substitute_tokens(params.get("instructions", ""))
-            return self._ask_gemini(instructions), None
-
-        # --- Claude-backed functions (adapters/claude-bridge, mock-mode until real API access exists) ---
-        if tool_id == "function_claude_ask":
-            instructions = self._substitute_tokens(params.get("instructions", ""))
-            return self._ask_claude(instructions), None
-
-        # --- ChatGPT-backed functions (adapters/chatgpt-bridge, mock-mode until real API access exists) ---
-        if tool_id == "function_chatgpt_ask":
-            instructions = self._substitute_tokens(params.get("instructions", ""))
-            return self._ask_chatgpt(instructions), None
-
-        if tool_id == "function_image_generate":
-            prompt = self._substitute_tokens(params.get("prompt", ""))
-            output_dir = params.get("output_dir") or str(self.router.base_dir / "02_vault" / "generated_images")
-            return self._generate_image_gemini(prompt, output_dir), None
+        # --- Prompt-driven AI functions (Gemini / Claude / ChatGPT / image gen) ---
+        # There's no implicit "whatever flowed in" fallback any more, so an empty
+        # prompt means the node is misconfigured -- fail loudly instead of firing
+        # an empty request at the model.
+        AI_PROMPT_NODES = {
+            "function_google_search": ("Google Search", "instructions"),
+            "function_gemini_ask": ("Gemini Ask", "instructions"),
+            "function_claude_ask": ("Claude Ask", "instructions"),
+            "function_chatgpt_ask": ("ChatGPT Ask", "instructions"),
+            "function_image_generate": ("Image Generate", "prompt"),
+        }
+        if tool_id in AI_PROMPT_NODES:
+            friendly_name, field = AI_PROMPT_NODES[tool_id]
+            prompt = self._substitute_tokens(params.get(field, ""))
+            if not prompt.strip():
+                raise WorkflowRunError(
+                    f"{friendly_name} requires {field} -- bind {{{{label}}}} or type a prompt directly."
+                )
+            if tool_id == "function_image_generate":
+                output_dir = params.get("output_dir") or str(self.router.base_dir / "02_vault" / "generated_images")
+                return self._generate_image_gemini(prompt, output_dir), None
+            if tool_id == "function_claude_ask":
+                return self._ask_claude(prompt), None
+            if tool_id == "function_chatgpt_ask":
+                return self._ask_chatgpt(prompt), None
+            return self._ask_gemini(prompt, use_search=(tool_id == "function_google_search")), None
 
         # --- NotebookLM-backed functions (adapters/notebooklm-bridge, mock-mode until real API/MCP access exists) ---
         if tool_id == "function_notebooklm_create":
@@ -641,6 +666,16 @@ class WorkflowEngine:
         # jump instead gets inserted at the very FRONT, so it's picked up
         # immediately next, ahead of anything else already queued.
         queue: List[str] = list(entry_ids)
+        # Every node that has finished running (succeeded OR failed). A node is
+        # only allowed to run once ALL of its direct predecessors are in here --
+        # without that, a diamond (A->B->C->D plus a direct A->D) would pop D via
+        # the short A->D edge before C had produced anything, fail it on {{C}},
+        # then run it a second time via C->D.
+        finished: set = set()
+        # How many nodes in a row have been popped and put back unrun. When that
+        # reaches the queue length, nothing left in the queue can ever become
+        # ready, so force-run the head to guarantee progress (see below).
+        skipped_in_a_row = 0
 
         while queue:
             if len(self.log) >= MAX_TOTAL_STEPS:
@@ -655,6 +690,21 @@ class WorkflowEngine:
             if node is None:
                 continue
 
+            if any(p not in finished for p in backward_edges.get(node_id, [])) and skipped_in_a_row <= len(queue):
+                # Not everything feeding this node has run yet -- send it to the
+                # back of the queue and let the rest drain first.
+                queue.append(node_id)
+                skipped_in_a_row += 1
+                continue
+            # ponytail: when NOTHING queued is ready we force-run the head rather
+            # than erroring out. That happens for legitimately unreachable
+            # predecessors too -- a Logic Gate only ever follows one of its two
+            # branches, so a node joining both branches would otherwise stall
+            # forever -- and force-running just reproduces the old behaviour
+            # (it fails cleanly on the missing {{label}} if it really needed it).
+            # Upgrade path: mark not-taken branches as skipped and gate on that.
+            skipped_in_a_row = 0
+
             try:
                 output_text, jump_to = self._execute_node(node_id, node)
                 label = self.node_labels.get(node_id, node_id)
@@ -668,16 +718,21 @@ class WorkflowEngine:
                     "node_id": node_id, "title": node.get("title", node_id), "kind": node.get("kind"),
                     "status": "failed", "output": str(e),
                 })
+                # Marked finished even though it failed, so nodes waiting on it
+                # aren't blocked forever -- they'll fail on the missing token.
+                finished.add(node_id)
                 continue  # do not follow this node's outgoing edges on failure
 
+            finished.add(node_id)
             if jump_to:
                 # A Review Gate (or similar) decided to loop back to an
                 # earlier node instead of continuing forward normally.
                 queue.insert(0, jump_to)
             else:
                 # Normal case: queue up whatever node(s) this one's output
-                # arrows point to next.
-                queue.extend(forward_edges.get(node_id, []))
+                # arrows point to next -- skipping any already waiting in the
+                # queue, so a node fed by two paths is only ever run once.
+                queue.extend(t for t in forward_edges.get(node_id, []) if t not in queue)
 
         overall_success = bool(self.log) and all(s["status"] == "success" for s in self.log)
         return {"success": overall_success, "steps": self.log}
