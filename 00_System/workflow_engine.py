@@ -82,6 +82,7 @@ import sys
 sys.dont_write_bytecode = True
 
 import re
+import ast
 import json
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Optional
@@ -116,6 +117,63 @@ class MissingInputError(WorkflowRunError):
     # generic WorkflowRunError, callers can catch this one specifically if
     # they ever need to distinguish "bad wiring" from other failure modes.
     pass
+
+
+# --- Conditions node: safe expression evaluation (no eval(), stdlib only) -------
+
+_CONDITION_COMPARE_OPS = {
+    ast.Eq: lambda a, b: a == b,
+    ast.NotEq: lambda a, b: a != b,
+    ast.Lt: lambda a, b: a < b,
+    ast.LtE: lambda a, b: a <= b,
+    ast.Gt: lambda a, b: a > b,
+    ast.GtE: lambda a, b: a >= b,
+    ast.In: lambda a, b: a in b,
+    ast.NotIn: lambda a, b: a not in b,
+}
+
+
+def _eval_condition_ast(node: ast.AST, namespace: Dict[str, Any]) -> Any:
+    # Whitelist walker: only boolean logic, comparisons, name lookups (against
+    # namespace only), and literal constants are ever evaluated. Anything else
+    # (Call, Attribute, Subscript, imports, comprehensions, ...) is rejected --
+    # this is what makes a user-typed expression safe to run server-side.
+    if isinstance(node, ast.Expression):
+        return _eval_condition_ast(node.body, namespace)
+    if isinstance(node, ast.BoolOp):
+        values = [_eval_condition_ast(v, namespace) for v in node.values]
+        return all(values) if isinstance(node.op, ast.And) else any(values)
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+        return not _eval_condition_ast(node.operand, namespace)
+    if isinstance(node, ast.Compare):
+        left = _eval_condition_ast(node.left, namespace)
+        for op, comparator in zip(node.ops, node.comparators):
+            handler = _CONDITION_COMPARE_OPS.get(type(op))
+            if handler is None:
+                raise WorkflowRunError(f"Unsupported comparison operator in condition expression: {type(op).__name__}")
+            right = _eval_condition_ast(comparator, namespace)
+            if not handler(left, right):
+                return False
+            left = right
+        return True
+    if isinstance(node, ast.Name):
+        if node.id not in namespace:
+            raise WorkflowRunError(f"Condition expression references unknown field: {node.id}")
+        return namespace[node.id]
+    if isinstance(node, ast.Constant):
+        return node.value
+    raise WorkflowRunError(f"Unsupported syntax in condition expression: {type(node).__name__}")
+
+
+def _eval_condition_expression(expr: str, namespace: Dict[str, Any]) -> bool:
+    # expr is text a workflow author typed into a form field -- it must never
+    # be able to call functions, access attributes, or do anything beyond
+    # compare values already present in namespace. Deliberately not eval().
+    try:
+        tree = ast.parse(expr, mode="eval")
+    except SyntaxError as e:
+        raise WorkflowRunError(f"Invalid condition expression: {e}")
+    return bool(_eval_condition_ast(tree, namespace))
 
 
 class WorkflowEngine:
