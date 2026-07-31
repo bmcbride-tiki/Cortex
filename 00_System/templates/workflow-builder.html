@@ -568,6 +568,17 @@
             function_select: [
                 { key: "columns", label: 'Columns (JSON: {"outputKey": "dotted.path"})', type: "textarea", mono: true, placeholder: '{"name": "user.name"}' },
             ],
+            function_join: [
+                { key: "field", label: "Field (optional dotted path; blank = whole item)", type: "text", mono: true },
+                { key: "separator", label: "Separator", type: "text", mono: true, placeholder: ", " },
+            ],
+            function_sort: [
+                { key: "field", label: "Field (optional dotted path; blank = whole item)", type: "text", mono: true },
+                { key: "direction", label: "Direction", type: "select", options: ["asc", "desc"] },
+            ],
+            function_union: [
+                { key: "key", label: "Dedup Key (optional dotted path; blank = whole item)", type: "text", mono: true },
+            ],
             function_google_search: [
                 { key: "instructions", label: "Search Instructions", type: "textarea", placeholder: "e.g. What changed in the latest Red Seal standard?" },
             ],

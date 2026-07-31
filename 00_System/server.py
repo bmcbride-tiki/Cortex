@@ -280,6 +280,24 @@ FUNCTIONS_REGISTRY = [
         "model": None,
     },
     {
+        "tool_id": "function_join",
+        "title": "Join",
+        "description": "Joins array items (or an optional dotted-path field of each item) into a single delimited string.",
+        "model": None,
+    },
+    {
+        "tool_id": "function_sort",
+        "title": "Sort",
+        "description": "Sorts an array by an optional dotted-path field, ascending or descending.",
+        "model": None,
+    },
+    {
+        "tool_id": "function_union",
+        "title": "Union",
+        "description": "Merges two or more connected arrays, deduplicated by whole-item equality or an optional dotted-path key.",
+        "model": None,
+    },
+    {
         "tool_id": "function_google_search",
         "title": "Google Search",
         "description": "Asks the Gemini bridge to run a full Deep Research pass via your signed-in Gemini session (no API key).",
@@ -504,6 +522,9 @@ TOOL_FA_ICON_MAP: Dict[str, str] = {
     "function_delay_until": "fa-hourglass-half",
     "function_filter_array": "fa-filter",
     "function_select": "fa-table-columns",
+    "function_join": "fa-link",
+    "function_sort": "fa-arrow-down-a-z",
+    "function_union": "fa-object-ungroup",
     "builtin_review_gate": "fa-repeat",           # loops back to an earlier node on fail
     "human_review_checkpoint": "fa-user-check",
     "generate_vault_map": "fa-folder-tree",

@@ -307,6 +307,57 @@ def test_select_missing_path_yields_null():
     assert json.loads(output) == [{"email": None}]
 
 
+def test_join_whole_items_with_separator():
+    engine = _single_input_engine("n", '["a", "b", "c"]')
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_join"}, {"field": "", "separator": ", "})
+    assert output == "a, b, c"
+
+
+def test_join_field_path():
+    engine = _single_input_engine("n", '[{"name": "Alice"}, {"name": "Bob"}]')
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_join"}, {"field": "name", "separator": "; "})
+    assert output == "Alice; Bob"
+
+
+def test_sort_ascending_and_descending():
+    engine = _single_input_engine("n", '[{"total": 30}, {"total": 10}, {"total": 20}]')
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_sort"}, {"field": "total", "direction": "asc"})
+    assert [i["total"] for i in json.loads(output)] == [10, 20, 30]
+
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_sort"}, {"field": "total", "direction": "desc"})
+    assert [i["total"] for i in json.loads(output)] == [30, 20, 10]
+
+
+def test_sort_mixed_types_raises():
+    engine = _single_input_engine("n", '[1, "a"]')
+    try:
+        engine._execute_function_node("n", {"tool_id": "function_sort"}, {"field": "", "direction": "asc"})
+        assert False, "expected WorkflowRunError"
+    except WorkflowRunError:
+        pass
+
+
+def test_union_merges_and_dedupes_two_predecessors():
+    engine = WorkflowEngine(dry_run=True)
+    engine.backward_edges = {"n": ["a", "b"]}
+    engine.node_labels = {"a": "A", "b": "B", "n": "N"}
+    engine.context = {"A": '[{"id": 1}, {"id": 2}]', "B": '[{"id": 2}, {"id": 3}]'}
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_union"}, {"key": "id"})
+    assert json.loads(output) == [{"id": 1}, {"id": 2}, {"id": 3}]
+
+
+def test_union_requires_two_predecessors():
+    engine = WorkflowEngine(dry_run=True)
+    engine.backward_edges = {"n": ["a"]}
+    engine.node_labels = {"a": "A", "n": "N"}
+    engine.context = {"A": "[1, 2]"}
+    try:
+        engine._execute_function_node("n", {"tool_id": "function_union"}, {"key": ""})
+        assert False, "expected WorkflowRunError"
+    except WorkflowRunError:
+        pass
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0

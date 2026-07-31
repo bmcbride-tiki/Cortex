@@ -908,6 +908,44 @@ class WorkflowEngine:
             ]
             return json.dumps(projected, indent=2), None
 
+        if tool_id == "function_join":
+            arr = self._parse_json_array(node_id, "Join")
+            field = self._substitute_tokens(params.get("field", ""))
+            separator = self._substitute_tokens(params.get("separator", ", "))
+            values = [str(self._dotted_get(item, field) if field else item) for item in arr]
+            return separator.join(values), None
+
+        if tool_id == "function_sort":
+            arr = self._parse_json_array(node_id, "Sort")
+            field = self._substitute_tokens(params.get("field", ""))
+            direction = params.get("direction", "asc")
+            key_fn = (lambda item: self._dotted_get(item, field)) if field else (lambda item: item)
+            try:
+                sorted_arr = sorted(arr, key=key_fn, reverse=(direction == "desc"))
+            except TypeError as e:
+                raise WorkflowRunError(f"Sort: items aren't consistently comparable: {e}")
+            return json.dumps(sorted_arr, indent=2), None
+
+        if tool_id == "function_union":
+            pred_texts = self._direct_predecessor_texts(node_id)
+            if len(pred_texts) < 2:
+                raise WorkflowRunError("Union requires at least two connected inputs.")
+            key = self._substitute_tokens(params.get("key", ""))
+            merged, seen = [], set()
+            for i, text in enumerate(pred_texts):
+                try:
+                    parsed = json.loads(text)
+                except (TypeError, ValueError) as e:
+                    raise WorkflowRunError(f"Union: predecessor {i + 1} is not valid JSON: {e}")
+                if not isinstance(parsed, list):
+                    raise WorkflowRunError(f"Union: predecessor {i + 1} is a {type(parsed).__name__}, not a JSON array.")
+                for item in parsed:
+                    dedup_key = json.dumps(self._dotted_get(item, key) if key else item, sort_keys=True)
+                    if dedup_key not in seen:
+                        seen.add(dedup_key)
+                        merged.append(item)
+            return json.dumps(merged, indent=2), None
+
         # --- Prompt-driven AI functions (Gemini / Claude / ChatGPT / image gen) ---
         # There's no implicit "whatever flowed in" fallback any more, so an empty
         # prompt means the node is misconfigured -- fail loudly instead of firing
