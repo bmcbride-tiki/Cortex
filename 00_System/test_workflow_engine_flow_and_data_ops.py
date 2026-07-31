@@ -274,6 +274,39 @@ def test_delay_until_far_future_raises():
         pass
 
 
+def test_filter_array_keeps_matching_items():
+    engine = _single_input_engine("n", '[{"status": "active", "total": 50}, {"status": "closed", "total": 200}, {"status": "active", "total": 300}]')
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_filter_array"}, {"condition": "status == 'active'"})
+    assert json.loads(output) == [{"status": "active", "total": 50}, {"status": "active", "total": 300}]
+
+
+def test_filter_array_numeric_condition():
+    engine = _single_input_engine("n", '[{"total": 50}, {"total": 300}]')
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_filter_array"}, {"condition": "total > 100"})
+    assert json.loads(output) == [{"total": 300}]
+
+
+def test_filter_array_invalid_input_raises():
+    engine = _single_input_engine("n", "not json")
+    try:
+        engine._execute_function_node("n", {"tool_id": "function_filter_array"}, {"condition": "1 == 1"})
+        assert False, "expected WorkflowRunError"
+    except WorkflowRunError:
+        pass
+
+
+def test_select_projects_and_renames_fields():
+    engine = _single_input_engine("n", '[{"user": {"name": "Alice", "email": "a@x.com"}}, {"user": {"name": "Bob", "email": "b@x.com"}}]')
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_select"}, {"columns": '{"name": "user.name", "email": "user.email"}'})
+    assert json.loads(output) == [{"name": "Alice", "email": "a@x.com"}, {"name": "Bob", "email": "b@x.com"}]
+
+
+def test_select_missing_path_yields_null():
+    engine = _single_input_engine("n", '[{"user": {"name": "Alice"}}]')
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_select"}, {"columns": '{"email": "user.email"}'})
+    assert json.loads(output) == [{"email": None}]
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0

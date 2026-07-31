@@ -268,6 +268,18 @@ FUNCTIONS_REGISTRY = [
         "model": None,
     },
     {
+        "tool_id": "function_filter_array",
+        "title": "Filter Array",
+        "description": "Keeps array items matching a condition (e.g. status == 'active' and total > 100), using the same safe expression evaluator as Conditions.",
+        "model": None,
+    },
+    {
+        "tool_id": "function_select",
+        "title": "Select",
+        "description": "Projects/renames fields per array item via a JSON map of {outputKey: \"dotted.path\"}.",
+        "model": None,
+    },
+    {
         "tool_id": "function_google_search",
         "title": "Google Search",
         "description": "Asks the Gemini bridge to run a full Deep Research pass via your signed-in Gemini session (no API key).",
@@ -490,6 +502,8 @@ TOOL_FA_ICON_MAP: Dict[str, str] = {
     "function_terminate": "fa-flag-checkered",
     "function_delay": "fa-clock",
     "function_delay_until": "fa-hourglass-half",
+    "function_filter_array": "fa-filter",
+    "function_select": "fa-table-columns",
     "builtin_review_gate": "fa-repeat",           # loops back to an earlier node on fail
     "human_review_checkpoint": "fa-user-check",
     "generate_vault_map": "fa-folder-tree",

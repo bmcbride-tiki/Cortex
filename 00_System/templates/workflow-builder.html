@@ -562,6 +562,12 @@
             function_delay_until: [
                 { key: "timestamp", label: "Timestamp (ISO8601)", type: "text", mono: true, placeholder: "2026-08-01T14:00:00" },
             ],
+            function_filter_array: [
+                { key: "condition", label: "Condition (e.g. status == 'active' and total > 100)", type: "text", mono: true },
+            ],
+            function_select: [
+                { key: "columns", label: 'Columns (JSON: {"outputKey": "dotted.path"})', type: "textarea", mono: true, placeholder: '{"name": "user.name"}' },
+            ],
             function_google_search: [
                 { key: "instructions", label: "Search Instructions", type: "textarea", placeholder: "e.g. What changed in the latest Red Seal standard?" },
             ],

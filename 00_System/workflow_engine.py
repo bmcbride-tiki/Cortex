@@ -884,6 +884,30 @@ class WorkflowEngine:
             time.sleep(seconds)
             return f"Delayed until {raw}", None
 
+        if tool_id == "function_filter_array":
+            arr = self._parse_json_array(node_id, "Filter Array")
+            condition = self._substitute_tokens(params.get("condition", ""))
+            kept = []
+            for item in arr:
+                namespace = dict(item) if isinstance(item, dict) else {}
+                namespace["item"] = item
+                if _eval_condition_expression(condition, namespace):
+                    kept.append(item)
+            return json.dumps(kept, indent=2), None
+
+        if tool_id == "function_select":
+            arr = self._parse_json_array(node_id, "Select")
+            columns_text = self._substitute_tokens(params.get("columns", "")).strip()
+            try:
+                columns = json.loads(columns_text) if columns_text else {}
+            except (TypeError, ValueError) as e:
+                raise WorkflowRunError(f"Select: Columns must be a JSON object: {e}")
+            projected = [
+                {out_key: self._dotted_get(item, path) for out_key, path in columns.items()}
+                for item in arr
+            ]
+            return json.dumps(projected, indent=2), None
+
         # --- Prompt-driven AI functions (Gemini / Claude / ChatGPT / image gen) ---
         # There's no implicit "whatever flowed in" fallback any more, so an empty
         # prompt means the node is misconfigured -- fail loudly instead of firing
