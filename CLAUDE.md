@@ -2,6 +2,11 @@
 
 This project is a visual and programmatic workflow engine built on FastAPI that maps, executes, and automates business process flows. It integrates Python operations, Microsoft 365, Power Platform, Copilot Agents, and Google Gemini Enterprise APIs/MCP tools.
 
+> **Before doing any real work here, read these three in order:**
+> 1. `CORTEX_ARCHITECTURE_BLUEPRINT.md` (repo root) — the authoritative, verified current-state architecture. Some of what follows in this file is aspirational/generic and doesn't fully match the real codebase; the blueprint is what to trust when they disagree.
+> 2. `CORTEX_DEVELOPMENT_ROADMAP.md` (repo root) — the staged plan from current state to target state, sequenced to avoid depending on enterprise tenant access until the final verification stage.
+> 3. `.claude/memories/INDEX.md` — short session logs of what's already been decided, so past decisions don't get silently re-litigated.
+
 ---
 
 ## 1. Directory Structure Rules & Guidelines
