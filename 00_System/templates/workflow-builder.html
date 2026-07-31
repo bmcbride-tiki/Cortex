@@ -1178,15 +1178,46 @@
 
         function renderContainerPanel(nodeId, data) {
             const body = document.getElementById("wfb-panel-body");
+            const p = data.params || {};
+            const loopType = p.loop_type || "";
             body.innerHTML = `
                 <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Container Name</label>
                 <input type="text" data-panel-container-name value="${escapeHtml(data.title)}" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading text-xs focus:outline-none focus:border-primary">
+                <label class="block text-muted font-mono uppercase tracking-wider text-[10px] mt-3">Loop Type</label>
+                <select id="wfb-container-loop-type" onchange="window.wfbRenderLoopFields('${nodeId}')" class="w-full bg-canvas border border-border rounded px-3 py-2 text-body text-xs focus:outline-none focus:border-primary">
+                    <option value="" ${loopType === "" ? "selected" : ""}>None (plain grouping)</option>
+                    <option value="apply_to_each" ${loopType === "apply_to_each" ? "selected" : ""}>Apply to Each</option>
+                    <option value="do_until" ${loopType === "do_until" ? "selected" : ""}>Do Until</option>
+                </select>
+                <div id="wfb-container-loop-fields" class="mt-2"></div>
                 <button onclick="window.wfbSaveNodePanel('${nodeId}')" class="w-full mt-3 px-3 py-1.5 bg-primary/15 hover:bg-primary/25 text-primary-400 border border-primary/30 text-xs font-semibold rounded transition-colors">Save Name</button>
                 <button onclick="window.wfbEnterContainerFromPanel('${nodeId}')" class="w-full mt-2 px-3 py-1.5 bg-surface-2 hover:bg-border border border-border-strong text-xs font-mono rounded text-heading transition-colors">Open Container <i class="fa-solid fa-up-right-and-down-left-from-center ml-1"></i></button>
                 <p class="text-[10px] text-muted mt-3 leading-relaxed">Contains its own mini sub-flow. From the outside it connects like any other block; open it to build or edit what's inside.</p>
             `;
+            window.wfbRenderLoopFields(nodeId, p);
             body.dataset.readFn = "container-name";
         }
+
+        window.wfbRenderLoopFields = function(nodeId, existingParams) {
+            const loopType = document.getElementById("wfb-container-loop-type").value;
+            const p = existingParams || {};
+            const mount = document.getElementById("wfb-container-loop-fields");
+            if (loopType === "apply_to_each") {
+                mount.innerHTML = `
+                    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Items</label>
+                    <textarea id="wfb-loop-items" rows="2" placeholder="e.g. {{label}} or a literal JSON array" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading font-mono text-[11px] focus:outline-none focus:border-primary custom-scrollbar resize-none">${escapeHtml(p.items || "")}</textarea>
+                `;
+            } else if (loopType === "do_until") {
+                mount.innerHTML = `
+                    <label class="block text-muted font-mono uppercase tracking-wider text-[10px]">Condition</label>
+                    <input type="text" id="wfb-loop-condition" value="${escapeHtml(p.condition || "")}" placeholder="e.g. total &gt;= 100" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading font-mono text-[11px] focus:outline-none focus:border-primary">
+                    <label class="block text-muted font-mono uppercase tracking-wider text-[10px] mt-2">Max Iterations</label>
+                    <input type="number" id="wfb-loop-max-iterations" value="${escapeHtml(String(p.max_iterations || 60))}" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading text-xs focus:outline-none focus:border-primary">
+                `;
+            } else {
+                mount.innerHTML = "";
+            }
+        };
 
         function renderReviewGatePanel(nodeId, data) {
             const body = document.getElementById("wfb-panel-body");
@@ -1404,6 +1435,20 @@
                 const newTitle = body.querySelector("[data-panel-container-name]").value.trim() || "Container";
                 const node = editor.getNodeFromId(nodeId);
                 editor.updateNodeDataFromId(nodeId, { ...node.data, title: newTitle });
+
+                const loopType = document.getElementById("wfb-container-loop-type").value;
+                let loopParams = {};
+                if (loopType === "apply_to_each") {
+                    loopParams = { loop_type: "apply_to_each", items: document.getElementById("wfb-loop-items").value };
+                } else if (loopType === "do_until") {
+                    loopParams = {
+                        loop_type: "do_until",
+                        condition: document.getElementById("wfb-loop-condition").value,
+                        max_iterations: parseInt(document.getElementById("wfb-loop-max-iterations").value, 10) || 60,
+                    };
+                }
+                saveNodeParams(nodeId, loopParams);
+
                 const titleEl = document.querySelector(`#node-${nodeId} .wfb-node-title`);
                 if (titleEl) titleEl.innerHTML = `<i class="fa-solid fa-box-archive text-primary-400 mr-1"></i>${escapeHtml(newTitle)}`;
                 wfbLog(`Renamed container to "${newTitle}".`, "text-success-400");
