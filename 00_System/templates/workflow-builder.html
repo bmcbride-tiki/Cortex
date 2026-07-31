@@ -1551,7 +1551,7 @@
                 if (!response.ok) { wfbLog(data.detail || "Run failed to start.", "text-danger-400"); wfbSetRunStatus("Failed", "text-danger-400"); return; }
 
                 (data.steps || []).forEach(step => {
-                    const color = step.status === "success" ? "text-body" : "text-danger-400";
+                    const color = step.status === "success" ? "text-body" : step.status === "terminated" ? "text-info-400" : "text-danger-400";
                     wfbLog(`[${step.kind || "?"}] ${step.title || step.node_id}: ${step.status}${step.output ? " -- " + step.output : ""}`, color);
 
                     // A node can appear twice in one run's steps (a Review Gate
@@ -1567,7 +1567,15 @@
                     }
                 });
 
-                if (data.success) {
+                (data.responses || []).forEach(r => {
+                    wfbLog(`Response [${r.label}]: ${r.output}`, "text-info-400");
+                });
+
+                if (data.terminated) {
+                    const tColor = data.terminated.status === "Succeeded" ? "text-success-400" : "text-danger-400";
+                    wfbLog(`Workflow terminated: ${data.terminated.status} -- ${data.terminated.message}`, tColor);
+                    wfbSetRunStatus(`Terminated (${data.terminated.status})`, tColor);
+                } else if (data.success) {
                     wfbLog("Workflow run complete.", "text-success-400");
                     wfbSetRunStatus("Complete", "text-success-400");
                 } else {
