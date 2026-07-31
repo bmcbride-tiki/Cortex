@@ -319,6 +319,24 @@ class WorkflowEngine:
         self._flatten_containers(nodes, forward_edges, backward_edges, module_nodes)
         return nodes, forward_edges, backward_edges
 
+    def _collect_transitive_module_ids(self, module_name: str, module_nodes: Dict[str, List[str]], nodes: Dict[str, Any]) -> List[str]:
+        """Every node id belonging to `module_name` OR to any module nested (at any
+        depth) inside a container living in `module_name` -- i.e. everything a
+        recursive _flatten_containers pass over this module could ever need to
+        reference, including nodes several containers deep."""
+        collected: List[str] = []
+        seen: set = set()
+        queue = list(module_nodes.get(module_name, []))
+        while queue:
+            nid = queue.pop(0)
+            if nid in seen or nid not in nodes:
+                continue
+            seen.add(nid)
+            collected.append(nid)
+            if nodes[nid].get("kind") == "container":
+                queue.extend(module_nodes.get(nodes[nid].get("module_name"), []))
+        return collected
+
     def _flatten_containers(
         self,
         nodes: Dict[str, Any],
@@ -326,10 +344,55 @@ class WorkflowEngine:
         backward_edges: Dict[str, List[str]],
         module_nodes: Dict[str, List[str]],
     ) -> None:
-        """Splices every container node out of the flat graph in place, rewiring its
-        module's own entry/exit nodes directly to its former predecessors/successors.
-        Repeats until no container nodes remain, so containers nested inside containers
-        resolve too."""
+        """Splices every PLAIN container node out of the flat graph in place, rewiring
+        its module's own entry/exit nodes directly to its former predecessors/successors.
+        Repeats until no plain container nodes remain, so containers nested inside
+        containers resolve too. LOOP containers (Apply to Each / Do Until --
+        params.loop_type set) are handled first, separately: their inner module must
+        run more than once at runtime, which splicing can't express, so it's extracted
+        into a private subgraph (self.loop_subgraphs) instead of spliced into the main
+        flow."""
+        # --- Step A: extract loop containers into private subgraphs -------------
+        # Recursing into each one's own private copy first means anything nested
+        # inside a loop's body (a plain container, or another loop) resolves
+        # correctly before the loop itself is treated as one opaque node by
+        # whatever contains it. Module names are unique per container instance
+        # (workflow-builder.html's container_${Date.now()}_${counter}), so no two
+        # containers' modules ever share a node id -- extraction order never matters.
+        loop_container_ids = [
+            nid for nid, n in nodes.items()
+            if n.get("kind") == "container" and (n.get("params") or {}).get("loop_type")
+        ]
+        for cid in loop_container_ids:
+            module_name = nodes[cid].get("module_name")
+            # Transitive, not just direct children: a plain (or loop) container
+            # nested inside this loop's module has its OWN module, several node-ids
+            # deep, which the recursive _flatten_containers call below will need to
+            # reference (e.g. to rewire a grandchild's entry/exit into the nested
+            # container's own predecessors/successors) -- those ids must already be
+            # present as keys in sub_forward/sub_backward before recursion, or that
+            # rewiring KeyErrors on a node this loop's own module never listed.
+            inner_ids = [nid for nid in self._collect_transitive_module_ids(module_name, module_nodes, nodes) if nid in nodes]
+            sub_nodes = {nid: nodes[nid] for nid in inner_ids}
+            sub_forward = {nid: list(forward_edges.get(nid, [])) for nid in inner_ids}
+            sub_backward = {nid: list(backward_edges.get(nid, [])) for nid in inner_ids}
+            self._flatten_containers(sub_nodes, sub_forward, sub_backward, module_nodes)
+            entry_ids = [nid for nid in sub_nodes if not sub_backward.get(nid)] or list(sub_nodes)[:1]
+            exit_ids = [nid for nid in sub_nodes if not sub_forward.get(nid)] or list(sub_nodes)[-1:]
+            self.loop_subgraphs[cid] = {
+                "nodes": sub_nodes, "forward_edges": sub_forward, "backward_edges": sub_backward,
+                "entry_ids": entry_ids, "exit_ids": exit_ids,
+            }
+            for nid in inner_ids:
+                del nodes[nid]
+                forward_edges.pop(nid, None)
+                backward_edges.pop(nid, None)
+            # The loop container node `cid` itself is NOT removed or rewired --
+            # unlike a plain container, it stays in `nodes` as a real, single
+            # executable unit (dispatched via _execute_loop_container); only its
+            # inner module's nodes are pulled out of the shared graph.
+
+        # --- Step B: existing plain-container splice-and-delete, unchanged below --
         # A "container" node on the main canvas is really just a visual
         # stand-in for a whole separate mini-diagram of its own steps. This
         # function removes that stand-in box entirely and rewires the
@@ -339,7 +402,10 @@ class WorkflowEngine:
         # inside it -- as if the container had never existed and its
         # inner steps had been drawn directly on the main canvas all along.
         while True:
-            container_ids = [nid for nid, n in nodes.items() if n.get("kind") == "container"]
+            container_ids = [
+                nid for nid, n in nodes.items()
+                if n.get("kind") == "container" and not (n.get("params") or {}).get("loop_type")
+            ]
             if not container_ids:
                 break
 

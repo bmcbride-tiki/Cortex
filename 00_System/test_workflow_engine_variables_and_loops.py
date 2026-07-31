@@ -171,6 +171,113 @@ def test_append_variable_preserves_json_types():
     assert engine.variables["arr"] == ["plain", 42, {"a": 1}]
 
 
+def _container_graph(outer_specs, container_id, container_label, loop_params, inner_module_name, inner_specs, outer_targets_from_container):
+    """Builds a Drawflow-shaped graph_json with one container node wired into the
+    Home module, whose own sub-diagram lives in a separate module. outer_specs and
+    inner_specs are lists of (node_id, label, tool_id, params, targets) same as
+    _graph(); inner node targets are wired within the inner module only."""
+    home_data = {}
+    for node_id, label, tool_id, params, targets in outer_specs:
+        home_data[node_id] = {
+            "name": tool_id,
+            "data": {"kind": "function", "tool_id": tool_id, "category": None, "title": label, "label": label, "params": params},
+            "outputs": {"output_1": {"connections": [{"node": t, "output": "input_1"} for t in targets]}},
+        }
+    home_data[container_id] = {
+        "name": "container",
+        "data": {
+            "kind": "container", "tool_id": "container", "category": None,
+            "title": container_label, "label": container_label, "params": loop_params,
+            "module_name": inner_module_name,
+        },
+        "outputs": {"output_1": {"connections": [{"node": t, "output": "input_1"} for t in outer_targets_from_container]}},
+    }
+    inner_data = {}
+    for node_id, label, tool_id, params, targets in inner_specs:
+        inner_data[node_id] = {
+            "name": tool_id,
+            "data": {"kind": "function", "tool_id": tool_id, "category": None, "title": label, "label": label, "params": params},
+            "outputs": {"output_1": {"connections": [{"node": t, "output": "input_1"} for t in targets]}},
+        }
+    return {"drawflow": {"Home": {"data": home_data}, inner_module_name: {"data": inner_data}}}
+
+
+def test_apply_to_each_container_extracted_not_flattened():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _container_graph(
+        outer_specs=[], container_id="10", container_label="Loop",
+        loop_params={"loop_type": "apply_to_each", "items": "[1,2,3]"},
+        inner_module_name="loop_mod_1",
+        inner_specs=[("11", "Inner", "function_compose", {"value": "x"}, [])],
+        outer_targets_from_container=[],
+    )
+    nodes, forward_edges, backward_edges = engine._parse_graph(graph)
+    assert "10" in nodes and nodes["10"]["kind"] == "container"
+    assert "11" not in nodes  # pulled out of the shared graph
+    assert "10" in engine.loop_subgraphs
+    sub = engine.loop_subgraphs["10"]
+    assert list(sub["nodes"].keys()) == ["11"]
+    assert sub["entry_ids"] == ["11"] and sub["exit_ids"] == ["11"]
+
+
+def test_plain_container_nested_inside_loop_container_still_resolves():
+    # The specific correctness risk the recursive extraction design targets:
+    # a PLAIN container's inner nodes, nested inside a LOOP container's own
+    # module, must end up inside the loop's private subgraph, not lost.
+    engine = WorkflowEngine(dry_run=True)
+    graph = _container_graph(
+        outer_specs=[], container_id="10", container_label="Loop",
+        loop_params={"loop_type": "apply_to_each", "items": "[1]"},
+        inner_module_name="loop_mod_1",
+        inner_specs=[
+            ("11", "BeforeNested", "function_compose", {"value": "a"}, ["20"]),
+        ],
+        outer_targets_from_container=[],
+    )
+    # Manually splice a plain container ("20") into the loop's module, whose
+    # own sub-diagram lives in yet another module ("nested_mod").
+    graph["drawflow"]["loop_mod_1"]["data"]["20"] = {
+        "name": "container",
+        "data": {"kind": "container", "tool_id": "container", "category": None, "title": "Nested", "label": "Nested", "params": {}, "module_name": "nested_mod"},
+        "outputs": {"output_1": {"connections": []}},
+    }
+    graph["drawflow"]["nested_mod"] = {"data": {
+        "21": {
+            "name": "function_compose",
+            "data": {"kind": "function", "tool_id": "function_compose", "category": None, "title": "Nested Inner", "label": "NestedInner", "params": {"value": "b"}},
+            "outputs": {"output_1": {"connections": []}},
+        }
+    }}
+
+    nodes, forward_edges, backward_edges = engine._parse_graph(graph)
+    assert "10" in nodes  # loop container itself survives
+    assert "11" not in nodes and "20" not in nodes and "21" not in nodes  # all pulled into the loop's private subgraph
+    sub = engine.loop_subgraphs["10"]
+    assert set(sub["nodes"].keys()) == {"11", "21"}  # "20" (the nested container) is spliced away WITHIN the private copy, same as top-level
+    assert sub["forward_edges"]["11"] == ["21"]  # rewired through the nested container's own entry/exit
+
+
+def test_backward_compatible_plain_container_unaffected():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _container_graph(
+        outer_specs=[("1", "Before", "function_compose", {"value": "x"}, ["10"])],
+        container_id="10", container_label="Group", loop_params={},  # no loop_type -- today's plain container
+        inner_module_name="mod_1",
+        inner_specs=[("11", "Inner", "function_compose", {"value": "y"}, [])],
+        outer_targets_from_container=["2"],
+    )
+    graph["drawflow"]["Home"]["data"]["2"] = {
+        "name": "function_compose",
+        "data": {"kind": "function", "tool_id": "function_compose", "category": None, "title": "After", "label": "After", "params": {"value": "z"}},
+        "outputs": {"output_1": {"connections": []}},
+    }
+    nodes, forward_edges, backward_edges = engine._parse_graph(graph)
+    assert "10" not in nodes  # plain container IS spliced away, unchanged from today
+    assert "11" in nodes
+    assert forward_edges["1"] == ["11"]  # rewired to the inner entry, same as before this slice
+    assert engine.loop_subgraphs == {}
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0
