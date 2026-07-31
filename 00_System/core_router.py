@@ -102,6 +102,8 @@ TITLE_OVERRIDES: Dict[str, str] = {
 # as a fixed acronym everywhere a title is displayed (e.g. "Tos" -> "TOS").
 ACRONYM_WORDS: Dict[str, str] = {
     "tos": "TOS",
+    "ocr": "OCR",
+    "id": "ID",
 }
 
 class CoreRouter:

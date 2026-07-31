@@ -454,6 +454,18 @@ TOOL_MODELS = {
     "upload_notebooklm_sources": "notebooklm",
     "run_notebooklm_prompt_loop": "notebooklm",
     "abc_uploader": "agenty",
+    "summarize_text": "gemini",
+    "sentiment_analysis": "gemini",
+    "language_detection": "gemini",
+    "text_translation": "gemini",
+    "key_phrase_extraction": "gemini",
+    "entity_extraction": "gemini",
+    "category_classification": "gemini",
+    "form_invoice_processing": "gemini",
+    "business_card_id_reader": "gemini",
+    "object_detection_ocr": "gemini",
+    "image_description": "gemini",
+    "predict": None,
 }
 
 # Explicit toggle display order for the Workflow Builder's model-toggle row --
@@ -547,6 +559,17 @@ TOOL_SVGL_MAP: Dict[str, str] = {
     "ask_chatgpt": OPENAI_ICON,
     "ask_gemini": GEMINI_ICON,
     "generate_gemini_image": GEMINI_ICON,
+    "summarize_text": GEMINI_ICON,
+    "sentiment_analysis": GEMINI_ICON,
+    "language_detection": GEMINI_ICON,
+    "text_translation": GEMINI_ICON,
+    "key_phrase_extraction": GEMINI_ICON,
+    "entity_extraction": GEMINI_ICON,
+    "category_classification": GEMINI_ICON,
+    "form_invoice_processing": GEMINI_ICON,
+    "business_card_id_reader": GEMINI_ICON,
+    "object_detection_ocr": GEMINI_ICON,
+    "image_description": GEMINI_ICON,
 }
 
 # tool_id -> Font Awesome 6 Free solid glyph (no "fa-solid" prefix), for every node with no
@@ -618,6 +641,8 @@ TOOL_FA_ICON_MAP: Dict[str, str] = {
     "skill_structured_data_normalization": "fa-wand-magic-sparkles",
     "skill_dynamic_predictive_modeler": "fa-wand-magic-sparkles",
     "skill_fts5_linguistic_search_vector": "fa-wand-magic-sparkles",
+    # Predict -- no real trained-model backend, so no brand logo either
+    "predict": "fa-chart-line",
 }
 DEFAULT_FA_ICON = "fa-code"  # generic building block with no more specific icon -- the "</>" glyph
 
