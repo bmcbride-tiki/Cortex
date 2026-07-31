@@ -226,6 +226,18 @@ FUNCTIONS_REGISTRY = [
         "model": None,
     },
     {
+        "tool_id": "function_compose",
+        "title": "Compose",
+        "description": "Passes a value (with {{label}} substitution) through unchanged -- a named checkpoint value for later steps to reference.",
+        "model": None,
+    },
+    {
+        "tool_id": "function_parse_json",
+        "title": "Parse JSON",
+        "description": "Validates upstream data is valid JSON and (optionally) that required top-level keys are present; re-emits it pretty-printed.",
+        "model": None,
+    },
+    {
         "tool_id": "function_google_search",
         "title": "Google Search",
         "description": "Asks the Gemini bridge to run a full Deep Research pass via your signed-in Gemini session (no API key).",
@@ -441,6 +453,8 @@ TOOL_FA_ICON_MAP: Dict[str, str] = {
     # Control flow / structure
     "function_logic_gate": "fa-signs-post",       # if/else branch -- literal signpost
     "function_conditions": "fa-code-branch",      # N-way branch
+    "function_compose": "fa-cube",
+    "function_parse_json": "fa-file-code",
     "builtin_review_gate": "fa-repeat",           # loops back to an earlier node on fail
     "human_review_checkpoint": "fa-user-check",
     "generate_vault_map": "fa-folder-tree",

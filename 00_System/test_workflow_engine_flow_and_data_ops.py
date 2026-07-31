@@ -91,6 +91,48 @@ def test_array_item_to_text():
     assert engine._array_item_to_text(None) == ""
 
 
+def test_compose_substitutes_tokens():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([
+        ("1", "Name", "function_gemini_ask", {"instructions": "Alice"}, ["2"]),
+        ("2", "Greeting", "function_compose", {"value": "Hello, {{Name}}!"}, []),
+    ])
+    result = engine.run(graph)
+    assert result["success"], result
+    assert result["steps"][1]["output"] == "Hello, [DRY RUN] Simulated Gemini response for prompt:\nAlice!"
+
+
+def test_parse_json_valid_passthrough():
+    engine = _single_input_engine("n", '{"a": 1}')
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_parse_json"}, {"required_keys": ""})
+    assert json.loads(output) == {"a": 1}
+    assert jump is None
+
+
+def test_parse_json_invalid_raises():
+    engine = _single_input_engine("n", "not json")
+    try:
+        engine._execute_function_node("n", {"tool_id": "function_parse_json"}, {"required_keys": ""})
+        assert False, "expected WorkflowRunError"
+    except WorkflowRunError:
+        pass
+
+
+def test_parse_json_missing_required_key_raises():
+    engine = _single_input_engine("n", '{"a": 1}')
+    try:
+        engine._execute_function_node("n", {"tool_id": "function_parse_json"}, {"required_keys": "a\nb"})
+        assert False, "expected WorkflowRunError"
+    except WorkflowRunError as e:
+        assert "b" in str(e)
+
+
+def test_parse_json_present_required_keys_pass():
+    engine = _single_input_engine("n", '{"a": 1, "b": 2}')
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_parse_json"}, {"required_keys": "a\nb"})
+    assert json.loads(output) == {"a": 1, "b": 2}
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0

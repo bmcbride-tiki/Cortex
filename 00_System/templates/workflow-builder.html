@@ -538,6 +538,12 @@
             function_concatenate: [
                 { key: "separator", label: "Separator", type: "text", mono: true, placeholder: "\\n\\n (default)" },
             ],
+            function_compose: [
+                { key: "value", label: "Value", type: "textarea", placeholder: "e.g. {{label}} or a literal value" },
+            ],
+            function_parse_json: [
+                { key: "required_keys", label: "Required Keys (optional, one per line)", type: "textarea", mono: true },
+            ],
             function_google_search: [
                 { key: "instructions", label: "Search Instructions", type: "textarea", placeholder: "e.g. What changed in the latest Red Seal standard?" },
             ],

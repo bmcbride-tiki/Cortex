@@ -771,6 +771,24 @@ class WorkflowEngine:
         if tool_id == "function_conditions":
             return self._run_conditions(node_id, params)
 
+        if tool_id == "function_compose":
+            return self._substitute_tokens(params.get("value", "")), None
+
+        if tool_id == "function_parse_json":
+            text = self._gather_upstream_text(node_id)
+            try:
+                parsed = json.loads(text)
+            except (TypeError, ValueError) as e:
+                raise WorkflowRunError(f"Parse JSON: invalid JSON input: {e}")
+            required = [k.strip() for k in self._substitute_tokens(params.get("required_keys", "")).splitlines() if k.strip()]
+            if required:
+                if not isinstance(parsed, dict):
+                    raise WorkflowRunError(f"Parse JSON: required keys given but input is a {type(parsed).__name__}, not an object.")
+                missing = [k for k in required if k not in parsed]
+                if missing:
+                    raise WorkflowRunError(f"Parse JSON: missing required key(s): {', '.join(missing)}")
+            return json.dumps(parsed, indent=2), None
+
         # --- Prompt-driven AI functions (Gemini / Claude / ChatGPT / image gen) ---
         # There's no implicit "whatever flowed in" fallback any more, so an empty
         # prompt means the node is misconfigured -- fail loudly instead of firing
