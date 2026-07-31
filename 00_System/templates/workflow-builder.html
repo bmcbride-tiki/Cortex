@@ -580,6 +580,13 @@
                         <textarea data-panel-field="${f.key}" rows="4" placeholder="${escapeHtml(f.placeholder || "")}" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading text-[11px] ${monoClass} focus:outline-none focus:border-primary custom-scrollbar resize-none">${val}</textarea>
                     `;
                 }
+                if (f.type === "select") {
+                    const options = (f.options || []).map(o => `<option value="${escapeHtml(o)}" ${o === raw ? "selected" : ""}>${escapeHtml(o)}</option>`).join("");
+                    return `
+                        <label class="block text-muted font-mono uppercase tracking-wider text-[10px] mt-3 first:mt-0">${f.label}</label>
+                        <select data-panel-field="${f.key}" class="w-full bg-canvas border border-border rounded px-3 py-2 text-body text-xs focus:outline-none focus:border-primary">${options}</select>
+                    `;
+                }
                 return `
                     <label class="block text-muted font-mono uppercase tracking-wider text-[10px] mt-3 first:mt-0">${f.label}</label>
                     <input type="${f.type === "number" ? "number" : "text"}" data-panel-field="${f.key}" value="${val}" placeholder="${escapeHtml(f.placeholder || "")}" class="w-full bg-canvas border border-border rounded px-3 py-2 text-heading text-xs ${monoClass} focus:outline-none focus:border-primary">
