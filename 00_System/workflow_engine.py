@@ -104,7 +104,7 @@ from core_router import CoreRouter
 # settings text, so they can be swapped out for that earlier node's real
 # captured output before this node actually runs. The allowed character set
 # here is what workflow-builder.html's wfbSaveLabel enforces on labels.
-TOKEN_PATTERN = re.compile(r"\{\{\s*([a-zA-Z0-9_\-]+)\s*\}\}")
+TOKEN_PATTERN = re.compile(r"\{\{\s*([a-zA-Z0-9_.\-]+)\s*\}\}")
 MAX_TOTAL_STEPS = 200  # guards against runaway loops even when a gate's own max_attempts is misconfigured
 MAX_DELAY_SECONDS = 300  # 5 minutes -- workflows run synchronously inside one HTTP request
 
@@ -253,6 +253,18 @@ class WorkflowEngine:
         self.responses: List[Dict[str, str]] = []
         # Set when a Terminate node ends the run early -- {"status", "message"}.
         self.terminated: Optional[Dict[str, str]] = None
+        # Named mutable variable store (Initialize/Set/Increment/Append Variable) --
+        # deliberately global for the whole run, NOT connection-scoped like
+        # self.context/{{label}}, matching Power Automate's own variable semantics.
+        self.variables: Dict[str, Any] = {}
+        # Stack of [current_item, current_index] frames, one per currently-executing
+        # loop container -- supports nesting, {{loop.item}}/{{loop.index}} always
+        # resolve to the innermost (top of stack) frame.
+        self.loop_stack: List[List[Any]] = []
+        # Populated by _flatten_containers' loop-extraction pass: node_id of a loop
+        # container -> its private {"nodes", "forward_edges", "backward_edges",
+        # "entry_ids", "exit_ids"}.
+        self.loop_subgraphs: Dict[str, Dict[str, Any]] = {}
 
     # --- Graph parsing -----------------------------------------------------------
 
@@ -403,20 +415,33 @@ class WorkflowEngine:
             return text
 
         def replace(m: "re.Match[str]") -> str:
-            label = m.group(1)
-            if label not in self._current_scope:
-                token_display = "{{" + label + "}}"
+            name = m.group(1)
+
+            if name.startswith("var."):
+                var_name = name[4:]
+                if var_name not in self.variables:
+                    raise WorkflowRunError(f"Unknown variable: {name} -- initialize it with an Initialize Variable node first.")
+                return self._array_item_to_text(self.variables[var_name])
+
+            if name in ("loop.item", "loop.index"):
+                if not self.loop_stack:
+                    raise WorkflowRunError("{{loop.item}}/{{loop.index}} can only be used inside an Apply to Each or Do Until container.")
+                item, index = self.loop_stack[-1]
+                return self._array_item_to_text(item) if name == "loop.item" else str(index)
+
+            if name not in self._current_scope:
+                token_display = "{{" + name + "}}"
                 # A connected-but-empty predecessor shouldn't happen now that
                 # run() waits for every predecessor to finish, but if it does
                 # (e.g. that predecessor failed) say so precisely rather than
                 # blaming the wiring.
                 why = (
                     "hasn't produced output yet"
-                    if label in self._current_pred_labels
+                    if name in self._current_pred_labels
                     else "isn't directly connected to this node"
                 )
-                raise MissingInputError(f'Missing input value: {token_display} -- "{label}" {why}.')
-            return self._current_scope[label]
+                raise MissingInputError(f'Missing input value: {token_display} -- "{name}" {why}.')
+            return self._current_scope[name]
 
         return TOKEN_PATTERN.sub(replace, text)
 
