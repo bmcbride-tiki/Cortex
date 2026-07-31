@@ -405,6 +405,41 @@ class WorkflowEngine:
             if self.node_labels.get(p) in self.context
         ]
 
+    def _parse_json_array(self, node_id: str, friendly_name: str) -> list:
+        """Shared by every array-op node. Raises WorkflowRunError naming the
+        node type on invalid JSON or a non-list top-level value."""
+        text = self._gather_upstream_text(node_id)
+        try:
+            parsed = json.loads(text)
+        except (TypeError, ValueError) as e:
+            raise WorkflowRunError(f"{friendly_name} requires a JSON array as input; got invalid JSON: {e}")
+        if not isinstance(parsed, list):
+            raise WorkflowRunError(f"{friendly_name} requires a JSON array as input; got {type(parsed).__name__}.")
+        return parsed
+
+    def _dotted_get(self, obj: Any, path: str) -> Any:
+        """Dict-only dotted-path lookup (no list indices, no expressions) -- used by
+        Select/Join/Sort/Union for 'pull this nested field out of each item.' Missing
+        key at any level returns None rather than raising: a per-item lookup miss
+        just produces a null field on that item, consistent with Select's
+        row-independent design (one bad item shouldn't kill the whole array)."""
+        if not path:
+            return obj
+        current = obj
+        for part in path.split("."):
+            if not isinstance(current, dict) or part not in current:
+                return None
+            current = current[part]
+        return current
+
+    def _array_item_to_text(self, value: Any) -> str:
+        # Object/array items round-trip through JSON (so a later Parse JSON node
+        # still works on them); bare scalars get unquoted plain text so
+        # {{label}} substitution into a later prompt reads as Alice, not "Alice".
+        if isinstance(value, (dict, list)):
+            return json.dumps(value, indent=2)
+        return "" if value is None else str(value)
+
     def _gather_upstream_text(self, node_id: str) -> str:
         # Used only by node types whose entire defined behavior IS "operate
         # on whatever's directly connected" -- Skill nodes, Logic Gate, and
