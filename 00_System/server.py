@@ -466,6 +466,8 @@ TOOL_MODELS = {
     "object_detection_ocr": "gemini",
     "image_description": "gemini",
     "predict": None,
+    "list_gems": "gemini",
+    "ask_gemini_gem": "gemini",
 }
 
 # Explicit toggle display order for the Workflow Builder's model-toggle row --
@@ -570,6 +572,8 @@ TOOL_SVGL_MAP: Dict[str, str] = {
     "business_card_id_reader": GEMINI_ICON,
     "object_detection_ocr": GEMINI_ICON,
     "image_description": GEMINI_ICON,
+    "list_gems": GEMINI_ICON,
+    "ask_gemini_gem": GEMINI_ICON,
 }
 
 # tool_id -> Font Awesome 6 Free solid glyph (no "fa-solid" prefix), for every node with no
