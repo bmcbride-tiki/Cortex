@@ -1,4 +1,4 @@
-# 00_System/test_workflow_engine_tokens.py
+# 00_System/tests/test_workflow_engine_tokens.py
 """Assert-based smoke tests for WorkflowEngine's named-label token substitution.
 Run directly: python test_workflow_engine_tokens.py
 """
@@ -6,7 +6,7 @@ import sys
 sys.dont_write_bytecode = True
 
 from pathlib import Path
-CURRENT_DIR = Path(__file__).resolve().parent
+CURRENT_DIR = Path(__file__).resolve().parents[1]
 if str(CURRENT_DIR) not in sys.path:
     sys.path.append(str(CURRENT_DIR))
 

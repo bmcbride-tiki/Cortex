@@ -1,4 +1,4 @@
-# 00_System/test_workflow_engine_variables_and_loops.py
+# 00_System/tests/test_workflow_engine_variables_and_loops.py
 """Assert-based smoke tests for Variables (Initialize/Set/Increment/Append)
 and loop containers (Apply to Each / Do Until). Run directly:
 python test_workflow_engine_variables_and_loops.py
@@ -8,7 +8,7 @@ sys.dont_write_bytecode = True
 import json
 
 from pathlib import Path
-CURRENT_DIR = Path(__file__).resolve().parent
+CURRENT_DIR = Path(__file__).resolve().parents[1]
 if str(CURRENT_DIR) not in sys.path:
     sys.path.append(str(CURRENT_DIR))
 

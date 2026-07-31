@@ -7,7 +7,7 @@
 #   `data_processing/` layer together, end to end, without needing the web
 #   server running or a browser open. It's the fastest way to check "did my
 #   change break the workflow-state/licensing/canvas machinery?" -- run it
-#   directly (`python 00_System/sandbox_smoke_test.py`) and read the printed
+#   directly (`python 00_System/tests/sandbox_smoke_test.py`) and read the printed
 #   output; every check is a plain Python `assert`, so it stops with a
 #   traceback the moment something doesn't match what's expected.
 #
@@ -52,7 +52,7 @@ import uuid
 import json
 from pathlib import Path
 
-CURRENT_DIR = Path(__file__).resolve().parent
+CURRENT_DIR = Path(__file__).resolve().parents[1]
 if str(CURRENT_DIR) not in sys.path:
     sys.path.append(str(CURRENT_DIR))
 

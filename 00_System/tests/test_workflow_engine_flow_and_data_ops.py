@@ -1,4 +1,4 @@
-# 00_System/test_workflow_engine_flow_and_data_ops.py
+# 00_System/tests/test_workflow_engine_flow_and_data_ops.py
 """Assert-based smoke tests for the flow-control and data-operation Function
 nodes (Compose, Parse JSON, HTTP, Response, Terminate, Delay, Delay Until,
 and the array data-op family). Run directly: python test_workflow_engine_flow_and_data_ops.py
@@ -8,7 +8,7 @@ sys.dont_write_bytecode = True
 import json
 
 from pathlib import Path
-CURRENT_DIR = Path(__file__).resolve().parent
+CURRENT_DIR = Path(__file__).resolve().parents[1]
 if str(CURRENT_DIR) not in sys.path:
     sys.path.append(str(CURRENT_DIR))
 

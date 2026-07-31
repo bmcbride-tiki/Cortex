@@ -10,7 +10,7 @@ copyright: '2025 Brian McBride at Tiki-1 Studio'
 
 # sandbox-smoke-test
 
-> **Status:** Active. Runnable directly: `python 00_System/sandbox_smoke_test.py`.
+> **Status:** Active. Runnable directly: `python 00_System/tests/sandbox_smoke_test.py`.
 
 ## Purpose
 
