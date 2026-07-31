@@ -410,6 +410,44 @@ def test_take_and_skip():
     assert json.loads(output) == [3, 4, 5]
 
 
+def test_create_csv_table_auto_columns():
+    engine = _single_input_engine("n", '[{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]')
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_create_csv_table"}, {"columns": ""})
+    assert "name,age" in output.replace("\r\n", "\n").splitlines()[0]
+    assert "Alice,30" in output
+
+
+def test_create_csv_table_explicit_columns():
+    engine = _single_input_engine("n", '[{"name": "Alice", "age": 30, "extra": "x"}]')
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_create_csv_table"}, {"columns": "name\nage"})
+    lines = output.replace("\r\n", "\n").splitlines()
+    assert lines[0] == "name,age"
+    assert lines[1] == "Alice,30"
+
+
+def test_create_csv_table_non_dict_item_raises():
+    engine = _single_input_engine("n", "[1, 2]")
+    try:
+        engine._execute_function_node("n", {"tool_id": "function_create_csv_table"}, {"columns": ""})
+        assert False, "expected WorkflowRunError"
+    except WorkflowRunError:
+        pass
+
+
+def test_create_csv_table_empty_array_returns_empty_string():
+    engine = _single_input_engine("n", "[]")
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_create_csv_table"}, {"columns": ""})
+    assert output == ""
+
+
+def test_create_html_table_basic_structure_and_escaping():
+    engine = _single_input_engine("n", '[{"name": "<b>Alice</b>"}]')
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_create_html_table"}, {"columns": ""})
+    assert "<table>" in output and "</table>" in output
+    assert "&lt;b&gt;Alice&lt;/b&gt;" in output
+    assert "<b>Alice</b>" not in output
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0

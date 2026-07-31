@@ -979,6 +979,32 @@ class WorkflowEngine:
             count = max(int(params.get("count") or 0), 0)
             return json.dumps(arr[count:], indent=2), None
 
+        if tool_id in ("function_create_csv_table", "function_create_html_table"):
+            friendly_name = "Create CSV Table" if tool_id == "function_create_csv_table" else "Create HTML Table"
+            arr = self._parse_json_array(node_id, friendly_name)
+            for i, item in enumerate(arr):
+                if not isinstance(item, dict):
+                    raise WorkflowRunError(f"{friendly_name}: item {i} is a {type(item).__name__}, not an object.")
+            explicit_columns = [c.strip() for c in self._substitute_tokens(params.get("columns", "")).splitlines() if c.strip()]
+            columns = explicit_columns or (list(arr[0].keys()) if arr else [])
+
+            if not arr:
+                return "", None
+
+            if tool_id == "function_create_csv_table":
+                buffer = io.StringIO()
+                writer = csv.DictWriter(buffer, fieldnames=columns, extrasaction="ignore", restval="")
+                writer.writeheader()
+                writer.writerows(arr)
+                return buffer.getvalue(), None
+
+            header_html = "".join(f"<th>{html.escape(str(c))}</th>" for c in columns)
+            rows_html = "".join(
+                "<tr>" + "".join(f"<td>{html.escape(str(item.get(c, '')))}</td>" for c in columns) + "</tr>"
+                for item in arr
+            )
+            return f"<table><tr>{header_html}</tr>{rows_html}</table>", None
+
         # --- Prompt-driven AI functions (Gemini / Claude / ChatGPT / image gen) ---
         # There's no implicit "whatever flowed in" fallback any more, so an empty
         # prompt means the node is misconfigured -- fail loudly instead of firing

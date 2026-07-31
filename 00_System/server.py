@@ -304,6 +304,18 @@ FUNCTIONS_REGISTRY = [
     {"tool_id": "function_take", "title": "Take", "description": "Returns the first N items of an array.", "model": None},
     {"tool_id": "function_skip", "title": "Skip", "description": "Returns an array with the first N items removed.", "model": None},
     {
+        "tool_id": "function_create_csv_table",
+        "title": "Create CSV Table",
+        "description": "Converts an array of objects into CSV text (optional explicit column order; blank = auto-detect from the first row).",
+        "model": None,
+    },
+    {
+        "tool_id": "function_create_html_table",
+        "title": "Create HTML Table",
+        "description": "Converts an array of objects into an HTML <table> (optional explicit column order; blank = auto-detect from the first row).",
+        "model": None,
+    },
+    {
         "tool_id": "function_google_search",
         "title": "Google Search",
         "description": "Asks the Gemini bridge to run a full Deep Research pass via your signed-in Gemini session (no API key).",
@@ -537,6 +549,8 @@ TOOL_FA_ICON_MAP: Dict[str, str] = {
     "function_last": "fa-angles-right",
     "function_take": "fa-forward",
     "function_skip": "fa-backward",
+    "function_create_csv_table": "fa-file-csv",
+    "function_create_html_table": "fa-table",
     "builtin_review_gate": "fa-repeat",           # loops back to an earlier node on fail
     "human_review_checkpoint": "fa-user-check",
     "generate_vault_map": "fa-folder-tree",
