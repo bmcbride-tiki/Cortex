@@ -278,6 +278,175 @@ def test_backward_compatible_plain_container_unaffected():
     assert engine.loop_subgraphs == {}
 
 
+def test_apply_to_each_end_to_end():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _container_graph(
+        outer_specs=[("1", "Src", "function_compose", {"value": '[10, 20, 30]'}, [])],
+        container_id="10", container_label="Loop",
+        loop_params={"loop_type": "apply_to_each", "items": "{{Src}}"},
+        inner_module_name="loop_mod_1",
+        inner_specs=[("11", "Doubled", "function_compose", {"value": "got {{loop.item}} at {{loop.index}}"}, [])],
+        outer_targets_from_container=[],
+    )
+    graph["drawflow"]["Home"]["data"]["1"]["outputs"]["output_1"]["connections"] = [{"node": "10", "output": "input_1"}]
+    result = engine.run(graph)
+    assert result["success"], result
+    container_step = next(s for s in result["steps"] if s["node_id"] == "10")
+    iterations = json.loads(container_step["output"])
+    assert iterations == ["got 10 at 0", "got 20 at 1", "got 30 at 2"]
+
+
+def test_apply_to_each_inner_failure_aborts_whole_loop():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _container_graph(
+        outer_specs=[], container_id="10", container_label="Loop",
+        loop_params={"loop_type": "apply_to_each", "items": "[1, 2]"},
+        inner_module_name="loop_mod_1",
+        inner_specs=[("11", "Bad", "function_parse_json", {"required_keys": ""}, [])],  # gathers upstream text -- none connected -> invalid JSON
+        outer_targets_from_container=[],
+    )
+    result = engine.run(graph)
+    assert result["success"] is False
+    container_step = next(s for s in result["steps"] if s["node_id"] == "10")
+    assert container_step["status"] == "failed"
+    # Only ONE inner-node failure log entry -- the loop aborted after the first
+    # iteration's failure rather than attempting a second.
+    inner_failures = [s for s in result["steps"] if s["node_id"] == "11"]
+    assert len(inner_failures) == 1
+
+
+def test_apply_to_each_context_and_container_output():
+    # Connection-scoping is unchanged by loops: "After" is only directly wired to
+    # the container ("Loop"), never to the loop-body node ("Inner") -- it can only
+    # read the container's own aggregate JSON array via {{Loop}}, exactly like any
+    # other node's output is referenced. {{Inner}} from outside the loop's module
+    # would raise MissingInputError, same as referencing any non-adjacent label
+    # would today -- this test doesn't attempt that unreachable reference.
+    engine = WorkflowEngine(dry_run=True)
+    graph = _container_graph(
+        outer_specs=[], container_id="10", container_label="Loop",
+        loop_params={"loop_type": "apply_to_each", "items": "[1, 2, 3]"},
+        inner_module_name="loop_mod_1",
+        inner_specs=[("11", "Inner", "function_compose", {"value": "n={{loop.item}}"}, [])],
+        outer_targets_from_container=["2"],
+    )
+    graph["drawflow"]["Home"]["data"]["2"] = {
+        "name": "function_compose",
+        "data": {"kind": "function", "tool_id": "function_compose", "category": None, "title": "After", "label": "After", "params": {"value": "loop result: {{Loop}}"}},
+        "outputs": {"output_1": {"connections": []}},
+    }
+    result = engine.run(graph)
+    assert result["success"], result
+    after_step = next(s for s in result["steps"] if s["node_id"] == "2")
+    prefix = "loop result: "
+    assert after_step["output"].startswith(prefix)
+    assert json.loads(after_step["output"][len(prefix):]) == ["n=1", "n=2", "n=3"]
+    # Internally, self.context["Inner"] (the inner node's OWN label) still holds
+    # the last iteration's value, same as any node re-run in place would -- not
+    # reachable from outside the loop's module, but real and correct internally.
+    assert engine.context["Inner"] == "n=3"
+
+
+def test_do_until_stops_when_condition_true():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _container_graph(
+        outer_specs=[("1", "Init", "function_initialize_variable", {"name": "counter", "type": "Number", "value": "0"}, ["10"])],
+        container_id="10", container_label="Loop",
+        loop_params={"loop_type": "do_until", "condition": "counter >= 3", "max_iterations": 10},
+        inner_module_name="loop_mod_1",
+        inner_specs=[("11", "Inc", "function_increment_variable", {"name": "counter", "increment_by": "1"}, [])],
+        outer_targets_from_container=[],
+    )
+    result = engine.run(graph)
+    assert result["success"], result
+    container_step = next(s for s in result["steps"] if s["node_id"] == "10")
+    iterations = json.loads(container_step["output"])
+    assert len(iterations) == 3  # 0->1, 1->2, 2->3, condition true after 3rd
+    assert engine.variables["counter"] == 3
+
+
+def test_do_until_stops_at_max_iterations_without_raising():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _container_graph(
+        outer_specs=[("1", "Init", "function_initialize_variable", {"name": "counter", "type": "Number", "value": "0"}, ["10"])],
+        container_id="10", container_label="Loop",
+        loop_params={"loop_type": "do_until", "condition": "counter >= 1000", "max_iterations": 5},
+        inner_module_name="loop_mod_1",
+        inner_specs=[("11", "Inc", "function_increment_variable", {"name": "counter", "increment_by": "1"}, [])],
+        outer_targets_from_container=[],
+    )
+    result = engine.run(graph)
+    assert result["success"], result
+    container_step = next(s for s in result["steps"] if s["node_id"] == "10")
+    assert len(json.loads(container_step["output"])) == 5
+    assert engine.variables["counter"] == 5
+
+
+def test_terminate_inside_loop_ends_entire_run():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _container_graph(
+        outer_specs=[], container_id="10", container_label="Loop",
+        loop_params={"loop_type": "apply_to_each", "items": "[1, 2, 3]"},
+        inner_module_name="loop_mod_1",
+        inner_specs=[("11", "Stop", "function_terminate", {"status": "Failed", "message": "stop from inside loop"}, [])],
+        outer_targets_from_container=["2"],
+    )
+    graph["drawflow"]["Home"]["data"]["2"] = {
+        "name": "function_compose",
+        "data": {"kind": "function", "tool_id": "function_compose", "category": None, "title": "Never", "label": "Never", "params": {"value": "should not run"}},
+        "outputs": {"output_1": {"connections": []}},
+    }
+    result = engine.run(graph)
+    assert result["success"] is False
+    assert result["terminated"] == {"status": "Failed", "message": "stop from inside loop"}
+    ran_ids = [s["node_id"] for s in result["steps"]]
+    assert "2" not in ran_ids  # the whole run stopped, not just the loop
+
+
+def test_nested_apply_to_each_resolves_innermost_loop_stack():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _container_graph(
+        outer_specs=[], container_id="10", container_label="Outer",
+        loop_params={"loop_type": "apply_to_each", "items": '["a", "b"]'},
+        inner_module_name="outer_mod",
+        inner_specs=[],
+        outer_targets_from_container=[],
+    )
+    # Nest an inner Apply to Each container inside the outer loop's own module.
+    graph["drawflow"]["outer_mod"]["data"]["20"] = {
+        "name": "container",
+        "data": {
+            "kind": "container", "tool_id": "container", "category": None,
+            "title": "Inner", "label": "Inner",
+            "params": {"loop_type": "apply_to_each", "items": "[1, 2]"},
+            "module_name": "inner_mod",
+        },
+        "outputs": {"output_1": {"connections": []}},
+    }
+    graph["drawflow"]["inner_mod"] = {"data": {
+        "21": {
+            "name": "function_compose",
+            "data": {"kind": "function", "tool_id": "function_compose", "category": None, "title": "Combine", "label": "Combine", "params": {"value": "outer={{loop.item}}"}},
+            "outputs": {"output_1": {"connections": []}},
+        }
+    }}
+    result = engine.run(graph)
+    assert result["success"], result
+    outer_step = next(s for s in result["steps"] if s["node_id"] == "10")
+    outer_iterations = json.loads(outer_step["output"])
+    # Every node output in this engine is text (self.context: Dict[str, str]) --
+    # the outer loop's own aggregate is a JSON array of strings, each itself a
+    # JSON-encoded array (the inner loop's own aggregate), same as any other
+    # node's JSON-shaped text output needs an explicit json.loads to unpack.
+    assert len(outer_iterations) == 2  # outer ran twice, once per "a"/"b"
+    for inner_text in outer_iterations:
+        # Each outer iteration's inner loop result: the "Combine" node's
+        # {{loop.item}} must resolve to the INNER loop's current item (1, then 2)
+        # both times, NOT the outer loop's "a"/"b" -- proving innermost-frame
+        # resolution, not just "some" loop context leaking through.
+        assert json.loads(inner_text) == ["outer=1", "outer=2"]
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0

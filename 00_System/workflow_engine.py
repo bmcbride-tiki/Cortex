@@ -364,6 +364,14 @@ class WorkflowEngine:
             if n.get("kind") == "container" and (n.get("params") or {}).get("loop_type")
         ]
         for cid in loop_container_ids:
+            if cid not in nodes:
+                # A loop container nested inside another loop container's module is
+                # captured as its own top-level entry in the snapshot above (the flat
+                # `nodes` dict lists every module's nodes regardless of nesting), but
+                # gets pulled into its ancestor's private subgraph -- and recursively
+                # extracted there via the self._flatten_containers(sub_nodes, ...)
+                # call below -- before its own turn in this same loop comes up.
+                continue
             module_name = nodes[cid].get("module_name")
             # Transitive, not just direct children: a plain (or loop) container
             # nested inside this loop's module has its OWN module, several node-ids
@@ -828,6 +836,101 @@ class WorkflowEngine:
             return verdict_text, loop_back
         return verdict_text, None
 
+    def _execute_loop_container(self, node_id: str, node: Dict[str, Any]) -> str:
+        params = node.get("params") or {}
+        loop_type = params.get("loop_type")
+        subgraph = self.loop_subgraphs.get(node_id)
+        if not subgraph or not subgraph.get("nodes"):
+            raise WorkflowRunError(f"Loop container '{node.get('title', node_id)}' has no steps inside it.")
+
+        if loop_type == "apply_to_each":
+            items_text = self._substitute_tokens(params.get("items", ""))
+            try:
+                items = json.loads(items_text)
+            except (TypeError, ValueError) as e:
+                raise WorkflowRunError(f"Apply to Each: Items must be a JSON array: {e}")
+            if not isinstance(items, list):
+                raise WorkflowRunError(f"Apply to Each: Items must be a JSON array, got {type(items).__name__}.")
+
+            results = []
+            self.loop_stack.append([None, None])
+            try:
+                for index, item in enumerate(items):
+                    self.loop_stack[-1] = [item, index]
+                    results.append(self._run_loop_iteration(subgraph))
+            finally:
+                self.loop_stack.pop()
+            return json.dumps(results, indent=2)
+
+        if loop_type == "do_until":
+            condition = params.get("condition", "")
+            max_iterations = int(params.get("max_iterations") or 60)  # 60 matches Power Automate's own default
+            results = []
+            self.loop_stack.append([None, None])
+            try:
+                index = 0
+                while index < max_iterations:
+                    self.loop_stack[-1] = [None, index]
+                    results.append(self._run_loop_iteration(subgraph))
+                    namespace = dict(self.variables)
+                    namespace["loop_index"] = index
+                    if _eval_condition_expression(condition, namespace):
+                        break
+                    index += 1
+            finally:
+                self.loop_stack.pop()
+            return json.dumps(results, indent=2)
+
+        raise WorkflowRunError(f"Unknown loop_type: {loop_type!r} for container '{node.get('title', node_id)}'.")
+
+    def _run_loop_iteration(self, subgraph: Dict[str, Any]) -> str:
+        nodes, forward_edges, backward_edges = subgraph["nodes"], subgraph["forward_edges"], subgraph["backward_edges"]
+        # A full swap, not a merge, is correct here: Drawflow connections are drawn
+        # within one module's own canvas view, so an inner node's edges can only
+        # ever point at other inner nodes in the same private subgraph.
+        saved_backward_edges, self.backward_edges = self.backward_edges, backward_edges
+        try:
+            queue = list(subgraph["entry_ids"])
+            finished: set = set()
+            last_output = ""
+            while queue:
+                node_id = self._pick_next(queue, forward_edges, backward_edges, finished)
+                queue.remove(node_id)
+                node = nodes.get(node_id)
+                if node is None:
+                    continue
+                try:
+                    output_text, jump_to = self._execute_node(node_id, node)
+                except WorkflowTerminate:
+                    raise  # Terminate ends the whole run, even from inside a loop
+                except Exception as e:
+                    self.log.append({
+                        "node_id": node_id, "title": node.get("title", node_id), "kind": node.get("kind"),
+                        "status": "failed", "output": str(e),
+                    })
+                    raise WorkflowRunError(f"Loop iteration failed at '{node.get('title', node_id)}': {e}")
+                label = self.node_labels.get(node_id, node_id)
+                self.context[label] = output_text
+                self.log.append({
+                    "node_id": node_id, "title": node["title"], "kind": node["kind"],
+                    "status": "success", "output": (output_text or "")[:600],
+                })
+                finished.add(node_id)
+                if node_id in subgraph["exit_ids"]:
+                    last_output = output_text
+                if jump_to:
+                    if isinstance(jump_to, list):
+                        for t in reversed(jump_to):
+                            if t not in queue:
+                                queue.insert(0, t)
+                    else:
+                        queue.insert(0, jump_to)
+                else:
+                    queue.extend(t for t in forward_edges.get(node_id, []) if t not in queue)
+            return last_output
+        finally:
+            self.backward_edges = saved_backward_edges
+
     # --- Per-node dispatch ---------------------------------------------------------
 
     def _execute_node(self, node_id: str, node: Dict[str, Any]) -> Tuple[str, Optional[Union[str, List[str]]]]:
@@ -863,6 +966,9 @@ class WorkflowEngine:
 
         if kind == "function":
             return self._execute_function_node(node_id, node, params)
+
+        if kind == "container":
+            return self._execute_loop_container(node_id, node), None
 
         raise WorkflowRunError(f"Unknown node kind: {kind}")
 
@@ -1273,6 +1379,13 @@ class WorkflowEngine:
         nodes, forward_edges, backward_edges = self._parse_graph(graph_json)
         self.backward_edges = backward_edges
         self.node_labels = {nid: (n.get("label") or nid) for nid, n in nodes.items()}
+        # Loop-body nodes were pulled out of `nodes` during extraction (see
+        # _flatten_containers) so their labels wouldn't otherwise be registered --
+        # without this, {{label}} references and self.context bookkeeping for a
+        # node inside a loop would fall back to its raw node id.
+        for subgraph in self.loop_subgraphs.values():
+            for nid, n in subgraph["nodes"].items():
+                self.node_labels[nid] = n.get("label") or nid
 
         if not nodes:
             return {"success": False, "steps": [], "error": "Workflow graph is empty."}
