@@ -133,6 +133,56 @@ def test_parse_json_present_required_keys_pass():
     assert json.loads(output) == {"a": 1, "b": 2}
 
 
+from unittest.mock import patch, MagicMock
+
+
+def test_http_dry_run_no_network_call():
+    engine = _single_input_engine("n", "")
+    with patch("requests.request") as mock_request:
+        output, jump = engine._execute_function_node("n", {"tool_id": "function_http"}, {
+            "method": "GET", "uri": "https://example.com/api", "headers": "", "body": "",
+        })
+    mock_request.assert_not_called()
+    assert "https://example.com/api" in output
+
+
+def test_http_live_success():
+    engine = WorkflowEngine(dry_run=False)
+    engine.backward_edges, engine.node_labels, engine.context = {}, {}, {}
+    mock_resp = MagicMock(status_code=200, headers={"Content-Type": "application/json"}, text='{"ok": true}')
+    with patch("requests.request", return_value=mock_resp) as mock_request:
+        output, jump = engine._execute_function_node("n", {"tool_id": "function_http"}, {
+            "method": "POST", "uri": "https://example.com/api", "headers": '{"X-Test": "1"}', "body": '{"x": 1}',
+        })
+    mock_request.assert_called_once_with("POST", "https://example.com/api", headers={"X-Test": "1"}, data='{"x": 1}', timeout=30)
+    parsed = json.loads(output)
+    assert parsed["status_code"] == 200
+    assert parsed["body"] == '{"ok": true}'
+
+
+def test_http_non_2xx_raises():
+    engine = WorkflowEngine(dry_run=False)
+    engine.backward_edges, engine.node_labels, engine.context = {}, {}, {}
+    mock_resp = MagicMock(status_code=404, reason="Not Found", text="no such resource")
+    with patch("requests.request", return_value=mock_resp):
+        try:
+            engine._execute_function_node("n", {"tool_id": "function_http"}, {
+                "method": "GET", "uri": "https://example.com/missing", "headers": "", "body": "",
+            })
+            assert False, "expected WorkflowRunError"
+        except WorkflowRunError as e:
+            assert "404" in str(e)
+
+
+def test_http_blank_uri_raises():
+    engine = _single_input_engine("n", "")
+    try:
+        engine._execute_function_node("n", {"tool_id": "function_http"}, {"method": "GET", "uri": "", "headers": "", "body": ""})
+        assert False, "expected WorkflowRunError"
+    except WorkflowRunError:
+        pass
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0

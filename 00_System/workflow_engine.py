@@ -87,6 +87,8 @@ import json
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Optional, Union
 
+import requests
+
 CURRENT_DIR = Path(__file__).resolve().parent
 if str(CURRENT_DIR) not in sys.path:
     sys.path.append(str(CURRENT_DIR))
@@ -788,6 +790,37 @@ class WorkflowEngine:
                 if missing:
                     raise WorkflowRunError(f"Parse JSON: missing required key(s): {', '.join(missing)}")
             return json.dumps(parsed, indent=2), None
+
+        if tool_id == "function_http":
+            method = (params.get("method") or "GET").upper()
+            uri = self._substitute_tokens(params.get("uri", ""))
+            if not uri.strip():
+                raise WorkflowRunError("HTTP requires a URI.")
+            headers_text = self._substitute_tokens(params.get("headers", "")).strip()
+            headers = {}
+            if headers_text:
+                try:
+                    headers = json.loads(headers_text)
+                except (TypeError, ValueError) as e:
+                    raise WorkflowRunError(f"HTTP: Headers must be a JSON object: {e}")
+            body = self._substitute_tokens(params.get("body", ""))
+
+            if self.dry_run:
+                return f"[DRY RUN] Would {method} {uri}", None
+
+            try:
+                resp = requests.request(method, uri, headers=headers, data=body or None, timeout=30)
+            except requests.exceptions.RequestException as e:
+                raise WorkflowRunError(f"HTTP {method} {uri} failed: {e}")
+
+            if resp.status_code >= 400:
+                raise WorkflowRunError(f"HTTP {method} {uri} failed: {resp.status_code} {resp.reason}\n{resp.text[:1000]}")
+
+            return json.dumps({
+                "status_code": resp.status_code,
+                "headers": dict(resp.headers),
+                "body": resp.text[:5000],
+            }, indent=2), None
 
         # --- Prompt-driven AI functions (Gemini / Claude / ChatGPT / image gen) ---
         # There's no implicit "whatever flowed in" fallback any more, so an empty

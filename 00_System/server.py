@@ -238,6 +238,12 @@ FUNCTIONS_REGISTRY = [
         "model": None,
     },
     {
+        "tool_id": "function_http",
+        "title": "HTTP",
+        "description": "Generic REST API request (GET/POST/PUT/PATCH/DELETE). A non-2xx response fails the step with the status code and body, for troubleshooting.",
+        "model": None,
+    },
+    {
         "tool_id": "function_google_search",
         "title": "Google Search",
         "description": "Asks the Gemini bridge to run a full Deep Research pass via your signed-in Gemini session (no API key).",
@@ -455,6 +461,7 @@ TOOL_FA_ICON_MAP: Dict[str, str] = {
     "function_conditions": "fa-code-branch",      # N-way branch
     "function_compose": "fa-cube",
     "function_parse_json": "fa-file-code",
+    "function_http": "fa-globe",
     "builtin_review_gate": "fa-repeat",           # loops back to an earlier node on fail
     "human_review_checkpoint": "fa-user-check",
     "generate_vault_map": "fa-folder-tree",

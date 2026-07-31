@@ -544,6 +544,12 @@
             function_parse_json: [
                 { key: "required_keys", label: "Required Keys (optional, one per line)", type: "textarea", mono: true },
             ],
+            function_http: [
+                { key: "method", label: "Method", type: "select", options: ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+                { key: "uri", label: "URI", type: "text", mono: true, placeholder: "https://api.example.com/..." },
+                { key: "headers", label: "Headers (JSON object, optional)", type: "textarea", mono: true, placeholder: '{"Authorization": "Bearer {{token}}"}' },
+                { key: "body", label: "Body (optional)", type: "textarea", mono: true },
+            ],
             function_google_search: [
                 { key: "instructions", label: "Search Instructions", type: "textarea", placeholder: "e.g. What changed in the latest Red Seal standard?" },
             ],
