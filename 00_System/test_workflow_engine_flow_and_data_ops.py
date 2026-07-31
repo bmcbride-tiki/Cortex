@@ -358,6 +358,58 @@ def test_union_requires_two_predecessors():
         pass
 
 
+def test_chunk_splits_into_groups():
+    engine = _single_input_engine("n", "[1, 2, 3, 4, 5]")
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_chunk"}, {"size": 2})
+    assert json.loads(output) == [[1, 2], [3, 4], [5]]
+
+
+def test_chunk_invalid_size_raises():
+    engine = _single_input_engine("n", "[1, 2, 3]")
+    try:
+        engine._execute_function_node("n", {"tool_id": "function_chunk"}, {"size": 0})
+        assert False, "expected WorkflowRunError"
+    except WorkflowRunError:
+        pass
+
+
+def test_length_returns_plain_count():
+    engine = _single_input_engine("n", "[1, 2, 3]")
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_length"}, {})
+    assert output == "3"
+
+
+def test_first_and_last_scalar_unquoted():
+    engine = _single_input_engine("n", '["Alice", "Bob"]')
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_first"}, {})
+    assert output == "Alice"
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_last"}, {})
+    assert output == "Bob"
+
+
+def test_first_and_last_object_json():
+    engine = _single_input_engine("n", '[{"a": 1}, {"a": 2}]')
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_first"}, {})
+    assert json.loads(output) == {"a": 1}
+
+
+def test_first_empty_array_raises():
+    engine = _single_input_engine("n", "[]")
+    try:
+        engine._execute_function_node("n", {"tool_id": "function_first"}, {})
+        assert False, "expected WorkflowRunError"
+    except WorkflowRunError:
+        pass
+
+
+def test_take_and_skip():
+    engine = _single_input_engine("n", "[1, 2, 3, 4, 5]")
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_take"}, {"count": 2})
+    assert json.loads(output) == [1, 2]
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_skip"}, {"count": 2})
+    assert json.loads(output) == [3, 4, 5]
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0

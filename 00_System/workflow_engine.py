@@ -946,6 +946,39 @@ class WorkflowEngine:
                         merged.append(item)
             return json.dumps(merged, indent=2), None
 
+        if tool_id == "function_chunk":
+            arr = self._parse_json_array(node_id, "Chunk")
+            size = int(params.get("size") or 0)
+            if size <= 0:
+                raise WorkflowRunError("Chunk size must be a positive integer.")
+            return json.dumps([arr[i:i + size] for i in range(0, len(arr), size)], indent=2), None
+
+        if tool_id == "function_length":
+            arr = self._parse_json_array(node_id, "Length")
+            return str(len(arr)), None
+
+        if tool_id == "function_first":
+            arr = self._parse_json_array(node_id, "First")
+            if not arr:
+                raise WorkflowRunError("First: array is empty.")
+            return self._array_item_to_text(arr[0]), None
+
+        if tool_id == "function_last":
+            arr = self._parse_json_array(node_id, "Last")
+            if not arr:
+                raise WorkflowRunError("Last: array is empty.")
+            return self._array_item_to_text(arr[-1]), None
+
+        if tool_id == "function_take":
+            arr = self._parse_json_array(node_id, "Take")
+            count = max(int(params.get("count") or 0), 0)
+            return json.dumps(arr[:count], indent=2), None
+
+        if tool_id == "function_skip":
+            arr = self._parse_json_array(node_id, "Skip")
+            count = max(int(params.get("count") or 0), 0)
+            return json.dumps(arr[count:], indent=2), None
+
         # --- Prompt-driven AI functions (Gemini / Claude / ChatGPT / image gen) ---
         # There's no implicit "whatever flowed in" fallback any more, so an empty
         # prompt means the node is misconfigured -- fail loudly instead of firing
