@@ -551,6 +551,10 @@
                 { key: "body", label: "Body (optional)", type: "textarea", mono: true },
             ],
             function_response: [],
+            function_terminate: [
+                { key: "status", label: "Status", type: "select", options: ["Succeeded", "Failed", "Cancelled"] },
+                { key: "message", label: "Message", type: "textarea" },
+            ],
             function_google_search: [
                 { key: "instructions", label: "Search Instructions", type: "textarea", placeholder: "e.g. What changed in the latest Red Seal standard?" },
             ],

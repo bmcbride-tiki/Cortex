@@ -121,6 +121,17 @@ class MissingInputError(WorkflowRunError):
     pass
 
 
+class WorkflowTerminate(Exception):
+    # Deliberately NOT a WorkflowRunError subclass -- it must not fall into
+    # run()'s generic per-step failure handling. It needs its own except
+    # clause that stops the whole run rather than continuing to the next
+    # queued node.
+    def __init__(self, status: str, message: str):
+        self.status = status
+        self.message = message
+        super().__init__(message)
+
+
 # --- Conditions node: safe expression evaluation (no eval(), stdlib only) -------
 
 _CONDITION_COMPARE_OPS = {
@@ -831,6 +842,11 @@ class WorkflowEngine:
         if tool_id == "function_response":
             return self._gather_upstream_text(node_id), None
 
+        if tool_id == "function_terminate":
+            status = params.get("status", "Failed")
+            message = self._substitute_tokens(params.get("message", ""))
+            raise WorkflowTerminate(status, message)
+
         # --- Prompt-driven AI functions (Gemini / Claude / ChatGPT / image gen) ---
         # There's no implicit "whatever flowed in" fallback any more, so an empty
         # prompt means the node is misconfigured -- fail loudly instead of firing
@@ -985,6 +1001,13 @@ class WorkflowEngine:
                     "node_id": node_id, "title": node["title"], "kind": node["kind"],
                     "status": "success", "output": (output_text or "")[:600],
                 })
+            except WorkflowTerminate as e:
+                self.log.append({
+                    "node_id": node_id, "title": node.get("title", node_id), "kind": node.get("kind"),
+                    "status": "terminated", "output": e.message,
+                })
+                self.terminated = {"status": e.status, "message": e.message}
+                break
             except Exception as e:
                 self.log.append({
                     "node_id": node_id, "title": node.get("title", node_id), "kind": node.get("kind"),
@@ -1019,5 +1042,8 @@ class WorkflowEngine:
                 # queue, so a node fed by two paths is only ever run once.
                 queue.extend(t for t in forward_edges.get(node_id, []) if t not in queue)
 
-        overall_success = bool(self.log) and all(s["status"] == "success" for s in self.log)
-        return {"success": overall_success, "steps": self.log, "responses": self.responses}
+        if self.terminated:
+            overall_success = self.terminated["status"] == "Succeeded"
+        else:
+            overall_success = bool(self.log) and all(s["status"] == "success" for s in self.log)
+        return {"success": overall_success, "steps": self.log, "responses": self.responses, "terminated": self.terminated}

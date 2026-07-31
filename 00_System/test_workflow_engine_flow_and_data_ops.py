@@ -201,6 +201,34 @@ def test_response_absent_when_no_response_node():
     assert result["responses"] == [], result["responses"]
 
 
+def test_terminate_failed_stops_run_before_later_node():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([
+        ("1", "Stop", "function_terminate", {"status": "Failed", "message": "stopping here"}, ["2"]),
+        ("2", "Never", "function_compose", {"value": "should not run"}, []),
+    ])
+    result = engine.run(graph)
+    assert result["success"] is False, result
+    assert result["terminated"] == {"status": "Failed", "message": "stopping here"}, result["terminated"]
+    ran_ids = [s["node_id"] for s in result["steps"]]
+    assert ran_ids == ["1"], ran_ids
+
+
+def test_terminate_succeeded_marks_run_successful():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([("1", "Stop", "function_terminate", {"status": "Succeeded", "message": "done"}, [])])
+    result = engine.run(graph)
+    assert result["success"] is True, result
+    assert result["terminated"]["status"] == "Succeeded"
+
+
+def test_no_terminate_leaves_terminated_none():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([("1", "Src", "function_compose", {"value": "x"}, [])])
+    result = engine.run(graph)
+    assert result["terminated"] is None
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0
