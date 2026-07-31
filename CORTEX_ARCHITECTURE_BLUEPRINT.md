@@ -211,6 +211,8 @@ This is the concrete answer to "how do we stop this from sliding into chaos," ma
 
 ## 8. Recommended Implementation Sequence
 
+> **See `CORTEX_DEVELOPMENT_ROADMAP.md` for the detailed, stage-by-stage version of this sequence** — each stage there is written with enough detail for a fresh Claude Code session to begin brainstorming and implementation directly. The summary below is retained for orientation; the roadmap document is authoritative on sequencing and stage scope.
+
 ```text
  PHASE 1: Consolidation & Auth      PHASE 2: Validation & Guardrails    PHASE 3: UI & Feature Expansion
 ┌─────────────────────────────────┐ ┌─────────────────────────────────┐ ┌─────────────────────────────────┐
