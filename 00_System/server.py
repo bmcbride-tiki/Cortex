@@ -316,6 +316,30 @@ FUNCTIONS_REGISTRY = [
         "model": None,
     },
     {
+        "tool_id": "function_initialize_variable",
+        "title": "Initialize Variable",
+        "description": "Declares a named variable (String/Number/Boolean/Array/Object) with an initial value, referenced elsewhere via {{var.name}}.",
+        "model": None,
+    },
+    {
+        "tool_id": "function_set_variable",
+        "title": "Set Variable",
+        "description": "Overwrites an already-initialized variable's value.",
+        "model": None,
+    },
+    {
+        "tool_id": "function_increment_variable",
+        "title": "Increment Variable",
+        "description": "Adds a number (default 1) to an already-initialized numeric variable.",
+        "model": None,
+    },
+    {
+        "tool_id": "function_append_variable",
+        "title": "Append Variable",
+        "description": "Appends a value to an already-initialized Array variable.",
+        "model": None,
+    },
+    {
         "tool_id": "function_google_search",
         "title": "Google Search",
         "description": "Asks the Gemini bridge to run a full Deep Research pass via your signed-in Gemini session (no API key).",
@@ -551,6 +575,10 @@ TOOL_FA_ICON_MAP: Dict[str, str] = {
     "function_skip": "fa-backward",
     "function_create_csv_table": "fa-file-csv",
     "function_create_html_table": "fa-table",
+    "function_initialize_variable": "fa-box",
+    "function_set_variable": "fa-pen",
+    "function_increment_variable": "fa-plus",
+    "function_append_variable": "fa-list",
     "builtin_review_gate": "fa-repeat",           # loops back to an earlier node on fail
     "human_review_checkpoint": "fa-user-check",
     "generate_vault_map": "fa-folder-tree",

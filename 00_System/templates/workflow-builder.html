@@ -591,6 +591,23 @@
             function_create_html_table: [
                 { key: "columns", label: "Columns (optional, one per line; blank = auto-detect from first row)", type: "textarea", mono: true },
             ],
+            function_initialize_variable: [
+                { key: "name", label: "Name", type: "text", mono: true },
+                { key: "type", label: "Type", type: "select", options: ["String", "Number", "Boolean", "Array", "Object"] },
+                { key: "value", label: "Value", type: "textarea", mono: true },
+            ],
+            function_set_variable: [
+                { key: "name", label: "Name", type: "text", mono: true },
+                { key: "value", label: "Value", type: "textarea", mono: true },
+            ],
+            function_increment_variable: [
+                { key: "name", label: "Name", type: "text", mono: true },
+                { key: "increment_by", label: "Increment By", type: "text", mono: true, placeholder: "1" },
+            ],
+            function_append_variable: [
+                { key: "name", label: "Name", type: "text", mono: true },
+                { key: "value", label: "Value", type: "textarea", mono: true },
+            ],
             function_google_search: [
                 { key: "instructions", label: "Search Instructions", type: "textarea", placeholder: "e.g. What changed in the latest Red Seal standard?" },
             ],

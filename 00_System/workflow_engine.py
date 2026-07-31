@@ -1030,6 +1030,71 @@ class WorkflowEngine:
             )
             return f"<table><tr>{header_html}</tr>{rows_html}</table>", None
 
+        if tool_id == "function_initialize_variable":
+            name = params.get("name", "")
+            if not name:
+                raise WorkflowRunError("Initialize Variable requires a name.")
+            if name in self.variables:
+                raise WorkflowRunError(f"Variable '{name}' is already initialized.")
+            var_type = params.get("type", "String")
+            raw = self._substitute_tokens(params.get("value", ""))
+            if var_type == "Number":
+                try:
+                    value = float(raw)
+                except ValueError as e:
+                    raise WorkflowRunError(f"Initialize Variable: '{raw}' is not a valid Number: {e}")
+            elif var_type == "Boolean":
+                value = raw.strip().lower() in ("true", "1", "yes")
+            elif var_type in ("Array", "Object"):
+                try:
+                    value = json.loads(raw)
+                except (TypeError, ValueError) as e:
+                    raise WorkflowRunError(f"Initialize Variable: '{raw}' is not valid JSON for type {var_type}: {e}")
+            else:
+                value = raw
+            self.variables[name] = value
+            return self._array_item_to_text(value), None
+
+        if tool_id == "function_set_variable":
+            name = params.get("name", "")
+            if name not in self.variables:
+                raise WorkflowRunError(f"Set Variable: '{name}' has not been initialized.")
+            raw = self._substitute_tokens(params.get("value", ""))
+            try:
+                value = json.loads(raw)
+            except (TypeError, ValueError):
+                value = raw
+            self.variables[name] = value
+            return self._array_item_to_text(value), None
+
+        if tool_id == "function_increment_variable":
+            name = params.get("name", "")
+            if name not in self.variables:
+                raise WorkflowRunError(f"Increment Variable: '{name}' has not been initialized.")
+            try:
+                current = float(self.variables[name])
+            except (TypeError, ValueError):
+                raise WorkflowRunError(f"Increment Variable: '{name}' is not numeric (current value: {self.variables[name]!r}).")
+            increment_by = float(self._substitute_tokens(params.get("increment_by", "1")) or 1)
+            new_value = current + increment_by
+            new_value = int(new_value) if new_value.is_integer() else new_value
+            self.variables[name] = new_value
+            return self._array_item_to_text(new_value), None
+
+        if tool_id == "function_append_variable":
+            name = params.get("name", "")
+            if name not in self.variables:
+                raise WorkflowRunError(f"Append Variable: '{name}' has not been initialized.")
+            if not isinstance(self.variables[name], list):
+                raise WorkflowRunError(f"Append Variable: '{name}' is not an Array (current type: {type(self.variables[name]).__name__}).")
+            raw = self._substitute_tokens(params.get("value", ""))
+            try:
+                value = json.loads(raw)
+            except (TypeError, ValueError):
+                value = raw
+            self.variables[name].append(value)
+            return self._array_item_to_text(self.variables[name]), None
+
         # --- Prompt-driven AI functions (Gemini / Claude / ChatGPT / image gen) ---
         # There's no implicit "whatever flowed in" fallback any more, so an empty
         # prompt means the node is misconfigured -- fail loudly instead of firing
