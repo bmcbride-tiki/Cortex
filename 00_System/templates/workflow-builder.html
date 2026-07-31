@@ -555,6 +555,13 @@
                 { key: "status", label: "Status", type: "select", options: ["Succeeded", "Failed", "Cancelled"] },
                 { key: "message", label: "Message", type: "textarea" },
             ],
+            function_delay: [
+                { key: "duration", label: "Duration", type: "number", placeholder: "5" },
+                { key: "unit", label: "Unit", type: "select", options: ["Seconds", "Minutes", "Hours"] },
+            ],
+            function_delay_until: [
+                { key: "timestamp", label: "Timestamp (ISO8601)", type: "text", mono: true, placeholder: "2026-08-01T14:00:00" },
+            ],
             function_google_search: [
                 { key: "instructions", label: "Search Instructions", type: "textarea", placeholder: "e.g. What changed in the latest Red Seal standard?" },
             ],

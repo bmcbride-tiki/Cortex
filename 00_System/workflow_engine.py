@@ -84,6 +84,11 @@ sys.dont_write_bytecode = True
 import re
 import ast
 import json
+import time
+import csv
+import io
+import html
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Optional, Union
 
@@ -101,6 +106,7 @@ from core_router import CoreRouter
 # here is what workflow-builder.html's wfbSaveLabel enforces on labels.
 TOKEN_PATTERN = re.compile(r"\{\{\s*([a-zA-Z0-9_\-]+)\s*\}\}")
 MAX_TOTAL_STEPS = 200  # guards against runaway loops even when a gate's own max_attempts is misconfigured
+MAX_DELAY_SECONDS = 300  # 5 minutes -- workflows run synchronously inside one HTTP request
 
 
 class WorkflowRunError(Exception):
@@ -846,6 +852,37 @@ class WorkflowEngine:
             status = params.get("status", "Failed")
             message = self._substitute_tokens(params.get("message", ""))
             raise WorkflowTerminate(status, message)
+
+        if tool_id == "function_delay":
+            unit_seconds = {"Seconds": 1, "Minutes": 60, "Hours": 3600}
+            duration = float(params.get("duration") or 0)
+            unit = params.get("unit", "Seconds")
+            seconds = duration * unit_seconds.get(unit, 1)
+            if self.dry_run:
+                return f"[DRY RUN] Would delay {duration} {unit}", None
+            if seconds > MAX_DELAY_SECONDS:
+                raise WorkflowRunError(f"Delay of {seconds:.0f}s exceeds the {MAX_DELAY_SECONDS}s cap (workflows run synchronously inside one request).")
+            time.sleep(max(seconds, 0))
+            return f"Delayed {duration} {unit}", None
+
+        if tool_id == "function_delay_until":
+            raw = self._substitute_tokens(params.get("timestamp", "")).strip()
+            if not raw:
+                raise WorkflowRunError("Delay Until requires a timestamp.")
+            try:
+                target = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+            except ValueError as e:
+                raise WorkflowRunError(f"Delay Until: invalid ISO8601 timestamp: {e}")
+            now = datetime.now(target.tzinfo) if target.tzinfo else datetime.now()
+            seconds = (target - now).total_seconds()
+            if self.dry_run:
+                return f"[DRY RUN] Would delay until {raw}", None
+            if seconds <= 0:
+                return f"Target timestamp {raw} already passed; continuing immediately.", None
+            if seconds > MAX_DELAY_SECONDS:
+                raise WorkflowRunError(f"Delay Until is {seconds:.0f}s away, exceeding the {MAX_DELAY_SECONDS}s cap.")
+            time.sleep(seconds)
+            return f"Delayed until {raw}", None
 
         # --- Prompt-driven AI functions (Gemini / Claude / ChatGPT / image gen) ---
         # There's no implicit "whatever flowed in" fallback any more, so an empty

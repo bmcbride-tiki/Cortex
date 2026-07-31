@@ -256,6 +256,18 @@ FUNCTIONS_REGISTRY = [
         "model": None,
     },
     {
+        "tool_id": "function_delay",
+        "title": "Delay",
+        "description": "Pauses execution for a duration (capped at 5 minutes -- workflows run synchronously inside one request).",
+        "model": None,
+    },
+    {
+        "tool_id": "function_delay_until",
+        "title": "Delay Until",
+        "description": "Pauses execution until an ISO8601 timestamp (capped at 5 minutes out). A past timestamp continues immediately.",
+        "model": None,
+    },
+    {
         "tool_id": "function_google_search",
         "title": "Google Search",
         "description": "Asks the Gemini bridge to run a full Deep Research pass via your signed-in Gemini session (no API key).",
@@ -476,6 +488,8 @@ TOOL_FA_ICON_MAP: Dict[str, str] = {
     "function_http": "fa-globe",
     "function_response": "fa-reply",
     "function_terminate": "fa-flag-checkered",
+    "function_delay": "fa-clock",
+    "function_delay_until": "fa-hourglass-half",
     "builtin_review_gate": "fa-repeat",           # loops back to an earlier node on fail
     "human_review_checkpoint": "fa-user-check",
     "generate_vault_map": "fa-folder-tree",

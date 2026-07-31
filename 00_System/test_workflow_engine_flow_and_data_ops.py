@@ -12,7 +12,7 @@ CURRENT_DIR = Path(__file__).resolve().parent
 if str(CURRENT_DIR) not in sys.path:
     sys.path.append(str(CURRENT_DIR))
 
-from workflow_engine import WorkflowEngine, WorkflowRunError, WorkflowTerminate, _eval_condition_expression
+from workflow_engine import WorkflowEngine, WorkflowRunError
 
 
 def _graph(node_specs):
@@ -227,6 +227,51 @@ def test_no_terminate_leaves_terminated_none():
     graph = _graph([("1", "Src", "function_compose", {"value": "x"}, [])])
     result = engine.run(graph)
     assert result["terminated"] is None
+
+
+import time as _time
+
+
+def test_delay_dry_run_does_not_sleep():
+    engine = WorkflowEngine(dry_run=True)
+    start = _time.monotonic()
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_delay"}, {"duration": 3600, "unit": "Seconds"})
+    assert _time.monotonic() - start < 1
+    assert "[DRY RUN]" in output
+
+
+def test_delay_over_cap_raises_without_sleeping():
+    engine = WorkflowEngine(dry_run=False)
+    start = _time.monotonic()
+    try:
+        engine._execute_function_node("n", {"tool_id": "function_delay"}, {"duration": 10, "unit": "Minutes"})
+        assert False, "expected WorkflowRunError"
+    except WorkflowRunError:
+        pass
+    assert _time.monotonic() - start < 1
+
+
+def test_delay_live_short_actually_sleeps():
+    engine = WorkflowEngine(dry_run=False)
+    start = _time.monotonic()
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_delay"}, {"duration": 0.2, "unit": "Seconds"})
+    elapsed = _time.monotonic() - start
+    assert elapsed >= 0.2, elapsed
+
+
+def test_delay_until_past_timestamp_continues_immediately():
+    engine = WorkflowEngine(dry_run=False)
+    output, jump = engine._execute_function_node("n", {"tool_id": "function_delay_until"}, {"timestamp": "2000-01-01T00:00:00"})
+    assert "already passed" in output
+
+
+def test_delay_until_far_future_raises():
+    engine = WorkflowEngine(dry_run=False)
+    try:
+        engine._execute_function_node("n", {"tool_id": "function_delay_until"}, {"timestamp": "2099-01-01T00:00:00"})
+        assert False, "expected WorkflowRunError"
+    except WorkflowRunError:
+        pass
 
 
 if __name__ == "__main__":
