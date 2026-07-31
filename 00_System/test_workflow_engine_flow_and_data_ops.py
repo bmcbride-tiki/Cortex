@@ -183,6 +183,24 @@ def test_http_blank_uri_raises():
         pass
 
 
+def test_response_passes_through_and_is_recorded():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([
+        ("1", "Src", "function_compose", {"value": "final answer"}, ["2"]),
+        ("2", "Out", "function_response", {}, []),
+    ])
+    result = engine.run(graph)
+    assert result["success"], result
+    assert result["responses"] == [{"node_id": "2", "label": "Out", "output": "final answer"}], result["responses"]
+
+
+def test_response_absent_when_no_response_node():
+    engine = WorkflowEngine(dry_run=True)
+    graph = _graph([("1", "Src", "function_compose", {"value": "x"}, [])])
+    result = engine.run(graph)
+    assert result["responses"] == [], result["responses"]
+
+
 if __name__ == "__main__":
     tests = [v for k, v in list(globals().items()) if k.startswith("test_") and callable(v)]
     failures = 0

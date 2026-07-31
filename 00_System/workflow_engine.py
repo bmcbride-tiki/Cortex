@@ -230,6 +230,12 @@ class WorkflowEngine:
         # this is what gets shown back to the user afterward as the
         # workflow's execution report.
         self.log: List[Dict[str, Any]] = []
+        # Every "function_response" node's captured output, in execution order --
+        # a workflow's explicitly declared output(s), since Cortex has no external
+        # caller yet for a Response node to literally respond to.
+        self.responses: List[Dict[str, str]] = []
+        # Set when a Terminate node ends the run early -- {"status", "message"}.
+        self.terminated: Optional[Dict[str, str]] = None
 
     # --- Graph parsing -----------------------------------------------------------
 
@@ -822,6 +828,9 @@ class WorkflowEngine:
                 "body": resp.text[:5000],
             }, indent=2), None
 
+        if tool_id == "function_response":
+            return self._gather_upstream_text(node_id), None
+
         # --- Prompt-driven AI functions (Gemini / Claude / ChatGPT / image gen) ---
         # There's no implicit "whatever flowed in" fallback any more, so an empty
         # prompt means the node is misconfigured -- fail loudly instead of firing
@@ -970,6 +979,8 @@ class WorkflowEngine:
                 output_text, jump_to = self._execute_node(node_id, node)
                 label = self.node_labels.get(node_id, node_id)
                 self.context[label] = output_text
+                if node.get("tool_id") == "function_response":
+                    self.responses.append({"node_id": node_id, "label": label, "output": output_text})
                 self.log.append({
                     "node_id": node_id, "title": node["title"], "kind": node["kind"],
                     "status": "success", "output": (output_text or "")[:600],
@@ -1009,4 +1020,4 @@ class WorkflowEngine:
                 queue.extend(t for t in forward_edges.get(node_id, []) if t not in queue)
 
         overall_success = bool(self.log) and all(s["status"] == "success" for s in self.log)
-        return {"success": overall_success, "steps": self.log}
+        return {"success": overall_success, "steps": self.log, "responses": self.responses}

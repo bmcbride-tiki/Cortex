@@ -244,6 +244,12 @@ FUNCTIONS_REGISTRY = [
         "model": None,
     },
     {
+        "tool_id": "function_response",
+        "title": "Response",
+        "description": "Marks its connected input as one of the workflow's declared final outputs (Cortex workflows have no external caller yet -- this records intent, not an HTTP reply).",
+        "model": None,
+    },
+    {
         "tool_id": "function_google_search",
         "title": "Google Search",
         "description": "Asks the Gemini bridge to run a full Deep Research pass via your signed-in Gemini session (no API key).",
@@ -462,6 +468,7 @@ TOOL_FA_ICON_MAP: Dict[str, str] = {
     "function_compose": "fa-cube",
     "function_parse_json": "fa-file-code",
     "function_http": "fa-globe",
+    "function_response": "fa-reply",
     "builtin_review_gate": "fa-repeat",           # loops back to an earlier node on fail
     "human_review_checkpoint": "fa-user-check",
     "generate_vault_map": "fa-folder-tree",
