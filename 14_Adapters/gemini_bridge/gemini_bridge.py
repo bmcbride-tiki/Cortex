@@ -265,7 +265,7 @@ async def _run_deep_research(client, prompt: str, poll_interval: float = 15.0, t
     raise RuntimeError(f"Deep research timed out after {timeout}s without a completed report.")
 
 
-async def _ask_async(psid: str, psidts: str, prompt: str, deep_research: bool = False, files: Optional[List[str]] = None) -> str:
+async def _ask_async(psid: str, psidts: str, prompt: str, deep_research: bool = False, files: Optional[List[str]] = None, gem=None) -> str:
     # Everything in this file that actually talks to Gemini has to go
     # through gemini_webapi's "client" object, which is why this function
     # (and the one below it) both start by creating and initializing one
@@ -281,8 +281,21 @@ async def _ask_async(psid: str, psidts: str, prompt: str, deep_research: bool = 
     # Plain, single-turn question-and-answer -- the normal case. `files` (image/
     # document paths) is gemini_webapi's own documented multimodal support --
     # confirmed by inspecting the installed package's generate_content signature.
-    response = await client.generate_content(prompt, files=files)
+    # `gem` (a Gem object -- see ask_gemini_gem below) grounds the response in a
+    # Gem's custom instructions/dataset, the same documented parameter.
+    response = await client.generate_content(prompt, files=files, gem=gem)
     return (response.text or "").strip()
+
+
+async def _fetch_gems_async(psid: str, psidts: str):
+    """Returns gemini_webapi's GemJar (dict of id -> Gem) of every Gem available
+    to the signed-in account -- predefined and custom, each with its own
+    instructions/dataset loaded via the Gem interface."""
+    from gemini_webapi import GeminiClient
+
+    client = GeminiClient(psid, psidts)
+    await client.init(timeout=30, auto_refresh=False)
+    return await client.fetch_gems()
 
 
 async def _generate_image_async(psid: str, psidts: str, prompt: str, output_dir: str) -> str:
@@ -322,6 +335,39 @@ def ask_gemini(prompt: str, use_search: bool = False, files: Optional[List[str]]
     return asyncio.run(_ask_async(psid, psidts, prompt, deep_research=use_search, files=files))
 
 
+def list_gems() -> list:
+    """Returns every Gem available to the signed-in account: [{"id", "name",
+    "description"}] -- Gemini's equivalent of M365 Copilot Agents (see
+    copilot_bridge.list_agents), a reusable persona with its own custom
+    instructions and dataset loaded via the Gem interface."""
+    if MOCK_MODE:
+        return [
+            {"id": "mock-gem-1", "name": "Career Coach", "description": "[MOCK] Predefined Gemini Gem."},
+            {"id": "mock-gem-2", "name": "Curriculum Reviewer", "description": "[MOCK] Custom Gem with a loaded dataset."},
+        ]
+    psid, psidts = _get_session_cookies()
+    gems = asyncio.run(_fetch_gems_async(psid, psidts))
+    return [{"id": g.id, "name": g.name, "description": g.description or ""} for g in gems]
+
+
+def ask_gemini_gem(gem_name: str, prompt: str) -> str:
+    """Grounds a message to a specific Gem by name (see list_gems()) and returns its
+    response -- the Gem's own custom instructions/dataset shape the answer, same as
+    ask_agent() grounds a message to a specific M365 Copilot agent."""
+    if not gem_name:
+        raise ValueError("ask_gemini_gem requires a gem_name.")
+    if not prompt:
+        raise ValueError("ask_gemini_gem requires a prompt.")
+    if MOCK_MODE:
+        return f"[MOCK Gemini Gem '{gem_name}' response] {prompt[:300]}"
+    psid, psidts = _get_session_cookies()
+    gems = asyncio.run(_fetch_gems_async(psid, psidts))
+    gem = gems.get(name=gem_name)
+    if gem is None:
+        raise RuntimeError(f"No Gem named '{gem_name}' found. Run list_gems() to see available Gems.")
+    return asyncio.run(_ask_async(psid, psidts, prompt, gem=gem))
+
+
 def generate_image(prompt: str, output_dir: str) -> str:
     """Generates one image via Gemini's built-in image generation, saved to output_dir."""
     if MOCK_MODE:
@@ -350,7 +396,7 @@ def main():
     if not args.payload:
         print(json.dumps({
             "success": False,
-            "response": 'No JSON payload provided. Expected: {"action": "init|ask|search|generate_image", "prompt": "..."}',
+            "response": 'No JSON payload provided. Expected: {"action": "init|ask|search|generate_image|list_gems|ask_gem", "prompt": "..."}',
         }))
         sys.exit(1)
 
@@ -382,6 +428,10 @@ def main():
         elif action == "generate_image":
             output_dir = params.get("output_dir") or str(ROOT_DIR / "02_vault" / "generated_images")
             result = {"success": True, "file_path": generate_image(prompt, output_dir)}
+        elif action == "list_gems":
+            result = {"success": True, "gems": list_gems()}
+        elif action == "ask_gem":
+            result = {"success": True, "response": ask_gemini_gem(params.get("gem_name", ""), prompt)}
         else:
             result = {"success": False, "response": f"Unknown action: {action}"}
     except Exception as e:
