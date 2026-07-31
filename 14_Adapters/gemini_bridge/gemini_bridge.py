@@ -66,6 +66,7 @@ import json
 import asyncio
 import argparse
 from pathlib import Path
+from typing import List, Optional
 from playwright.sync_api import sync_playwright
 
 # gemini_webapi logs via loguru straight to stderr by default. core_router.py appends
@@ -264,7 +265,7 @@ async def _run_deep_research(client, prompt: str, poll_interval: float = 15.0, t
     raise RuntimeError(f"Deep research timed out after {timeout}s without a completed report.")
 
 
-async def _ask_async(psid: str, psidts: str, prompt: str, deep_research: bool = False) -> str:
+async def _ask_async(psid: str, psidts: str, prompt: str, deep_research: bool = False, files: Optional[List[str]] = None) -> str:
     # Everything in this file that actually talks to Gemini has to go
     # through gemini_webapi's "client" object, which is why this function
     # (and the one below it) both start by creating and initializing one
@@ -277,8 +278,10 @@ async def _ask_async(psid: str, psidts: str, prompt: str, deep_research: bool = 
     if deep_research:
         return await _run_deep_research(client, prompt)
 
-    # Plain, single-turn question-and-answer -- the normal case.
-    response = await client.generate_content(prompt)
+    # Plain, single-turn question-and-answer -- the normal case. `files` (image/
+    # document paths) is gemini_webapi's own documented multimodal support --
+    # confirmed by inspecting the installed package's generate_content signature.
+    response = await client.generate_content(prompt, files=files)
     return (response.text or "").strip()
 
 
@@ -301,15 +304,22 @@ async def _generate_image_async(psid: str, psidts: str, prompt: str, output_dir:
     return str(out_dir / filename)
 
 
-def ask_gemini(prompt: str, use_search: bool = False) -> str:
-    """Text generation. use_search=True runs it as a full Deep Research pass instead."""
+def ask_gemini(prompt: str, use_search: bool = False, files: Optional[List[str]] = None) -> str:
+    """Text generation, optionally with attached image/document files (multimodal --
+    OCR, image description, form extraction, etc.). use_search=True runs it as a full
+    Deep Research pass instead; combining that with files isn't supported (Deep
+    Research is a multi-step research pass over a topic, not a single-turn multimodal
+    question -- a deliberate Cortex-side restriction, not a gemini_webapi limitation)."""
+    if use_search and files:
+        raise ValueError("ask_gemini: use_search (Deep Research) and files can't be combined.")
     if MOCK_MODE:
         mode = "search-grounded " if use_search else ""
-        return f"[MOCK {mode}Gemini response] {prompt[:300]}"
+        file_note = f" [with {len(files)} attached file(s)]" if files else ""
+        return f"[MOCK {mode}Gemini response{file_note}] {prompt[:300]}"
     # Public entry point used by main() below. Handles the "get the login
     # cookies, then run the actual async Gemini call" sequence in one step.
     psid, psidts = _get_session_cookies()
-    return asyncio.run(_ask_async(psid, psidts, prompt, deep_research=use_search))
+    return asyncio.run(_ask_async(psid, psidts, prompt, deep_research=use_search, files=files))
 
 
 def generate_image(prompt: str, output_dir: str) -> str:
