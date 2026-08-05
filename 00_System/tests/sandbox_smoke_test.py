@@ -11,24 +11,25 @@
 #   output; every check is a plain Python `assert`, so it stops with a
 #   traceback the moment something doesn't match what's expected.
 #
-#   Four independent checks run in sequence, each printing its own banner:
+#   Two independent checks run in sequence, each printing its own banner:
 #     1. `test_data_flow` -- ingest two files, run them through two workflow
 #        steps (a plain task, then an AI-flavored skill), confirm output
 #        and file lists carry forward correctly.
 #     2. `test_licensing` -- confirm a licensed block runs, an unlicensed
 #        one is correctly reported as unavailable, and running an
 #        unlicensed block anyway raises `PermissionError`.
-#     3. `test_visual_canvas` -- build a small 3-node visual graph, confirm
-#        its SVGL brand icon resolves and its nodes run/get greyed out
-#        exactly as licensing dictates.
-#     4. `test_observer_pipeline` -- run a short workflow, then transform
-#        its resulting history into the observer pipeline view and confirm
-#        the human-approval stage shows up correctly.
+#
+#   This file used to also exercise the visual-canvas and observer-pipeline
+#   modules (`test_visual_canvas`, `test_observer_pipeline`). Those modules
+#   were archived under `data_processing/_archive_canvas_exploration/` --
+#   see that folder's README and `CORTEX_ARCHITECTURE_BLUEPRINT.md` §5 --
+#   since they were never wired into the live Workflow Builder. The checks
+#   were removed rather than repointed at the archive, since this script's
+#   job is to guard the live path, not keep archived code green.
 #
 # WHAT IT INTERACTS WITH
-#   - Every module in `data_processing/`: `workflow_schema.py`,
-#     `enterprise_adapters.py`, `user_identity.py`, `theme_exporter.py`,
-#     `canvas_schema.py`, `canvas_parser.py`, `observer_transformer.py`.
+#   - The retained modules in `data_processing/`: `workflow_schema.py`,
+#     `enterprise_adapters.py`, `user_identity.py`.
 #   - `core_router.py`'s `CoreWorkflowRouter`, used to actually execute each
 #     simulated workflow step.
 #   - Environment variables (`CORTEX_USER_UPN`, `HAS_COPILOT_PREMIUM`,
@@ -49,7 +50,6 @@ import sys
 import os
 import asyncio
 import uuid
-import json
 from pathlib import Path
 
 CURRENT_DIR = Path(__file__).resolve().parents[1]
@@ -59,10 +59,6 @@ if str(CURRENT_DIR) not in sys.path:
 from data_processing.workflow_schema import WorkflowPayload, WorkflowInputData, WorkflowContext
 from data_processing.enterprise_adapters import M365OneDriveAdapter, GoogleDriveAdapter
 from data_processing.user_identity import CapabilityFlag, UserIdentityManager
-from data_processing.theme_exporter import ShadCNThemePalette
-from data_processing.canvas_schema import WorkflowCanvasGraph, CanvasNode, CanvasEdge, NodePosition, CanvasNodeStyle, IconSource
-from data_processing.canvas_parser import VisualWorkflowExecutor
-from data_processing.observer_transformer import PipelineObserverTransformer
 from core_router import CoreWorkflowRouter
 
 async def test_data_flow():
@@ -163,168 +159,9 @@ async def test_licensing():
 
     print("\n--- All Licensing & User Layer Checks Passed! ---")
 
-async def test_visual_canvas():
-    print("\n=== Starting Cortex ShadCN UI & SVGL Visual Canvas Verification ===")
-
-    os.environ["CORTEX_USER_UPN"] = "devops_builder@enterprise.com"
-    os.environ["HAS_COPILOT_PREMIUM"] = "true"
-    os.environ["HAS_VISIO"] = "false"
-
-    user_ent = UserIdentityManager.resolve_current_user()
-    print(f"Authenticated User: {user_ent.user_principal_name}")
-
-    def mock_m365_ingest(input_obj: WorkflowInputData):
-        return {"ingested_count": len(input_obj.files), "status": "FILE_PARSED"}
-
-    def mock_copilot_premium(input_obj: WorkflowInputData):
-        return {"ai_summary": "Extracted key enterprise contract risk terms."}
-
-    def mock_visio_export(input_obj: WorkflowInputData):
-        return {"visio_diagram": "EXPORTED"}
-
-    block_registry = {
-        "m365_ingest": mock_m365_ingest,
-        "copilot_premium": mock_copilot_premium,
-        "visio_export": mock_visio_export
-    }
-
-    graph = WorkflowCanvasGraph(
-        workflow_id="wf_shadcn_001",
-        theme_mode="dark",
-        nodes=[
-            CanvasNode(
-                id="node_1",
-                label="Microsoft 365 Ingestion",
-                subtitle="Fetch OneDrive Contract",
-                block_type="adapter",
-                func_name="m365_ingest",
-                required_capability=CapabilityFlag.M365_BASE.value,
-                position=NodePosition(x=100, y=150),
-                style=CanvasNodeStyle(
-                    icon_source=IconSource.SVGL,
-                    icon_name="m365",
-                    badge_label="TRIGGER",
-                    brand_color="#0078D4"
-                )
-            ),
-            CanvasNode(
-                id="node_2",
-                label="Copilot Premium Skill",
-                subtitle="AI Risk Extraction",
-                block_type="skill",
-                func_name="copilot_premium",
-                required_capability=CapabilityFlag.COPILOT_PREMIUM.value,
-                position=NodePosition(x=450, y=150),
-                style=CanvasNodeStyle(
-                    icon_source=IconSource.SVGL,
-                    icon_name="openai",
-                    badge_label="AI AGENT",
-                    brand_color="#10A37F"
-                )
-            ),
-            CanvasNode(
-                id="node_3",
-                label="MS Visio Flow Export",
-                subtitle="Generate Diagram",
-                block_type="adapter",
-                func_name="visio_export",
-                required_capability=CapabilityFlag.VISIO_EXPORT.value,  # Unlicensed
-                position=NodePosition(x=800, y=150),
-                style=CanvasNodeStyle(
-                    icon_source=IconSource.SVGL,
-                    icon_name="m365",
-                    badge_label="EXPORT",
-                    brand_color="#2B579A"
-                )
-            )
-        ],
-        edges=[
-            CanvasEdge(id="e1_2", source_node_id="node_1", target_node_id="node_2", edge_label="1 file"),
-            CanvasEdge(id="e2_3", source_node_id="node_2", target_node_id="node_3", edge_label="JSON payload")
-        ]
-    )
-
-    assert "https://svgl.app/" in graph.nodes[0].style.svgl_url
-    print(f"SVGL logo URL resolved: {graph.nodes[0].style.svgl_url}")
-
-    dark_palette = ShadCNThemePalette.get_theme("dark")
-    assert dark_palette["canvas"]["bg_color"] == "#09090B"
-    print("ShadCN dark palette initialized successfully")
-
-    file_ref = M365OneDriveAdapter.ingest_drive_item(
-        {"id": "doc_99", "name": "SLA_Agreement.pdf", "file": {"mimeType": "application/pdf"}},
-        "s3://cortex-vault/SLA_Agreement.pdf"
-    )
-
-    payload = WorkflowPayload(
-        workflow_id="wf_shadcn_001",
-        step_id="node_1",
-        input=WorkflowInputData(files=[file_ref]),
-        context=WorkflowContext(workflow_id="wf_shadcn_001", current_step_id="node_1", user_entitlements=user_ent)
-    )
-
-    executor = VisualWorkflowExecutor(registry=block_registry)
-    await executor.execute_canvas_graph_async(graph, payload)
-
-    assert graph.nodes[0].status == "SUCCESS"
-    assert graph.nodes[1].status == "SUCCESS"
-    assert graph.nodes[2].status == "GREYED_OUT"  # Visio block greyed out due to missing SKU
-
-    print("\n--- Visual Canvas Verification Succeeded! ---")
-    print(f"Node 1 [{graph.nodes[0].label}] Status: {graph.nodes[0].status}")
-    print(f"Node 2 [{graph.nodes[1].label}] Status: {graph.nodes[1].status}")
-    print(f"Node 3 [{graph.nodes[2].label}] Status: {graph.nodes[2].status} (Greyed Out - License Enforced)")
-
-async def test_observer_pipeline():
-    print("\n=== Starting Cortex Visual Observer Pipeline Verification ===")
-
-    os.environ["CORTEX_USER_UPN"] = "lead_devops@enterprise.com"
-    os.environ["HAS_COPILOT_PREMIUM"] = "true"
-    os.environ["HAS_VISIO"] = "false"
-
-    user_ent = UserIdentityManager.resolve_current_user()
-
-    file_ref = M365OneDriveAdapter.ingest_drive_item(
-        {"id": "doc_2026_001", "name": "project_proposal.pdf", "file": {"mimeType": "application/pdf"}},
-        "s3://cortex-vault/sandbox/project_proposal.pdf"
-    )
-
-    payload = WorkflowPayload(
-        workflow_id=f"wf_obs_{uuid.uuid4().hex[:6]}",
-        step_id="stage_01_capture",
-        input=WorkflowInputData(files=[file_ref], data={"project_slug": "no-hype-ai"}),
-        context=WorkflowContext(workflow_id="wf_obs_01", current_step_id="stage_01_capture", user_entitlements=user_ent)
-    )
-
-    def classify_step(input_obj: WorkflowInputData):
-        return {"route": "project_shaped", "confidence": 0.89}
-
-    async def ai_research_step(input_obj: WorkflowInputData):
-        await asyncio.sleep(0.01)
-        return {"ai_summary": "Auto-research completed for project_shaped proposal."}
-
-    router = CoreWorkflowRouter()
-
-    p1 = await router.execute_block_async(classify_step, payload, "stage_02_classify", block_type="task")
-    p2 = await router.execute_block_async(ai_research_step, p1, "stage_04_process", block_type="skill")
-    p2.step_id = "human_gate"  # Move to human checkpoint
-
-    observer_view = PipelineObserverTransformer.build_observer_view(p2, "Idea Capture & Execution Pipeline")
-
-    assert len(observer_view.stages) == 6
-    assert observer_view.stages[0].status == "COMPLETED"
-    assert observer_view.stages[4].nodes[0].status == "WAITING_APPROVAL"
-
-    print("\n--- Visual Pipeline Observer Model Generated Successfully ---")
-    print(json.dumps(observer_view.model_dump(), indent=2, default=str))
-
-    print("\n=== All Visual Observer Pipeline Verification Checks Passed! ===")
-
 async def main():
     await test_data_flow()
     await test_licensing()
-    await test_visual_canvas()
-    await test_observer_pipeline()
 
 if __name__ == "__main__":
     asyncio.run(main())
