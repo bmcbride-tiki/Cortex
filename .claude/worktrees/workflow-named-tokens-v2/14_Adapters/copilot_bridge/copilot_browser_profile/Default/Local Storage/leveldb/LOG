@@ -1,0 +1,6 @@
+2026/07/24-14:03:37.755 7aa0 Reusing MANIFEST C:\Cortex\14_Adapters\copilot_bridge\copilot_browser_profile\Default\Local Storage\leveldb/MANIFEST-000001
+2026/07/24-14:03:37.761 7aa0 Recovering log #56
+2026/07/24-14:03:37.764 7aa0 Reusing old log C:\Cortex\14_Adapters\copilot_bridge\copilot_browser_profile\Default\Local Storage\leveldb/000056.log 
+2026/07/24-14:04:37.770 5014 Level-0 table #60: started
+2026/07/24-14:04:37.773 5014 Level-0 table #60: 95301 bytes OK
+2026/07/24-14:04:37.775 5014 Delete type=0 #56

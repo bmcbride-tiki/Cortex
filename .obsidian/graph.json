@@ -6,74 +6,17 @@
   "hideUnresolved": false,
   "showOrphans": true,
   "collapse-color-groups": false,
-  "colorGroups": [
-    {
-      "query": "path:00_System  ",
-      "color": {
-        "a": 1,
-        "rgb": 14048348
-      }
-    },
-    {
-      "query": "path:01_inbox  ",
-      "color": {
-        "a": 1,
-        "rgb": 14069084
-      }
-    },
-    {
-      "query": "path:10_Skills  ",
-      "color": {
-        "a": 1,
-        "rgb": 11392604
-      }
-    },
-    {
-      "query": "path:11_Processes  ",
-      "color": {
-        "a": 1,
-        "rgb": 6084188
-      }
-    },
-    {
-      "query": "path:12_Tasks  ",
-      "color": {
-        "a": 1,
-        "rgb": 6084269
-      }
-    },
-    {
-      "query": "path:13_Functions  ",
-      "color": {
-        "a": 1,
-        "rgb": 6073814
-      }
-    },
-    {
-      "query": "path:14_Adapters  ",
-      "color": {
-        "a": 1,
-        "rgb": 6053078
-      }
-    },
-    {
-      "query": "path:docs  ",
-      "color": {
-        "a": 1,
-        "rgb": 11361494
-      }
-    }
-  ],
+  "colorGroups": [],
   "collapse-display": false,
   "showArrow": true,
   "textFadeMultiplier": 0,
-  "nodeSizeMultiplier": 1,
+  "nodeSizeMultiplier": 1.01875,
   "lineSizeMultiplier": 1,
   "collapse-forces": false,
-  "centerStrength": 0.5625,
-  "repelStrength": 11.875,
-  "linkStrength": 0.666666666666667,
-  "linkDistance": 312,
-  "scale": 0.0939292790284683,
+  "centerStrength": 0.518713248970312,
+  "repelStrength": 10,
+  "linkStrength": 1,
+  "linkDistance": 250,
+  "scale": 0.25883865621815794,
   "close": false
 }

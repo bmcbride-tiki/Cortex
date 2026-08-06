@@ -37,7 +37,7 @@ Stage 7 is then genuinely small: acquire real credentials, flip four environment
 
 ---
 
-## Stage 0 — Path B Resolution (Housekeeping)
+## Stage 0 — Path B Resolution (Housekeeping) = DONE
 
 **Goal:** Execute the architecture blueprint's §5 decision. No new capability — this is cleanup that makes every later stage's "what's real" question unambiguous.
 
@@ -57,7 +57,7 @@ Stage 7 is then genuinely small: acquire real credentials, flip four environment
 
 ---
 
-## Stage 1 — M365 Real-Call Wiring (Mock-Verified, Tenant-Pending)
+## Stage 1 — M365 Real-Call Wiring (Mock-Verified, Tenant-Pending) - DONE
 
 **Goal:** Every M365 Graph/Power BI action Cortex exposes gets real HTTP request-construction code, using the already-written MSAL auth in `data_processing/auth.py`, fully testable today via mocked HTTP responses — with zero real tenant access required to finish this stage.
 

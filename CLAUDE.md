@@ -112,4 +112,37 @@ When starting a session with Claude Code to generate this architecture, use this
 > 1. Set up the core FastAPI application in `00_System/` with routing hooks for dynamic visual workflow execution.
 > 2. Create the mock abstract interfaces in `14_Adapters/` for Google Gemini Enterprise API and M365/Power Automate services.
 > 3. Implement the Docx -> JSON (`cg.json`) -> TOS Excel (`.xlsx`) transformation tools under `13_Functions/`.
+
+## GBrain Configuration (configured by /setup-gbrain)
+- Mode: local-stdio
+- Engine: pglite
+- Config file: ~/.gbrain/config.json (mode 0600)
+- Setup date: 2026-07-31
+- MCP registered: yes (user scope)
+- Embedding provider: none (deferred — semantic/vector search disabled until `gbrain config set embedding_model <id>` with an API key)
+- Artifacts sync: off
+- Current repo policy: read-write
+
+## GBrain Search Guidance (configured by /sync-gbrain)
+<!-- gstack-gbrain-search-guidance:start -->
+
+GBrain is set up and synced on this machine. The agent should prefer gbrain
+over Grep when the question is semantic or when you don't know the exact
+identifier yet. Two indexed corpora available via the `gbrain` CLI:
+- This repo's markdown/docs (registered via `gbrain import`).
+- `~/.gstack/` curated memory (registered as `gstack-brain-<user>` source via
+  the existing federation pipeline, if/when artifacts sync is turned on).
+
+Prefer gbrain when:
+- "Where is X handled?" / semantic intent, no exact string yet:
+    `gbrain search "<terms>"` or `gbrain query "<question>"`
+- "What did we decide last time?" / past plans, retros, learnings:
+    `gbrain search "<terms>"`
+
+Grep is still right for known exact strings, regex, multiline patterns, and
+file globs. Semantic ranking quality is limited until an embedding provider
+is configured (see GBrain Configuration above) — until then, gbrain relies on
+keyword/FTS search rather than vector similarity.
+
+<!-- gstack-gbrain-search-guidance:end -->
 > 4. Ensure all code contains Pydantic models, handles errors cleanly, and includes mock data generators so workflows can run locally without live API keys. Install any missing packages as needed and write unit tests to verify execution.

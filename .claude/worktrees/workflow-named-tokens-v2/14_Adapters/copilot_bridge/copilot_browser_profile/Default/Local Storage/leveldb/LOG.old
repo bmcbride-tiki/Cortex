@@ -1,0 +1,6 @@
+2026/07/16-16:47:16.591 7360 Reusing MANIFEST C:\workbrain\00_System_Core\adapters\copilot-bridge\copilot_browser_profile\Default\Local Storage\leveldb/MANIFEST-000001
+2026/07/16-16:47:16.596 7360 Recovering log #52
+2026/07/16-16:47:16.598 7360 Reusing old log C:\workbrain\00_System_Core\adapters\copilot-bridge\copilot_browser_profile\Default\Local Storage\leveldb/000052.log 
+2026/07/16-16:48:12.552 6468 Level-0 table #57: started
+2026/07/16-16:48:12.556 6468 Level-0 table #57: 107502 bytes OK
+2026/07/16-16:48:12.557 6468 Delete type=0 #52

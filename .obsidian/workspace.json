@@ -176,8 +176,13 @@
       "bases:Create new base": false
     }
   },
-  "active": "323d3a119b647123",
+  "active": "42fa333a364a39c5",
   "lastOpenFiles": [
+    "docs/superpowers/specs/2026-07-30-flow-control-and-data-operations-design.md.tmp.14308.0a5ad23e3bd9",
+    "docs/superpowers/specs/2026-07-30-flow-control-and-data-operations-design.md.tmp.14308.f39a4b80d5f5",
+    "docs/superpowers/specs/2026-07-30-flow-control-and-data-operations-design.md.tmp.14308.3b430579214a",
+    "docs/superpowers/specs/2026-07-30-flow-control-and-data-operations-design.md.tmp.14308.8ee3ba4eafb0",
+    "docs/superpowers/specs/2026-07-30-flow-control-and-data-operations-design.md",
     "_map_script_check.js",
     "00_System/templates/architecture-map.html",
     "00_System/templates/architecture-map.html.tmp.44848.70dd1b70c604",
@@ -193,13 +198,9 @@
     "13_Functions/import_from_pdf/test_import_from_pdf.md",
     "13_Functions/import_from_pdf/test_import_from_pdf.md.tmp.7996.c8dc162bc8fb",
     "13_Functions/import_from_json/test_import_from_json.md",
-    "13_Functions/import_from_json/test_import_from_json.md.tmp.7996.eb2f043fba6c",
     "13_Functions/human_review_checkpoint/test_human_review_checkpoint.md",
-    "13_Functions/human_review_checkpoint/test_human_review_checkpoint.md.tmp.7996.7bbfd14751e0",
     "13_Functions/format_json/test_format_json.md",
-    "13_Functions/format_json/test_format_json.md.tmp.7996.d1d149e4c957",
     "13_Functions/fill_docx_template/test_fill_docx_template.md",
-    "13_Functions/fill_docx_template/test_fill_docx_template.md.tmp.7996.3d8a56a9c4d8",
     "13_Functions/export_to_word/test_export_to_word.md",
     "13_Functions/export_to_pdf/test_export_to_pdf.md",
     "13_Functions/export_to_markdown/test_export_to_markdown.md",
@@ -212,7 +213,6 @@
     "12_Tasks/refresh_powerbi_dataset/test_refresh_powerbi_dataset.md",
     "12_Tasks/post_teams_channel_message/test_post_teams_channel_message.md",
     "12_Tasks/list_teams_chat_messages/test_list_teams_chat_messages.md",
-    "12_Tasks/list_teams_channels/test_list_teams_channels.md",
-    "12_Tasks/list_sharepoint_lists/test_list_sharepoint_lists.md"
+    "12_Tasks/list_teams_channels/test_list_teams_channels.md"
   ]
 }

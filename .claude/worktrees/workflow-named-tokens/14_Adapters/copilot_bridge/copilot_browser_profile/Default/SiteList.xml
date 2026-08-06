@@ -1,0 +1,1483 @@
+<?xml version="1.0"?>
+<site-list version="150">
+ <site url="abmars.energy.gov.ab.ca:6001/account/login">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="abmarsaccp.energy.gov.ab.ca:6001/account/login">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="acps.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="aep-capitalprogram.gov.ab.ca/pmis-pwa">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="aep.sp.gov.ab.ca/policy/pib">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="aep3.sp.alberta.ca/pit">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="aep4.sp.alberta.ca/prgmteams/comp/sitepages/home.aspx">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="arrs-dev.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="arrs-sit.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="arrs-uat.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="arrs.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="arts.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="artsdev.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="artsonlinetraining.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="artstrn.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="artsuat.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="atoms.alberta.ca/atoms.committee.web">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="atoms.alberta.ca/atoms.committee.web.uat">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="atoms.alberta.ca/atoms.uat/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="atoms.alberta.ca/atoms/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="atprdawv01.tu.gov.ab.ca:9446/jazz/web/projects">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="bim-dev.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="bim-sit.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="bim-uat.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="bim.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="blimsinventory.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="blimsinventorybox.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="blimsinventorydev.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="blimsinventorydev3.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="blimsinventorytrn.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="blimsinventoryuat.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="blimsinventoryupg.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="blimsprojects.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="blimsprojectsdev.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="blimsprojectsdev3.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="blimsprojectstrn.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="blimsprojectsuat.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="blimsprojectsupg.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="c-goa-web-10045/atoms.ams.devl/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="c-goa-web-10045/atoms.ams.puat/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="c-goa-web-10045/atoms.ams.syst/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="c-goa-web-10045/atoms.committee.web.ams.devl">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="c-goa-web-10045/atoms.committee.web.ams.syst">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="c-goa-web-10045/multisiteweb.ams.devl">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="c-goa-web-10045/multisiteweb.ams.syst">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="cams.albertacourts.ca/public-portal">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="chris-uat.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="chris.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="cmas-dev6.hs.alberta.ca">
+  <compat-mode>IE8</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="cmas-uat6.hs.alberta.ca">
+  <compat-mode>IE8</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="cmas.hs.alberta.ca">
+  <compat-mode>IE8</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="cms.energy.gov.ab.ca/cms">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="cms.energy.gov.ab.ca/cms/default.cfm">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="cmsaccp.energy.gov.ab.ca/cms">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="cmsaccp.energy.gov.ab.ca/cms/default.cfm">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="cognos-uat.iae.alberta.ca/cognos/aae/default.html">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="collab.energy.gov.ab.ca/sites/crat">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="content.energy.alberta.ca/landaccess/drrzd/energyappwrap.htm">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="content.energy.alberta.ca/landaccess/zd/energyappwrap.htm">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="csasimt.sp.gov.ab.ca/pd/internal/medic/sitepages/home.aspx">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="csasimt.sp.gov.ab.ca/pd/internal/mims/sitepages/home.aspx">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="dev-tsis-cat-a.tu.gov.ab.ca:10300/tsis_dev/welcome.do">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="dev.foipnet.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="dspvris-dev.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="dspvris-sit.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="dspvris-uat.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="dspvris.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="ed.spw.alberta.ca/sites/esss/sector/executive">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-642/atoms.ads.devl/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-642/atoms.committee.web.ads.devl">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-642/multisiteweb.ads.devl">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-643/atoms.ads.syst/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-643/atoms.committee.web.ads.syst">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-643/multisiteweb.ads.syst">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-644/atoms.ads.puat/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-644/atoms.ads.trng/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-644/atoms.committee.web.ads.syst">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-644/multisiteweb.ads.syst">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-645/multisiteweb.syst">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-671/atoms.ads.devl/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-671/atoms.committee.web.ads.devl">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-671/multisiteweb.ads.devl">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-672/atoms.ads.syst/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-672/atoms.committee.web.ads.syst">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-672/multisiteweb.ads.syst">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-673/atoms.ads.puat/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-673/atoms.ads.trng/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-673/atoms.committee.web.ads.puat">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-673/atoms.committee.web.ads.trng">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-673/multisiteweb.ads.puat">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-673/multisiteweb.ads.trng">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-675/atoms.ads.devl/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-675/atoms.committee.web.ads.devl">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-675/multisiteweb.ads.devl">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-676/atoms.ads.syst/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-676/atoms.committee.web.ads.syst">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-676/multisiteweb.ads.syst">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-677/atoms.ads.puat/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-677/atoms.ads.trng/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-677/atoms.committee.web.ads.puat">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-677/atoms.committee.web.ads.trng">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-677/multisiteweb.ads.puat">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-677/multisiteweb.ads.trng">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-678/atoms.ads.devl/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-678/atoms.committee.web.ads.devl">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-678/multisiteweb.ads.devl">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-679/atoms.ads.syst/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-679/atoms.committee.web.ads.syst">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-679/multisiteweb.ads.syst">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-680/atoms.ads.puat/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-680/atoms.committee.web.ads.puat">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-680/multisiteweb.ads.puat">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-844/atoms.pmr/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="edm-goa-web-971/atoms.precert/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="eiacc85v:6001">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="eimsdev.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="eipro85v:6001">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="energyforms.enr.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="energyforms.enr.gov.ab.ca/sites/bsd/psrf">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="energyprojects-sp-accp16.enr.gov.ab.ca/pmis-pwa">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="energyprojects.enr.gov.ab.ca/pmis-pwa/default.aspx">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="energyworks.enr.gov.ab.ca/portal/swhw/appl">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="epr.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="eprdev.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="epruat.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="eprupg.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="epsc.csc-scc.gc.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="epscdr.csc-scc.gc.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="esm.sp.gov.ab.ca/eucs">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="exc.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="exc.sp.gov.ab.ca/pco">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="extddms.sp.alberta.ca/dmo">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="extddms.sp.alberta.ca/et">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="extddms.sp.alberta.ca/mcu">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="extddms.sp.alberta.ca/mo">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="extern.wln.gov.ab.ca/groups">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="extern.wln.gov.ab.ca/helpdesk">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="extern.wln.gov.ab.ca/useradmin">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="faxroute.health.alberta.ca/faxroute">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fbis.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fbisdev.int.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fbisuat.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fbisupg.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="figaro.iticanada.ca:7777">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fms.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fmsdev.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fmstrn.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fmsuat.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="foipnet.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fscd-fr-dev.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fscd-fr-sit.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fscd-fr-uat.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fscd-fr.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fwmis.env.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fwmisa.env.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="fwmisd.env.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="infopol">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="inform.enr.gov.ab.ca/ilentry.aspx">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="internal.infrastructure.alberta.ca/capitalprojects/prs">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="internal.infrastructure.alberta.ca/imigt">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="intranet.ae.alberta.ca/multisiteweb">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="intranet.ae.alberta.ca/multisiteweb.uat">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="livelink-accp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="livelink-devl.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="livelink.enr.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mims.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mims.gov.ab.ca/mims/common/s1mimslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mims.gov.ab.ca/mims/file/welcome.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mimsuat.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mimsuat.gov.ab.ca/mims/common/s1mimslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mimsuat.gov.ab.ca/mims/file/welcome.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mobius-sit1.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mobius-sit2.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mobius-trn1.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mobius-trn1.int.alberta.ca/curam">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mobius-uat1.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mobius-uat1.int.alberta.ca/curam">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mobius-uat2.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mobius-uat2.int.alberta.ca/curam">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mobius.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="mobius.int.alberta.ca/curam">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="myimt.sp.gov.ab.ca/imt_governance/ersectorimt">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="ols-dweb.gov.ab.ca/alf_dev/runtravisofm.aspx">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="ols-pweba1.gov.ab.ca/alf_prd/runtravisofm.aspx">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="ols-pwebb1.gov.ab.ca/alf_prd/runtravisofm.aspx">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="ols-sweb.gov.ab.ca/alf_syt/runtravisofm.aspx">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="ols-uweba1.gov.ab.ca/alf_uat/runtravisofm.aspx">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="ols-uwebb1.gov.ab.ca/alf_uat/runtravisofm.aspx">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="opgis.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="orca.jsg.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="pabapps.alberta.ca/albertaconnects">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="pabapps.alberta.ca/albertaconnects/index.cfm">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="pdd-dev.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="pdd-sit.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="pdd-uat.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="pdd.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="pias-dev.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="pias-sit.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="pias-uat.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="pias.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="pmt.transportation.alberta.ca/sscr/_layouts/15">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="prd-tsis-cat-a.tu.gov.ab.ca:10300/tsis_prd/welcome.do">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="projects.transportation.alberta.ca/div/ds">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="psm.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="psmdev.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="psmuat.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="psmupg.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="ptt-dev.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="ptt-sit.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="ptt-uat.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="ptt.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="rocsadminuat.gov.ab.ca/rtdrs44">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="sectorapps.gov.ab.ca/sites/ir">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="sectorapps.gov.ab.ca/sites/occio-csm-pe">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="sectorapps.gov.ab.ca/sites/psrf">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="sectorapps.gov.ab.ca/sites/sa-pe">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarae.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedaraep.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedaraf.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedaraglc.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarcs.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarcss.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarct.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedardpo.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarec.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedaredc.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedaredt.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarenergy.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarhealth.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarinfra.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarir.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarirmss.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarjsg.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarlbr.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarlgs.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarltgov.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarma.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarpo.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarpsc.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarsa.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarsh.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedarsw.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedartbf.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="securedartrans.sp.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="ssia-figaro.iticanada.ca:4444">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="syst-ait.ae.alberta.ca/atoms.committee.web.syst">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="syst-ait.ae.alberta.ca/atoms.syst/atoms.presentation">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="test.foipnet.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="thebrain.hs.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="toi-datafix.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="toi-uat.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="toi.int.alberta.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="tsis-dev.int.gov.ab.ca/tsis_dev">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="tsis-prd.int.gov.ab.ca/tsis_prd">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="tsis-uat.int.gov.ab.ca/tsis_uat">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="uat-eps.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="uat-tsis-cat-a.tu.gov.ab.ca:10300/tsis_uat/welcome.do">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vmcoe.sp.gov.ab.ca/waas">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7807.gov.ab.ca1011/mims/common/s1mimslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7807.gov.ab.ca:1011/mims">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7807.gov.ab.ca:1011/mims/file/welcome.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7807.gov.ab.ca:1011/mimsrio">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7807.gov.ab.ca:1011/mimsrio/webaccess/riologin">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7807.gov.ab.ca:1011/mimsweb">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7807.gov.ab.ca:1011/mimsweb/webaccess/webaccesslogin">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7807.gov.ab.ca:3011/mims">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7807.gov.ab.ca:3011/mims/common/s1mimslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7807.gov.ab.ca:3011/mims/file/welcome.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7807.gov.ab.ca:3011/mimsrio">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7807.gov.ab.ca:3011/mimsrio/webaccess/riologin">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7807.gov.ab.ca:3011/mimsweb">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7807.gov.ab.ca:3011/mimsweb/webaccess/webaccesslogin">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7808.gov.ab.ca:2011/mims">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7808.gov.ab.ca:2011/mims/common/s1mimslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7808.gov.ab.ca:2011/mims/file/welcome.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7808.gov.ab.ca:2011/mimsrio">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7808.gov.ab.ca:2011/mimsrio/webaccess/riologin">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7808.gov.ab.ca:2011/mimsweb">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7808.gov.ab.ca:2011/mimsweb/webaccess/webaccesslogin">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7808.gov.ab.ca:4011/mims">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7808.gov.ab.ca:4011/mims/common/s1mimslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7808.gov.ab.ca:4011/mims/file/welcome.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7808.gov.ab.ca:4011/mimsrio">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7808.gov.ab.ca:4011/mimsrio/webaccess/riologin">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7808.gov.ab.ca:4011/mimsweb">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7808.gov.ab.ca:4011/mimsweb/webaccess/webaccesslogin">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:1011">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:1011/mims/common/s1mimslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:1011/mims/file/welcome.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:1011/mimsrio">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:1011/mimsrio/webaccess/s822ariologin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:1011/mimsweb">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:1011/mimsweb/webaccess/s2webaccesslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:2011">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:2011/mims/common/s1mimslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:2011/mims/file/welcome.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:2011/mimsrio">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:2011/mimsrio/webaccess/s822ariologin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:2011/mimsweb/webaccess/s2webaccesslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:3011">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:3011/mims/common/s1mimslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:3011/mims/file/welcome.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:3011/mimsrio">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:3011/mimsrio/webaccess/s822ariologin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:3011/mimsweb">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:3011/mimsweb/webaccess/s2webaccesslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:4011">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:4011/mims/common/s1mimslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:4011/mims/file/welcome.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:4011/mimsrio">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:4011/mimsrio/webaccess/s822ariologin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:4011/mimsweb">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7809.gov.ab.ca:4011/mimsweb/webaccess/s2webaccesslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:1011">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:1011/mims/common/s1mimslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:1011/mims/file/welcome.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:1011/mimsrio">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:1011/mimsrio/webaccess/s822ariologin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:1011/mimsweb">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:1011/mimsweb/webaccess/s2webaccesslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:2011">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:2011/mims/common/s1mimslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:2011/mims/file/welcome.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:2011/mimsrio">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:2011/mimsrio/webaccess/s822ariologin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:2011/mimsweb">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:2011/mimsweb/webaccess/s2webaccesslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:3011">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:3011/mims/common/s1mimslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:3011/mims/file/welcome.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:3011/mimsrio">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:3011/mimsrio/webaccess/s822ariologin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:3011/mimsweb">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:3011/mimsweb/webaccess/s2webaccesslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:4011">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:4011/mims/common/s1mimslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:4011/mims/file/welcome.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:4011/mimsrio">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:4011/mimsrio/webaccess/s822ariologin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:4011/mimsweb">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn7810.gov.ab.ca:4011/mimsweb/webaccess/s2webaccesslogin.jsp">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="vnn8109.gov.ab.ca:10500/tsis_syt">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="wap.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="wapdev.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="wapuat.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="wi.csc-scc.gc.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="worts.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="wortsdev.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="wortstrn.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="wortsuat.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.blimslandenhancements.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.blimslandenhancementsdev.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.blimslandenhancementsuat.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.blimsonline.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.blimsonlinebox.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.blimsonlinedev.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.blimsonlinedev3.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.blimsonlinetrn.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.blimsonlineuat.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.blimsonlineupg.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.cms.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.cmsdev.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.cmsuat.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.cmsupg.gov.ab.ca">
+  <compat-mode>IE8Enterprise</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.eps.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.foipnet.gov.ab.ca">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.mimsqa.gov.ab.ca/mimsrio/webaccess/s808aconfirmcontactinfo">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.mimsqa.gov.ab.ca/mimsweb/webaccess/s164webaddressupdate">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.mimsuat.gov.ab.ca/mimsrio/webaccess/s808aconfirmcontactinfo">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+ <site url="www.mimsuat.gov.ab.ca/mimsweb/webaccess/s164webaddressupdate">
+  <compat-mode>Default</compat-mode>
+  <open-in>IE11</open-in>
+ </site>
+</site-list>

@@ -1,0 +1,5 @@
+- search codebase / ORM for misused dynamic conditions, identify, plan correction, implement plan
+- verify if backend APi endpoints are sending more datapoint than required by the web UI
+- check if The backend server will fetch any URL is is given
+- check for vulnerabilities related cross site scripting
+- does the system have an open Cors policy
